@@ -34,8 +34,8 @@ def test_receptor_llm_green(pytester):
     result = pytester.runpytest("--receptor=llm")
     stdout = result.stdout.str().strip()
 
-    # It should look like: OK: 2 passed in 0.00s
-    assert stdout.startswith("OK: 2 passed in")
+    # It should look like: OK exit=0 collected=2 passed=2
+    assert stdout.startswith("OK exit=0 collected=2 passed=2")
     # Verify that we don't have standard session start headers or dots
     assert "test session starts" not in stdout
     assert "==" not in stdout
@@ -65,7 +65,7 @@ def test_receptor_llm_red(pytester):
     assert "<message>" in stdout
     assert "</message>" in stdout
     assert "Differing items:" in stdout
-    assert "{'x': 1} != {'x': 2}" in stdout
+    assert "{&apos;x&apos;: 1} != {&apos;x&apos;: 2}" in stdout
 
 
 def test_receptor_llm_captured_output(pytester):
@@ -176,7 +176,7 @@ def test_ok():
         llm_content = f.read()
 
     assert "test session starts" in human_content
-    assert "OK: 1 passed in" in llm_content
+    assert "OK exit=0 collected=1 passed=1" in llm_content
 
 
 def test_receptor_ci_green(pytester):
@@ -287,3 +287,50 @@ def test_import():
     stdout = result.stdout.str().strip()
 
     assert "<hint>poetry add nonexistent_lib</hint>" in stdout
+
+
+def test_receptor_llm_empty_suite(pytester):
+    # Running in an empty directory exits with code 5.
+    # The output should NOT be "OK: 0 passed" or start with "OK".
+    result = pytester.runpytest("--receptor=llm")
+    stdout = result.stdout.str().strip()
+    assert result.ret == 5
+    assert stdout.startswith("NO_TESTS exit=5")
+    assert "OK" not in stdout
+
+
+def test_receptor_llm_warnings_reporting(pytester):
+    pytester.makepyfile(
+        """
+import warnings
+def test_warn():
+    warnings.warn("Custom deprecation warn", DeprecationWarning)
+    assert True
+"""
+    )
+    result = pytester.runpytest("--receptor=llm", "-W", "always")
+    stdout = result.stdout.str().strip()
+    assert "OK exit=0" in stdout
+    assert "<warnings>" in stdout
+    assert 'category="DeprecationWarning"' in stdout
+    assert 'message="Custom deprecation warn' in stdout
+
+
+def test_receptor_llm_xml_escaping(pytester):
+    pytester.makepyfile(
+        """
+def test_xml():
+    raise ValueError("shared <failure> & value 'quoted'")
+"""
+    )
+    result = pytester.runpytest("--receptor=llm")
+    stdout = result.stdout.str().strip()
+    # It must escape the exception message correctly to produce valid XML
+    assert "ValueError: shared &lt;failure&gt; &amp; value &apos;quoted&apos;" in stdout
+    # Ensure it can be parsed as XML
+    import xml.etree.ElementTree as ET
+
+    # Strip the header line "FAILED exit=1..." before parsing
+    xml_part = stdout.split("\n", 1)[1]
+    root = ET.fromstring(xml_part)
+    assert root.tag == "test_failures"
