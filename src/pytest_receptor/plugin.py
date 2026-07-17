@@ -25,11 +25,33 @@ def pytest_addoption(parser):
         default=None,
         help="Directory where to dump debug log files (human and llm) with a unique signature.",
     )
+    group.addoption(
+        "--receptor-artifact",
+        action="store",
+        default=None,
+        help="Path to write the lossless JSONL evidence artifact.",
+    )
+    group.addoption(
+        "--receptor-budget",
+        action="store",
+        default="1500",
+        help="Character budget limit for exception message truncation to save LLM tokens.",
+    )
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config):
     receptor = config.getoption("--receptor")
+    artifact_path = config.getoption("--receptor-artifact")
+
+    if receptor in ("llm", "ci") or artifact_path:
+        from pytest_receptor.collector import EventCollector
+
+        collector = EventCollector(config)
+        config._receptor_collector = collector
+        config.pluginmanager.register(collector, "receptor_collector")
+        collector.log_session_start()
+
     if receptor == "llm":
         standard_reporter = config.pluginmanager.getplugin("terminalreporter")
         if standard_reporter is not None:
@@ -323,30 +345,71 @@ class LlmTerminalReporter(TerminalReporter):
         else:
             outcome_label = "FAILED"
 
-        passed_count = len(self.stats.get("passed", []))
-        skipped_count = len(self.stats.get("skipped", []))
-        xfailed_count = len(self.stats.get("xfailed", []))
-        xpassed_count = len(self.stats.get("xpassed", []))
-        failed_count = len(self.stats.get("failed", []))
-        error_count = len(self.stats.get("error", []))
-        collected_count = (
-            self._numtests
-            if hasattr(self, "_numtests")
-            else (
-                passed_count
-                + skipped_count
-                + xfailed_count
-                + xpassed_count
-                + failed_count
-                + error_count
+        collector = getattr(self.config, "_receptor_collector", None)
+        if collector:
+            # Group test phases by nodeid to count logical test results
+            logical_tests = {}
+            for phase_event in collector.test_phases:
+                nid = phase_event.nodeid
+                if nid not in logical_tests:
+                    logical_tests[nid] = []
+                logical_tests[nid].append(phase_event)
+
+            passed_count = 0
+            failed_count = 0
+            skipped_count = 0
+            xfailed_count = 0
+            xpassed_count = 0
+            error_count = 0
+
+            for nid, phases in logical_tests.items():
+                outcomes = [p.outcome for p in phases]
+                if "failed" in outcomes:
+                    failed_phase = next(p for p in phases if p.outcome == "failed")
+                    if failed_phase.phase in ("setup", "teardown"):
+                        error_count += 1
+                    else:
+                        failed_count += 1
+                elif "error" in outcomes:
+                    error_count += 1
+                elif "xpassed" in outcomes:
+                    xpassed_count += 1
+                elif "xfailed" in outcomes:
+                    xfailed_count += 1
+                elif "skipped" in outcomes:
+                    skipped_count += 1
+                elif "passed" in outcomes:
+                    passed_count += 1
+
+            collected_count = (
+                self._numtests if hasattr(self, "_numtests") else len(logical_tests)
             )
-        )
+            warnings_count = len(collector.warnings)
+        else:
+            passed_count = len(self.stats.get("passed", []))
+            skipped_count = len(self.stats.get("skipped", []))
+            xfailed_count = len(self.stats.get("xfailed", []))
+            xpassed_count = len(self.stats.get("xpassed", []))
+            failed_count = len(self.stats.get("failed", []))
+            error_count = len(self.stats.get("error", []))
+            collected_count = (
+                self._numtests
+                if hasattr(self, "_numtests")
+                else (
+                    passed_count
+                    + skipped_count
+                    + xfailed_count
+                    + xpassed_count
+                    + failed_count
+                    + error_count
+                )
+            )
+            warnings_count = len(self.stats.get("warnings", []))
 
         duration = time.monotonic() - self._llm_start_time
         root_dir = getattr(
             self.config, "rootpath", getattr(self.config, "rootdir", None)
         )
-        warnings_count = len(self.stats.get("warnings", []))
 
         if is_green:
             report_str = f"OK exit=0 collected={collected_count} passed={passed_count} skipped={skipped_count} xfailed={xfailed_count} xpassed={xpassed_count} duration={duration:.2f}s warnings={warnings_count}\n"
@@ -363,133 +426,250 @@ class LlmTerminalReporter(TerminalReporter):
         # If not green
         report_str = f"{outcome_label} exit={exit_val} collected={collected_count} passed={passed_count} failed={failed_count} error={error_count} skipped={skipped_count} xfailed={xfailed_count} xpassed={xpassed_count} duration={duration:.2f}s warnings={warnings_count}\n"
 
-        failed_reports = self.stats.get("failed", []) + self.stats.get("error", [])
         output = ["<test_failures>"]
 
-        if failed_reports:
-            groups = {}
-            for report in failed_reports:
-                path = getattr(report, "fspath", "unknown_path")
-                lineno = 0
-                message = ""
+        if collector:
+            failed_events = [
+                p for p in collector.test_phases if p.outcome in ("failed", "error")
+            ]
+            if failed_events:
+                groups = {}
+                for fe in failed_events:
+                    exc = fe.exception
+                    if not exc:
+                        continue
+                    exc_type = exc.exc_type
+                    message = exc.message
 
-                if (
-                    hasattr(report.longrepr, "reprcrash")
-                    and report.longrepr.reprcrash is not None
-                ):
-                    crash = report.longrepr.reprcrash
-                    path = crash.path
-                    lineno = crash.lineno
-                    message = crash.message
-                elif report.longrepr:
-                    message = str(report.longrepr)
+                    normalized_msg = self._normalize_message(message)
+                    key = (exc_type, normalized_msg)
 
-                if root_dir and os.path.isabs(path):
-                    try:
-                        path = os.path.relpath(path, start=root_dir)
-                    except ValueError:
-                        pass
+                    path = fe.nodeid.split("::")[0]
+                    if root_dir and os.path.isabs(path):
+                        try:
+                            path = os.path.relpath(path, start=root_dir)
+                        except ValueError:
+                            pass
+                    line_no = 0
+                    if exc.traceback:
+                        last_frame = exc.traceback[-1]
+                        m = re.search(r"at\s+(.+?):(\d+)\s+->", last_frame)
+                        if m:
+                            line_no = int(m.group(2))
 
-                # Extract exception type
-                exc_type = "Exception"
-                for line in message.splitlines():
-                    line_str = line.strip()
-                    if line_str.startswith("E   ") and ":" in line_str:
-                        parts = line_str[4:].split(":", 1)
-                        first_part = parts[0].strip()
-                        if first_part.isidentifier() or all(
-                            p.isidentifier() for p in first_part.split(".")
-                        ):
-                            exc_type = first_part
-                            break
-                    elif line_str.startswith("E ") and ":" in line_str:
-                        parts = line_str[2:].split(":", 1)
-                        first_part = parts[0].strip()
-                        if first_part.isidentifier() or all(
-                            p.isidentifier() for p in first_part.split(".")
-                        ):
-                            exc_type = first_part
-                            break
-                if exc_type == "Exception" and ":" in message:
-                    first_line = message.split("\n", 1)[0]
-                    if ":" in first_line:
-                        first_part = first_line.split(":", 1)[0].strip()
-                        if first_part.isidentifier() or all(
-                            p.isidentifier() for p in first_part.split(".")
-                        ):
-                            exc_type = first_part
+                    sections_dict = {}
+                    if fe.captured_stdout:
+                        sections_dict["captured_stdout"] = fe.captured_stdout
+                    if fe.captured_stderr:
+                        sections_dict["captured_stderr"] = fe.captured_stderr
+                    if fe.captured_log:
+                        sections_dict["captured_log"] = fe.captured_log
 
-                sections_dict = {}
-                sections = getattr(report, "sections", [])
-                for section_name, section_content in sections:
-                    tag_name = section_name.lower().replace(" ", "_")
-                    if "stdout" in tag_name:
-                        sections_dict["captured_stdout"] = section_content.strip()
-                    elif "stderr" in tag_name:
-                        sections_dict["captured_stderr"] = section_content.strip()
-                    elif "log" in tag_name:
-                        sections_dict["captured_log"] = section_content.strip()
+                    local_tb = "\n" + "\n".join(exc.traceback) if exc.traceback else ""
 
-                local_tb = self._extract_local_traceback(report, root_dir)
-
-                # Normalize the raw message first (before truncation)
-                normalized_msg = self._normalize_message(message)
-                key = (exc_type, normalized_msg)
-
-                # Compress huge message for display
-                compressed_msg = self._compress_message(message)
-
-                if key not in groups:
-                    groups[key] = {
-                        "exc_type": exc_type,
-                        "message": compressed_msg,
-                        "file": path,
-                        "line": lineno,
-                        "local_tb": local_tb,
-                        "sections": sections_dict,
-                        "tests": [],
-                    }
-
-                groups[key]["tests"].append(
-                    {"nodeid": report.nodeid, "phase": report.when}
-                )
-
-            for key, g in groups.items():
-                exc_type_esc = self._xml_escape(g["exc_type"])
-                file_path_esc = self._xml_escape(g["file"])
-                line_no_esc = self._xml_escape(g["line"])
-                msg_content_esc = self._xml_escape(g["message"])
-
-                output.append(
-                    f'<failure_group exception="{exc_type_esc}" file="{file_path_esc}" line="{line_no_esc}">'
-                )
-                output.append(f"<message>{msg_content_esc}</message>")
-
-                hint = self._get_correction_hint(g["exc_type"], g["message"], root_dir)
-                if hint:
-                    output.append(f"<hint>{self._xml_escape(hint)}</hint>")
-
-                if g["local_tb"]:
-                    output.append(
-                        f"<local_traceback>{self._xml_escape(g['local_tb'])}</local_traceback>"
+                    if key not in groups:
+                        groups[key] = {
+                            "exc_type": exc_type,
+                            "message": self._compress_message(
+                                message, nodeid=fe.nodeid, phase=fe.phase
+                            ),
+                            "file": path,
+                            "line": line_no,
+                            "local_tb": local_tb,
+                            "sections": sections_dict,
+                            "tests": [],
+                        }
+                    groups[key]["tests"].append(
+                        {"nodeid": fe.nodeid, "phase": fe.phase}
                     )
 
-                for sec_tag, sec_val in g["sections"].items():
-                    output.append(f"<{sec_tag}>{self._xml_escape(sec_val)}</{sec_tag}>")
+                for key, g in groups.items():
+                    exc_type_esc = self._xml_escape(g["exc_type"])
+                    file_path_esc = self._xml_escape(g["file"])
+                    line_no_esc = self._xml_escape(g["line"])
+                    msg_content_esc = self._xml_escape(g["message"])
+                    output.append(
+                        f'<failure_group exception="{exc_type_esc}" file="{file_path_esc}" line="{line_no_esc}">'
+                    )
+                    output.append(f"<message>{msg_content_esc}</message>")
 
-                tests_xml = ["<tests>"]
-                prefix = g["file"] + "::"
-                for t in g["tests"]:
-                    nodeid = t["nodeid"]
-                    if nodeid.startswith(prefix):
-                        nodeid = nodeid[len(prefix) :]
-                    esc_nodeid = self._xml_escape(nodeid)
-                    esc_phase = self._xml_escape(t["phase"])
-                    tests_xml.append(f'<test name="{esc_nodeid}" phase="{esc_phase}"/>')
-                tests_xml.append("</tests>")
-                output.append("".join(tests_xml))
+                    if len(g["tests"]) == 1:
+                        rerun_cmd = f"pytest {g['tests'][0]['nodeid']} -q"
+                    else:
+                        rerun_cmd = f"pytest {g['file']} -q"
+                    output.append(f"<rerun>{self._xml_escape(rerun_cmd)}</rerun>")
 
-                output.append("</failure_group>")
+                    hint = self._get_correction_hint(
+                        g["exc_type"], g["message"], root_dir
+                    )
+                    if hint:
+                        output.append(f"<hint>{self._xml_escape(hint)}</hint>")
+
+                    if g["local_tb"]:
+                        output.append(
+                            f"<local_traceback>{self._xml_escape(g['local_tb'])}</local_traceback>"
+                        )
+
+                    for sec_tag, sec_val in g["sections"].items():
+                        output.append(
+                            f"<{sec_tag}>{self._xml_escape(sec_val)}</{sec_tag}>"
+                        )
+
+                    tests_xml = ["<tests>"]
+                    prefix = g["file"] + "::"
+                    for t in g["tests"]:
+                        nodeid = t["nodeid"]
+                        if nodeid.startswith(prefix):
+                            nodeid = nodeid[len(prefix) :]
+                        esc_nodeid = self._xml_escape(nodeid)
+                        esc_phase = self._xml_escape(t["phase"])
+                        tests_xml.append(
+                            f'<test name="{esc_nodeid}" phase="{esc_phase}"/>'
+                        )
+                    tests_xml.append("</tests>")
+                    output.append("".join(tests_xml))
+
+                    output.append("</failure_group>")
+        else:
+            failed_reports = self.stats.get("failed", []) + self.stats.get("error", [])
+            if failed_reports:
+                groups = {}
+                for report in failed_reports:
+                    path = getattr(report, "fspath", "unknown_path")
+                    lineno = 0
+                    message = ""
+
+                    if (
+                        hasattr(report.longrepr, "reprcrash")
+                        and report.longrepr.reprcrash is not None
+                    ):
+                        crash = report.longrepr.reprcrash
+                        path = crash.path
+                        lineno = crash.lineno
+                        message = crash.message
+                    elif report.longrepr:
+                        message = str(report.longrepr)
+
+                    if root_dir and os.path.isabs(path):
+                        try:
+                            path = os.path.relpath(path, start=root_dir)
+                        except ValueError:
+                            pass
+
+                    # Extract exception type
+                    exc_type = "Exception"
+                    for line in message.splitlines():
+                        line_str = line.strip()
+                        if line_str.startswith("E   ") and ":" in line_str:
+                            parts = line_str[4:].split(":", 1)
+                            first_part = parts[0].strip()
+                            if first_part.isidentifier() or all(
+                                p.isidentifier() for p in first_part.split(".")
+                            ):
+                                exc_type = first_part
+                                break
+                        elif line_str.startswith("E ") and ":" in line_str:
+                            parts = line_str[2:].split(":", 1)
+                            first_part = parts[0].strip()
+                            if first_part.isidentifier() or all(
+                                p.isidentifier() for p in first_part.split(".")
+                            ):
+                                exc_type = first_part
+                                break
+                    if exc_type == "Exception" and ":" in message:
+                        first_line = message.split("\n", 1)[0]
+                        if ":" in first_line:
+                            first_part = first_line.split(":", 1)[0].strip()
+                            if first_part.isidentifier() or all(
+                                p.isidentifier() for p in first_part.split(".")
+                            ):
+                                exc_type = first_part
+
+                    sections_dict = {}
+                    sections = getattr(report, "sections", [])
+                    for section_name, section_content in sections:
+                        tag_name = section_name.lower().replace(" ", "_")
+                        if "stdout" in tag_name:
+                            sections_dict["captured_stdout"] = section_content.strip()
+                        elif "stderr" in tag_name:
+                            sections_dict["captured_stderr"] = section_content.strip()
+                        elif "log" in tag_name:
+                            sections_dict["captured_log"] = section_content.strip()
+
+                    local_tb = self._extract_local_traceback(report, root_dir)
+
+                    # Normalize the raw message first (before truncation)
+                    normalized_msg = self._normalize_message(message)
+                    key = (exc_type, normalized_msg)
+
+                    # Compress huge message for display
+                    compressed_msg = self._compress_message(
+                        message, nodeid=report.nodeid, phase=report.when
+                    )
+
+                    if key not in groups:
+                        groups[key] = {
+                            "exc_type": exc_type,
+                            "message": compressed_msg,
+                            "file": path,
+                            "line": lineno,
+                            "local_tb": local_tb,
+                            "sections": sections_dict,
+                            "tests": [],
+                        }
+
+                    groups[key]["tests"].append(
+                        {"nodeid": report.nodeid, "phase": report.when}
+                    )
+
+                for key, g in groups.items():
+                    exc_type_esc = self._xml_escape(g["exc_type"])
+                    file_path_esc = self._xml_escape(g["file"])
+                    line_no_esc = self._xml_escape(g["line"])
+                    msg_content_esc = self._xml_escape(g["message"])
+
+                    output.append(
+                        f'<failure_group exception="{exc_type_esc}" file="{file_path_esc}" line="{line_no_esc}">'
+                    )
+                    output.append(f"<message>{msg_content_esc}</message>")
+
+                    if len(g["tests"]) == 1:
+                        rerun_cmd = f"pytest {g['tests'][0]['nodeid']} -q"
+                    else:
+                        rerun_cmd = f"pytest {g['file']} -q"
+                    output.append(f"<rerun>{self._xml_escape(rerun_cmd)}</rerun>")
+
+                    hint = self._get_correction_hint(
+                        g["exc_type"], g["message"], root_dir
+                    )
+                    if hint:
+                        output.append(f"<hint>{self._xml_escape(hint)}</hint>")
+
+                    if g["local_tb"]:
+                        output.append(
+                            f"<local_traceback>{self._xml_escape(g['local_tb'])}</local_traceback>"
+                        )
+
+                    for sec_tag, sec_val in g["sections"].items():
+                        output.append(
+                            f"<{sec_tag}>{self._xml_escape(sec_val)}</{sec_tag}>"
+                        )
+
+                    tests_xml = ["<tests>"]
+                    prefix = g["file"] + "::"
+                    for t in g["tests"]:
+                        nodeid = t["nodeid"]
+                        if nodeid.startswith(prefix):
+                            nodeid = nodeid[len(prefix) :]
+                        esc_nodeid = self._xml_escape(nodeid)
+                        esc_phase = self._xml_escape(t["phase"])
+                        tests_xml.append(
+                            f'<test name="{esc_nodeid}" phase="{esc_phase}"/>'
+                        )
+                    tests_xml.append("</tests>")
+                    output.append("".join(tests_xml))
+
+                    output.append("</failure_group>")
 
         output.append(self._build_slow_tests_xml(root_dir))
         output.append(self._build_skips_xfails_xpassed_xml())
@@ -534,10 +714,38 @@ class LlmTerminalReporter(TerminalReporter):
             return "\n" + "\n".join(frames)
         return ""
 
-    def _compress_message(self, msg, max_len=1500):
+    def _compress_message(self, msg, max_len=1500, nodeid=None, phase=None):
+        budget_opt = self.config.getoption("--receptor-budget", None)
+        if budget_opt is not None:
+            try:
+                max_len = int(budget_opt)
+            except ValueError:
+                pass
+
         if len(msg) <= max_len:
             return msg
-        return msg[:1000] + "\n... [diff truncated to save tokens] ...\n" + msg[-400:]
+
+        import hashlib
+
+        msg_hash = hashlib.md5(msg.encode("utf-8", errors="ignore")).hexdigest()
+
+        # Calculate split sizes
+        head_len = int(max_len * 0.65)
+        tail_len = int(max_len * 0.3)
+
+        ref_info = ""
+        if nodeid and phase:
+            collector = getattr(self.config, "_receptor_collector", None)
+            art_path = (
+                collector.artifact_path
+                if (collector and collector.artifact_path)
+                else ".pytest-receptor.jsonl"
+            )
+            art_name = os.path.basename(art_path)
+            ref_info = f", full evidence: {art_name} for nodeid={nodeid} phase={phase}"
+
+        notice = f"\n... [truncated: original_size={len(msg)} bytes, md5={msg_hash}{ref_info}] ...\n"
+        return msg[:head_len] + notice + msg[-tail_len:]
 
     def _normalize_message(self, msg):
         # 1. Normalize Hex Addresses (e.g. 0x7f83ad910)
@@ -643,12 +851,47 @@ class CiTerminalReporter(TerminalReporter):
             self._tw = DummyTerminalWriter(self._original_tw, self.config)
 
         # Print our simple final CI summary line
-        passed_count = len(self.stats.get("passed", []))
-        skipped_count = len(self.stats.get("skipped", []))
-        xfailed_count = len(self.stats.get("xfailed", []))
-        xpassed_count = len(self.stats.get("xpassed", []))
-        failed_count = len(self.stats.get("failed", []))
-        error_count = len(self.stats.get("error", []))
+        collector = getattr(self.config, "_receptor_collector", None)
+        if collector:
+            logical_tests = {}
+            for phase_event in collector.test_phases:
+                nid = phase_event.nodeid
+                if nid not in logical_tests:
+                    logical_tests[nid] = []
+                logical_tests[nid].append(phase_event)
+
+            passed_count = 0
+            failed_count = 0
+            skipped_count = 0
+            xfailed_count = 0
+            xpassed_count = 0
+            error_count = 0
+
+            for nid, phases in logical_tests.items():
+                outcomes = [p.outcome for p in phases]
+                if "failed" in outcomes:
+                    failed_phase = next(p for p in phases if p.outcome == "failed")
+                    if failed_phase.phase in ("setup", "teardown"):
+                        error_count += 1
+                    else:
+                        failed_count += 1
+                elif "error" in outcomes:
+                    error_count += 1
+                elif "xpassed" in outcomes:
+                    xpassed_count += 1
+                elif "xfailed" in outcomes:
+                    xfailed_count += 1
+                elif "skipped" in outcomes:
+                    skipped_count += 1
+                elif "passed" in outcomes:
+                    passed_count += 1
+        else:
+            passed_count = len(self.stats.get("passed", []))
+            skipped_count = len(self.stats.get("skipped", []))
+            xfailed_count = len(self.stats.get("xfailed", []))
+            xpassed_count = len(self.stats.get("xpassed", []))
+            failed_count = len(self.stats.get("failed", []))
+            error_count = len(self.stats.get("error", []))
 
         parts = []
         if failed_count > 0:

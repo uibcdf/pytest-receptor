@@ -334,3 +334,89 @@ def test_xml():
     xml_part = stdout.split("\n", 1)[1]
     root = ET.fromstring(xml_part)
     assert root.tag == "test_failures"
+
+
+def test_receptor_jsonl_artifact(pytester, tmp_path):
+    pytester.makepyfile(
+        """
+def test_ok():
+    assert True
+def test_fail():
+    raise ValueError("some crash")
+"""
+    )
+    artifact_file = tmp_path / "events_output.jsonl"
+    result = pytester.runpytest(
+        "--receptor=llm", f"--receptor-artifact={artifact_file}"
+    )
+    assert result.ret == 1
+
+    assert artifact_file.exists()
+
+    # Read the JSONL lines
+    import json
+
+    with open(artifact_file, "r", encoding="utf-8") as f:
+        lines = [json.loads(line.strip()) for line in f if line.strip()]
+
+    assert len(lines) >= 3
+
+    # Line 1: session start
+    assert lines[0]["schema"] == "pytest-receptor.event.session_start@1"
+    assert "pytest_version" in lines[0]
+
+    # Find test phase events
+    phase_events = [
+        ev for ev in lines if ev["schema"] == "pytest-receptor.event.test_phase@1"
+    ]
+    assert len(phase_events) >= 2
+
+    # test_ok should have passed
+    ok_events = [p for p in phase_events if "test_ok" in p["nodeid"]]
+    assert any(p["outcome"] == "passed" for p in ok_events)
+
+    # test_fail should have failed
+    fail_events = [p for p in phase_events if "test_fail" in p["nodeid"]]
+    assert any(p["outcome"] == "failed" for p in fail_events)
+
+    # Last line: session finish
+    assert lines[-1]["schema"] == "pytest-receptor.event.session_finish@1"
+    assert lines[-1]["exitstatus"] == 1
+    assert lines[-1]["outcome"] == "FAILED"
+    assert lines[-1]["complete"] is True
+    assert lines[-1]["counts"]["passed"] == 1
+    assert lines[-1]["counts"]["failed"] == 1
+
+
+def test_receptor_phase2_features(pytester):
+    # Test suite with secrets, ANSI escapes, and very long message
+    pytester.makepyfile(
+        """
+def test_secrets():
+    # Contains ANSI escape color code, secret token, and is long
+    err_msg = "\\033[31mFailed: connection to api_key='secret-12345abcdef' failed. " + ("A" * 2000)
+    raise ValueError(err_msg)
+"""
+    )
+    # Run with custom budget
+    result = pytester.runpytest("--receptor=llm", "--receptor-budget=100")
+    stdout = result.stdout.str().strip()
+
+    # 1. Rerun commands check
+    assert (
+        "<rerun>pytest test_receptor_phase2_features.py::test_secrets -q</rerun>"
+        in stdout
+    )
+
+    # 2. Secret Redaction check
+    assert "secret-12345abcdef" not in stdout
+    assert "api_key=[REDACTED_SECRET]" in stdout
+
+    # 3. ANSI color codes should be stripped
+    assert "\\033[31m" not in stdout
+    assert "[31m" not in stdout
+
+    # 4. Truncation and Budget check
+    assert "[truncated: original_size=" in stdout
+    assert "md5=" in stdout
+    assert "full evidence: .pytest-receptor.jsonl" in stdout
