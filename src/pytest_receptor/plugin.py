@@ -487,7 +487,13 @@ class LlmTerminalReporter(TerminalReporter):
                             "tests": [],
                         }
                     groups[key]["tests"].append(
-                        {"nodeid": fe.nodeid, "phase": fe.phase}
+                        {
+                            "nodeid": fe.nodeid,
+                            "phase": fe.phase,
+                            "captured_stdout": fe.captured_stdout,
+                            "captured_stderr": fe.captured_stderr,
+                            "captured_log": fe.captured_log,
+                        }
                     )
 
                 for key, g in groups.items():
@@ -530,9 +536,31 @@ class LlmTerminalReporter(TerminalReporter):
                             nodeid = nodeid[len(prefix) :]
                         esc_nodeid = self._xml_escape(nodeid)
                         esc_phase = self._xml_escape(t["phase"])
-                        tests_xml.append(
-                            f'<test name="{esc_nodeid}" phase="{esc_phase}"/>'
-                        )
+
+                        captures = []
+                        if t.get("captured_stdout"):
+                            captures.append(
+                                f"<captured_stdout>{self._xml_escape(t['captured_stdout'])}</captured_stdout>"
+                            )
+                        if t.get("captured_stderr"):
+                            captures.append(
+                                f"<captured_stderr>{self._xml_escape(t['captured_stderr'])}</captured_stderr>"
+                            )
+                        if t.get("captured_log"):
+                            captures.append(
+                                f"<captured_log>{self._xml_escape(t['captured_log'])}</captured_log>"
+                            )
+
+                        if captures:
+                            tests_xml.append(
+                                f'<test name="{esc_nodeid}" phase="{esc_phase}">'
+                                + "".join(captures)
+                                + "</test>"
+                            )
+                        else:
+                            tests_xml.append(
+                                f'<test name="{esc_nodeid}" phase="{esc_phase}"/>'
+                            )
                     tests_xml.append("</tests>")
                     output.append("".join(tests_xml))
 
@@ -626,7 +654,13 @@ class LlmTerminalReporter(TerminalReporter):
                         }
 
                     groups[key]["tests"].append(
-                        {"nodeid": report.nodeid, "phase": report.when}
+                        {
+                            "nodeid": report.nodeid,
+                            "phase": report.when,
+                            "captured_stdout": sections_dict.get("captured_stdout"),
+                            "captured_stderr": sections_dict.get("captured_stderr"),
+                            "captured_log": sections_dict.get("captured_log"),
+                        }
                     )
 
                 for key, g in groups.items():
@@ -670,9 +704,31 @@ class LlmTerminalReporter(TerminalReporter):
                             nodeid = nodeid[len(prefix) :]
                         esc_nodeid = self._xml_escape(nodeid)
                         esc_phase = self._xml_escape(t["phase"])
-                        tests_xml.append(
-                            f'<test name="{esc_nodeid}" phase="{esc_phase}"/>'
-                        )
+
+                        captures = []
+                        if t.get("captured_stdout"):
+                            captures.append(
+                                f"<captured_stdout>{self._xml_escape(t['captured_stdout'])}</captured_stdout>"
+                            )
+                        if t.get("captured_stderr"):
+                            captures.append(
+                                f"<captured_stderr>{self._xml_escape(t['captured_stderr'])}</captured_stderr>"
+                            )
+                        if t.get("captured_log"):
+                            captures.append(
+                                f"<captured_log>{self._xml_escape(t['captured_log'])}</captured_log>"
+                            )
+
+                        if captures:
+                            tests_xml.append(
+                                f'<test name="{esc_nodeid}" phase="{esc_phase}">'
+                                + "".join(captures)
+                                + "</test>"
+                            )
+                        else:
+                            tests_xml.append(
+                                f'<test name="{esc_nodeid}" phase="{esc_phase}"/>'
+                            )
                     tests_xml.append("</tests>")
                     output.append("".join(tests_xml))
 

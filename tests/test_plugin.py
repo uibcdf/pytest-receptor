@@ -558,6 +558,8 @@ def test_receptor_extension_and_reader():
         assert finish["counts"]["collected"] == 10
         assert finish["complete"] is False
         assert finish["stop_reason"] == "Stopping after 1 failure"
+        assert finish["event_count"] is not None
+        assert finish["integrity_hash"] is not None
 
         # Verify restrictive permissions (0o600)
         import stat
@@ -584,3 +586,24 @@ def test_receptor_extension_and_reader():
         # The symlink should have been unlinked and replaced with a regular file
         assert not os.path.islink(sym_link_path)
         assert os.path.exists(sym_link_path)
+
+
+def test_receptor_llm_grouped_failures_preserve_distinct_logs(pytester):
+    pytester.makepyfile(
+        """
+        def test_fail_1():
+            print("Stdout test 1")
+            raise ValueError("same error message")
+        def test_fail_2():
+            print("Stdout test 2")
+            raise ValueError("same error message")
+        """
+    )
+    result = pytester.runpytest("--receptor=llm")
+    stdout = result.stdout.str()
+
+    # Verify both tests are in ValueError group
+    assert stdout.count("<failure_group") == 1
+    # Verify individual captures are nested under their respective test tags!
+    assert "<captured_stdout>Stdout test 1</captured_stdout>" in stdout
+    assert "<captured_stdout>Stdout test 2</captured_stdout>" in stdout

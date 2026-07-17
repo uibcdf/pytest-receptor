@@ -104,6 +104,8 @@ class SessionFinishEvent:
     complete: bool
     counts: Dict[str, int]
     stop_reason: Optional[str] = None
+    event_count: Optional[int] = None
+    integrity_hash: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         d = {
@@ -118,6 +120,10 @@ class SessionFinishEvent:
         }
         if self.stop_reason:
             d["stop_reason"] = self.stop_reason
+        if self.event_count is not None:
+            d["event_count"] = self.event_count
+        if self.integrity_hash is not None:
+            d["integrity_hash"] = self.integrity_hash
         return d
 
 

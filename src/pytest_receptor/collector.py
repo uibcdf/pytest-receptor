@@ -3,6 +3,7 @@ import sys
 import time
 import json
 import uuid
+import hashlib
 from datetime import datetime, timezone
 from typing import Optional, List, Any
 
@@ -62,6 +63,7 @@ class EventCollector:
         self.events: List[Any] = []
         self.test_phases: List[TestPhaseEvent] = []
         self.warnings: List[WarningEvent] = []
+        self._sha256 = hashlib.sha256()
 
         self.current_nodeid = None
         self.current_phase = None
@@ -100,7 +102,9 @@ class EventCollector:
         if self.artifact_file:
             try:
                 d = event.to_dict()
-                self.artifact_file.write(json.dumps(d) + "\n")
+                line = json.dumps(d) + "\n"
+                self.artifact_file.write(line)
+                self._sha256.update(line.encode("utf-8"))
             except Exception:
                 pass
 
@@ -215,6 +219,10 @@ class EventCollector:
             complete = False
             stop_reason = str(session.shouldstop)
 
+        # Integrity metadata
+        event_count = len(self.events) + 1
+        integrity_hash = self._sha256.hexdigest()
+
         event = SessionFinishEvent(
             run_id=self.run_id,
             timestamp_iso=timestamp_iso,
@@ -224,6 +232,8 @@ class EventCollector:
             complete=complete,
             counts=counts,
             stop_reason=stop_reason,
+            event_count=event_count,
+            integrity_hash=integrity_hash,
         )
         self._write_event(event)
         self.close()
