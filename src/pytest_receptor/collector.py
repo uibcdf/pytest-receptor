@@ -81,8 +81,13 @@ class EventCollector:
             try:
                 abs_path = os.path.abspath(self.artifact_path)
                 os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                # Safe handling of symlinks
+                if os.path.islink(abs_path):
+                    os.unlink(abs_path)
+                # Restrictive permissions: 0o600
+                fd = os.open(abs_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
                 self.artifact_file = open(
-                    abs_path, "w", encoding="utf-8", buffering=1
+                    fd, "w", encoding="utf-8", buffering=1
                 )  # line-buffered
             except Exception as e:
                 # Safe degradation: print a warning to stderr

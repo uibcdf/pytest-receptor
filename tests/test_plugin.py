@@ -558,3 +558,29 @@ def test_receptor_extension_and_reader():
         assert finish["counts"]["collected"] == 10
         assert finish["complete"] is False
         assert finish["stop_reason"] == "Stopping after 1 failure"
+
+        # Verify restrictive permissions (0o600)
+        import stat
+
+        mode = os.stat(art_path).st_mode
+        assert stat.S_IMODE(mode) == 0o600
+
+        # Verify safe handling of symlinks
+        sym_link_path = os.path.join(tmp_dir, "sym_link.jsonl")
+        target_path = os.path.join(tmp_dir, "target.jsonl")
+        with open(target_path, "w") as tf:
+            tf.write("dummy")
+        os.symlink(target_path, sym_link_path)
+        assert os.path.islink(sym_link_path)
+
+        # Set symlink as the artifact path in collector
+        config2 = MagicMock()
+        config2.getoption.side_effect = lambda opt, default=None: (
+            sym_link_path if opt == "--receptor-artifact" else default
+        )
+        collector2 = EventCollector(config2)
+        collector2.close()
+
+        # The symlink should have been unlinked and replaced with a regular file
+        assert not os.path.islink(sym_link_path)
+        assert os.path.exists(sym_link_path)
