@@ -466,3 +466,81 @@ def test_receptor_subtests_and_reruns():
     assert len(collector.test_phases) == 3
     assert collector.test_phases[2].nodeid == "test_module.py::test_case"
     assert collector.test_phases[2].attempt == 2
+
+
+def test_receptor_extension_and_reader():
+    from pytest_receptor.collector import EventCollector
+    from pytest_receptor.reader import EventReader
+    from unittest.mock import MagicMock
+    import tempfile
+    import os
+
+    config = MagicMock()
+    # Mocking --receptor-artifact option
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        art_path = os.path.join(tmp_dir, "test_events.jsonl")
+        config.getoption.side_effect = lambda opt, default=None: (
+            art_path if opt == "--receptor-artifact" else default
+        )
+
+        collector = EventCollector(config)
+
+        # 1. Check get_current_correlation is initialized
+        corr = collector.get_current_correlation()
+        assert corr["nodeid"] is None
+        assert corr["phase"] is None
+        assert corr["attempt"] == 1
+
+        # 2. Simulate hook triggers
+        item = MagicMock()
+        item.nodeid = "test_case.py::test_one"
+
+        collector.pytest_runtest_setup(item)
+        corr = collector.get_current_correlation()
+        assert corr["nodeid"] == "test_case.py::test_one"
+        assert corr["phase"] == "setup"
+        assert corr["attempt"] == 1
+
+        collector.pytest_runtest_call(item)
+        corr = collector.get_current_correlation()
+        assert corr["phase"] == "call"
+
+        # 3. Simulate extension event logging
+        collector.pytest_receptor_extension_event(
+            namespace="org.uibcdf.smonitor",
+            kind="diagnostic",
+            payload={"msg": "hello from smonitor"},
+            relationships={"nodeid": corr["nodeid"], "phase": corr["phase"]},
+        )
+
+        # Log another extension event without relationships
+        collector.pytest_receptor_extension_event(
+            namespace="org.uibcdf.other", kind="metric", payload={"cpu": 12.5}
+        )
+
+        # Close collector
+        collector.close()
+
+        # Verify JSONL file exists and contains events
+        assert os.path.exists(art_path)
+
+        # Use EventReader to parse and query the events!
+        reader = EventReader(art_path)
+
+        ext_events = reader.get_extension_events()
+        assert len(ext_events) == 2
+
+        # Filter by namespace
+        smonitor_evs = reader.get_extension_events(namespace="org.uibcdf.smonitor")
+        assert len(smonitor_evs) == 1
+        assert smonitor_evs[0]["kind"] == "diagnostic"
+        assert smonitor_evs[0]["payload"] == {"msg": "hello from smonitor"}
+        assert smonitor_evs[0]["relationships"] == {
+            "nodeid": "test_case.py::test_one",
+            "phase": "call",
+        }
+
+        other_evs = reader.get_extension_events(namespace="org.uibcdf.other")
+        assert len(other_evs) == 1
+        assert other_evs[0]["kind"] == "metric"
+        assert other_evs[0]["payload"] == {"cpu": 12.5}

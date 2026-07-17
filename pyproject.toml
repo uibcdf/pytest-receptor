@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pytest-receptor"
-version = "0.1.0"
+version = "0.5.0"
 description = "A pytest plugin to adapt test output for different receptors (humans, LLMs, CI)."
 readme = "README.md"
 requires-python = ">=3.11,<3.14"

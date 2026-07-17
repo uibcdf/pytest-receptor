@@ -1,4 +1,5 @@
 import dataclasses
+import time
 from typing import Dict, List, Optional, Any
 
 
@@ -107,4 +108,23 @@ class SessionFinishEvent:
         return {
             "schema": "pytest-receptor.event.session_finish@1",
             **dataclasses.asdict(self),
+        }
+
+
+@dataclasses.dataclass
+class ExtensionEvent:
+    namespace: str
+    kind: str
+    payload: Dict[str, Any]
+    relationships: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    timestamp: float = dataclasses.field(default_factory=time.monotonic)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "schema": "pytest-receptor.extension-event@1",
+            "namespace": self.namespace,
+            "kind": self.kind,
+            "relationships": self.relationships,
+            "payload": self.payload,
+            "timestamp": self.timestamp,
         }

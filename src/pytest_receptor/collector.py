@@ -15,6 +15,7 @@ from pytest_receptor.events import (
     TestPhaseEvent,
     WarningEvent,
     ExceptionInfo,
+    ExtensionEvent,
 )
 
 
@@ -61,6 +62,11 @@ class EventCollector:
         self.events: List[Any] = []
         self.test_phases: List[TestPhaseEvent] = []
         self.warnings: List[WarningEvent] = []
+
+        self.current_nodeid = None
+        self.current_phase = None
+        self.current_worker = "local"
+        self.current_attempt = 1
 
         # Determine artifact path
         self.artifact_path = self.config.getoption("--receptor-artifact", None)
@@ -276,6 +282,12 @@ class EventCollector:
                     report.node, "gateway", getattr(report.node, "name", "gw")
                 )
 
+        # Update correlation state
+        self.current_nodeid = nodeid
+        self.current_phase = phase
+        self.current_worker = str(worker)
+        self.current_attempt = attempt
+
         event = TestPhaseEvent(
             nodeid=nodeid,
             phase=phase,
@@ -418,3 +430,40 @@ class EventCollector:
 
     def pytest_sessionfinish(self, session, exitstatus):
         self.log_session_finish(exitstatus)
+
+    def pytest_runtest_setup(self, item):
+        self.current_nodeid = item.nodeid
+        self.current_phase = "setup"
+        existing_count = sum(
+            1
+            for p in self.test_phases
+            if p.nodeid == item.nodeid and p.phase == "setup"
+        )
+        self.current_attempt = existing_count + 1
+
+    def pytest_runtest_call(self, item):
+        self.current_phase = "call"
+
+    def pytest_runtest_teardown(self, item, nextitem):
+        self.current_phase = "teardown"
+
+    def get_current_correlation(self) -> dict:
+        return {
+            "run_id": self.run_id,
+            "nodeid": self.current_nodeid,
+            "phase": self.current_phase,
+            "worker": self.current_worker,
+            "attempt": self.current_attempt,
+        }
+
+    def pytest_receptor_extension_event(
+        self, namespace: str, kind: str, payload: dict, relationships: dict = None
+    ):
+        event = ExtensionEvent(
+            namespace=namespace,
+            kind=kind,
+            payload=payload,
+            relationships=relationships or {},
+            timestamp=time.monotonic(),
+        )
+        self._write_event(event)

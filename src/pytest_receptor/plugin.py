@@ -6,6 +6,12 @@ import pytest
 from _pytest.terminal import TerminalReporter
 
 
+def pytest_addhooks(pluginmanager):
+    from pytest_receptor import hooks
+
+    pluginmanager.add_hookspecs(hooks)
+
+
 def pytest_addoption(parser):
     group = parser.getgroup("receptor")
     group.addoption(
