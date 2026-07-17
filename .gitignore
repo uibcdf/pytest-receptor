@@ -46,6 +46,7 @@ coverage.xml
 # Receptor Specific Log Dumps
 pytest_human_*.log
 pytest_llm_*.log
+*.jsonl
 
 # Environments
 .env
