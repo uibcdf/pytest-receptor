@@ -420,3 +420,49 @@ def test_secrets():
     assert "[truncated: original_size=" in stdout
     assert "md5=" in stdout
     assert "full evidence: .pytest-receptor.jsonl" in stdout
+
+
+def test_receptor_subtests_and_reruns():
+    from pytest_receptor.collector import EventCollector
+    from unittest.mock import MagicMock
+
+    config = MagicMock()
+    config.getoption.return_value = None
+
+    collector = EventCollector(config)
+
+    # 1. Test subtest logging
+    report_subtest = MagicMock()
+    report_subtest.when = "call"
+    report_subtest.nodeid = "test_module.py::test_case"
+    report_subtest.outcome = "passed"
+    report_subtest.duration = 0.1
+    report_subtest.subtest = "Subtest A"
+    report_subtest.failed = False
+
+    collector.log_test_phase(report_subtest)
+    assert len(collector.test_phases) == 1
+    assert collector.test_phases[0].nodeid == "test_module.py::test_case[Subtest A]"
+    assert collector.test_phases[0].attempt == 1
+
+    # 2. Test rerun / attempt logging
+    report_rerun = MagicMock()
+    report_rerun.when = "call"
+    report_rerun.nodeid = "test_module.py::test_case"
+    report_rerun.outcome = "failed"
+    report_rerun.duration = 0.2
+    report_rerun.failed = True
+    report_rerun.longrepr = "Some failure"
+    del report_rerun.subtest  # no subtest
+
+    # Attempt 1
+    collector.log_test_phase(report_rerun)
+    assert len(collector.test_phases) == 2
+    assert collector.test_phases[1].nodeid == "test_module.py::test_case"
+    assert collector.test_phases[1].attempt == 1
+
+    # Attempt 2
+    collector.log_test_phase(report_rerun)
+    assert len(collector.test_phases) == 3
+    assert collector.test_phases[2].nodeid == "test_module.py::test_case"
+    assert collector.test_phases[2].attempt == 2

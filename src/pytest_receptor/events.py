@@ -22,6 +22,7 @@ class TestPhaseEvent:
     duration: float
     timestamp: float  # monotonic timestamp
     worker: str = "local"
+    attempt: int = 1
     reason: Optional[str] = None
     exception: Optional[ExceptionInfo] = None
     captured_stdout: Optional[str] = None
@@ -37,6 +38,7 @@ class TestPhaseEvent:
             "duration": self.duration,
             "timestamp": self.timestamp,
             "worker": self.worker,
+            "attempt": self.attempt,
         }
         if self.reason:
             d["reason"] = self.reason
