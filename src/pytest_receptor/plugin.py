@@ -13,6 +13,11 @@ def pytest_addhooks(pluginmanager):
 
 
 def pytest_addoption(parser):
+    parser.addini(
+        "receptor_normalizers",
+        type="linelist",
+        help="Custom regex rules for normalizing failure messages, in the format pattern -> replacement",
+    )
     group = parser.getgroup("receptor")
     group.addoption(
         "--receptor",
@@ -811,9 +816,20 @@ class LlmTerminalReporter(TerminalReporter):
         return msg[:head_len] + notice + msg[-tail_len:]
 
     def _normalize_message(self, msg):
-        # 1. Normalize Hex Addresses (e.g. 0x7f83ad910)
+        # 1. Apply config-driven custom normalizers
+        try:
+            custom_rules = self.config.getini("receptor_normalizers")
+            if custom_rules:
+                for rule in custom_rules:
+                    if "->" in rule:
+                        pattern, replacement = rule.split("->", 1)
+                        msg = re.sub(pattern.strip(), replacement.strip(), msg)
+        except Exception:
+            pass
+
+        # 2. Normalize Hex Addresses (e.g. 0x7f83ad910)
         msg = re.sub(r"0x[0-9a-fA-F]+", "[HEX_ADDR]", msg)
-        # 2. Normalize Dynamic Timestamps (e.g. 2026-07-17 09:15:47.123)
+        # 3. Normalize Dynamic Timestamps (e.g. 2026-07-17 09:15:47.123)
         msg = re.sub(
             r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?", "[DATETIME]", msg
         )
@@ -928,6 +944,10 @@ class CiTerminalReporter(TerminalReporter):
         # The base class runs and writes its summary to DummyTerminalWriter (quietly)
         result = yield
 
+        root_dir = getattr(
+            self.config, "rootpath", getattr(self.config, "rootdir", None)
+        )
+
         # Print our clean, flat CI output to the original terminal writer
         failed_reports = self.stats.get("failed", []) + self.stats.get("error", [])
         if failed_reports or exitstatus != 0:
@@ -941,6 +961,76 @@ class CiTerminalReporter(TerminalReporter):
             self.summary_errors()
             # Restore DummyTerminalWriter
             self._tw = DummyTerminalWriter(self._original_tw, self.config)
+
+            # Print CI annotation-friendly file and line data for failures/errors
+            self._original_tw.line("")
+            self._original_tw.line("CI Error Annotations:")
+            collector = getattr(self.config, "_receptor_collector", None)
+            if collector:
+                failed_events = [
+                    p for p in collector.test_phases if p.outcome in ("failed", "error")
+                ]
+                for fe in failed_events:
+                    if fe.exception:
+                        exc = fe.exception
+                        path = fe.nodeid.split("::")[0]
+                        if root_dir and os.path.isabs(path):
+                            try:
+                                path = os.path.relpath(path, start=root_dir)
+                            except ValueError:
+                                pass
+                        line_no = 0
+                        if exc.traceback:
+                            last_frame = exc.traceback[-1]
+                            m = re.search(r"at\s+(.+?):(\d+)\s+->", last_frame)
+                            if m:
+                                line_no = int(m.group(2))
+                        self._original_tw.line(
+                            f"::error file={path},line={line_no}::{fe.nodeid} phase={fe.phase} - {exc.exc_type}: {exc.message}"
+                        )
+            else:
+                for report in failed_reports:
+                    path = getattr(report, "fspath", "unknown_path")
+                    lineno = 0
+                    message = ""
+                    if (
+                        hasattr(report.longrepr, "reprcrash")
+                        and report.longrepr.reprcrash is not None
+                    ):
+                        crash = report.longrepr.reprcrash
+                        path = crash.path
+                        lineno = crash.lineno
+                        message = crash.message
+                    elif report.longrepr:
+                        message = str(report.longrepr)
+                    if root_dir and os.path.isabs(path):
+                        try:
+                            path = os.path.relpath(path, start=root_dir)
+                        except ValueError:
+                            pass
+                    self._original_tw.line(
+                        f"::error file={path},line={lineno}::{report.nodeid} phase={report.when} - {message.splitlines()[0] if message else 'failure'}"
+                    )
+
+        # Print warnings in CI mode if warnings exist
+        warnings_reports = self.stats.get("warnings", [])
+        if warnings_reports:
+            self._original_tw.line("")
+            self._original_tw.line("Warnings:")
+            for wr in warnings_reports:
+                msg = getattr(wr, "message", str(wr))
+                nodeid = getattr(wr, "nodeid", "")
+                fslocation = getattr(wr, "fslocation", None)
+                loc_str = ""
+                if fslocation:
+                    filename, lineno = fslocation[0], fslocation[1]
+                    if root_dir and os.path.isabs(str(filename)):
+                        try:
+                            filename = os.path.relpath(filename, start=root_dir)
+                        except ValueError:
+                            pass
+                    loc_str = f"{filename}:{lineno}"
+                self._original_tw.line(f"- {loc_str} [{nodeid}] {msg}")
 
         # Print our simple final CI summary line
         collector = getattr(self.config, "_receptor_collector", None)
@@ -1008,8 +1098,21 @@ class CiTerminalReporter(TerminalReporter):
         duration = time.monotonic() - self._ci_start_time
         status_str = ", ".join(parts)
 
+        # Expose session completeness and stop reason
+        complete = exitstatus not in (2, 3)
+        stop_reason = None
+        if session and getattr(session, "shouldstop", False):
+            complete = False
+            stop_reason = str(session.shouldstop)
+
+        completeness_str = f"complete={str(complete).lower()}"
+        if stop_reason:
+            completeness_str += f" stop_reason='{stop_reason}'"
+
         self._original_tw.line("")
-        self._original_tw.line(f"CI: {status_str} in {duration:.2f}s")
+        self._original_tw.line(
+            f"CI: {status_str} in {duration:.2f}s ({completeness_str})"
+        )
 
         # Report slowest tests (>0.5s)
         slow_tests = sorted(

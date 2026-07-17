@@ -607,3 +607,47 @@ def test_receptor_llm_grouped_failures_preserve_distinct_logs(pytester):
     # Verify individual captures are nested under their respective test tags!
     assert "<captured_stdout>Stdout test 1</captured_stdout>" in stdout
     assert "<captured_stdout>Stdout test 2</captured_stdout>" in stdout
+
+
+def test_receptor_custom_normalizers(pytester):
+    # Register receptor_normalizers in pytest config
+    pytester.makeini(
+        """
+        [pytest]
+        receptor_normalizers =
+            uuid_[a-f0-9]{8} -> uuid_REDACTED
+        """
+    )
+    pytester.makepyfile(
+        """
+        def test_fail_1():
+            raise ValueError("error on item uuid_12345678")
+        def test_fail_2():
+            raise ValueError("error on item uuid_87654321")
+        """
+    )
+    result = pytester.runpytest("--receptor=llm")
+    stdout = result.stdout.str()
+    # Check that they were grouped under a single failure_group because of the custom normalizer!
+    assert stdout.count("<failure_group") == 1
+
+
+def test_receptor_ci_reporter_features(pytester):
+    pytester.makepyfile(
+        """
+        import warnings
+        def test_fail():
+            warnings.warn("A test warning", UserWarning)
+            raise ValueError("CI error msg")
+        """
+    )
+    result = pytester.runpytest("--receptor=ci")
+    stdout = result.stdout.str()
+
+    # Check error annotations
+    assert "::error file=test_receptor_ci_reporter_features.py,line=4::" in stdout
+    # Check warnings
+    assert "Warnings:" in stdout
+    assert "A test warning" in stdout
+    # Check completeness
+    assert "complete=true" in stdout
