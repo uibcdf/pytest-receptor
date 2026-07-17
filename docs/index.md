@@ -1,17 +1,17 @@
-# Documentación de `pytest-receptor`
+# `pytest-receptor` Documentation
 
-Bienvenido a la documentación oficial de `pytest-receptor`, el plugin de pytest diseñado para la era de la inteligencia artificial y el desarrollo guiado por agentes.
+Welcome to the official documentation for `pytest-receptor`, the pytest plugin designed for the AI era and agentic-driven development workflows.
 
 ---
 
-## ¿Qué es `pytest-receptor`?
+## What is `pytest-receptor`?
 
-`pytest-receptor` introduce el concepto de **Receptor (Consumer Profile)** en pytest. Permite adaptar por completo las heurísticas del reporte de resultados y trazas de error de las pruebas según *quién* va a digerir la información (un programador humano, un agente autónomo de IA, o un servidor de integración continua).
+`pytest-receptor` introduces the concept of a **Receptor (Consumer Profile)** to pytest. It decouples the core test runner from its visual reporting backend. This allows formatting test execution logs and failure tracebacks differently depending on *who* is consuming the outputs (a human developer, an autonomous AI agent, or a CI/CD build machine).
 
 ```{toctree}
 ---
 maxdepth: 2
-caption: "Contenidos:"
+caption: "Contents:"
 ---
 installation
 usage
@@ -20,9 +20,9 @@ benchmarks
 
 ---
 
-## Características de un Vistazo
+## Features at a Glance
 
-* **`--receptor=human` (Por defecto):** Salida tradicional, bonita y amigable.
-* **`--receptor=llm`:** XML minificado optimizado para tokens de contexto de IA con de-duplicación, hints de reparación y stack trace filtrado.
-* **`--receptor=ci`:** Formato plano, silencioso en éxito (zero log bloat) y progresivo mediante latidos de progreso en tiempo real.
-* **Estadísticas de Performance:** Detección automática y reporte de los tests lentos que superen el umbral de 0.5s en los logs.
+* **`--receptor=human` (Default):** Classic, colorful, and interactive output for human developers.
+* **`--receptor=llm`:** Densely packed, minified XML designed for AI prompt contexts, featuring de-duplication, smart fingerprinting, local traceback pruning, and repair suggestions.
+* **`--receptor=ci`:** Flat, silent-on-success output with time-based heartbeat progress lines to prevent CI/CD VM timeouts.
+* **Performance Reporting:** Automatic tracking and reporting of the top 3 slowest tests taking more than 0.5s.

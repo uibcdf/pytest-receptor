@@ -1,26 +1,26 @@
-# Instalación
+# Installation
 
-Esta página detalla cómo instalar y configurar `pytest-receptor` en diferentes entornos.
-
----
-
-## Requisitos Previos
-
-`pytest-receptor` requiere:
-* **Python:** Versión `>= 3.8` (incluyendo soporte completo para Python `3.13`).
-* **Pytest:** Versión `>= 8.0.0`.
+This page guides you through installing and configuring `pytest-receptor` for your project.
 
 ---
 
-## Instalación Estable (PyPI)
+## Prerequisites
 
-Para instalar la versión estable más reciente directamente desde el repositorio oficial de paquetes de Python (PyPI):
+`pytest-receptor` requires:
+* **Python:** Version `>= 3.11` (with full support up to Python `3.13`).
+* **Pytest:** Version `>= 8.0.0`.
+
+---
+
+## Installing Stable Releases (PyPI)
+
+To install the latest stable version of the plugin from the Python Package Index (PyPI):
 
 ```bash
 pip install pytest-receptor
 ```
 
-O agrégalo a las dependencias de tu proyecto según el gestor que utilices:
+Alternatively, add the package to your development dependencies using your preferred package manager:
 
 * **Poetry:**
   ```bash
@@ -41,17 +41,17 @@ O agrégalo a las dependencias de tu proyecto según el gestor que utilices:
 
 ---
 
-## Instalación desde Código Fuente (Desarrollo)
+## Installing from Source (Development)
 
-Si deseas clonar el repositorio para desarrollo local o probar cambios:
+If you wish to clone the repository to contribute or test local changes:
 
-1. Clona el repositorio desde GitHub:
+1. Clone the repository from GitHub:
    ```bash
    git clone https://github.com/uibcdf/pytest-receptor.git
    cd pytest-receptor
    ```
 
-2. Instala en modo editable junto con las dependencias de desarrollo (`dev`):
+2. Install in editable mode along with the development dependencies (`dev`):
    ```bash
    pip install -e .[dev]
    ```

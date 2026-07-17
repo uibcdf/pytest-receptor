@@ -12,18 +12,18 @@ def pytest_addoption(parser):
         action="store",
         default="human",
         choices=["human", "llm", "ci"],
-        help="Especifica el receptor de la salida de pytest (human, llm, ci).",
+        help="Specify the receptor for pytest output (human, llm, ci).",
     )
     group.addoption(
         "--receptor-stats",
         action="store_true",
-        help="Muestra estadísticas comparativas de tokens al final de la ejecución.",
+        help="Show comparative token statistics at the end of execution.",
     )
     group.addoption(
         "--receptor-dump-dir",
         action="store",
         default=None,
-        help="Directorio donde volcar los archivos de log de depuración (human y llm) con firma única.",
+        help="Directory where to dump debug log files (human and llm) with a unique signature.",
     )
 
 

@@ -87,7 +87,7 @@ def test_token_savings_warnings_suite(pytester):
     pytester.makepyfile("""
         import warnings
         def test_with_warning():
-            warnings.warn("Este es un warning de test", DeprecationWarning)
+            warnings.warn("This is a test warning", DeprecationWarning)
             assert True
     """)
 
@@ -118,11 +118,11 @@ def test_token_savings_mixed_states_suite(pytester):
     pytester.makepyfile("""
         import pytest
         def test_pass(): assert True
-        @pytest.mark.skip(reason="saltado por compatibilidad")
+        @pytest.mark.skip(reason="skipped for compatibility")
         def test_skip(): pass
-        @pytest.mark.xfail(reason="fallo esperado")
+        @pytest.mark.xfail(reason="expected failure")
         def test_xfail(): assert False
-        @pytest.mark.xfail(reason="pasa inesperadamente")
+        @pytest.mark.xfail(reason="passes unexpectedly")
         def test_xpass(): assert True
     """)
 
@@ -151,11 +151,11 @@ def test_token_savings_multiple_failures_suite(pytester):
         import pytest
         @pytest.fixture
         def broken_fixture():
-            raise RuntimeError("error de setup en fixture")
+            raise RuntimeError("setup error in fixture")
         def test_setup_error(broken_fixture):
             pass
         def test_call_error():
-            raise ValueError("error en ejecucion")
+            raise ValueError("error in execution")
     """)
 
     result_human = pytester.runpytest()

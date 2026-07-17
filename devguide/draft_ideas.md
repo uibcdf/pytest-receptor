@@ -1,62 +1,53 @@
-Aquí tienes un texto perfectamente estructurado para la sección de la **Guía de Desarrollo** o el **README** de tu repositorio. Está redactado con un tono técnico, claro y motivador, ideal para orientar el rumbo del proyecto desde el primer día:
+# Development Guide: `pytest-receptor`
+
+## 1. The Why (The Vision)
+
+The software development ecosystem is undergoing a paradigm shift. It is increasingly common for `pytest` to be executed not by a human in their terminal, but by **AI Agents and LLM-native CLIs** (such as Claude Code, Codex CLI, Aider, or autonomous TDD loops).
+
+### The Current Problem
+
+`pytest` was designed at its core for human eyes. Its standard output (`stdout`) includes progress bars, visual decorations (`====`), ANSI colors, and redundant source code blocks in *tracebacks*.
+
+* For a human, this is visual ergonomics.
+* For a Language Model (LLM), this is **semantic noise and a massive waste of context tokens**, increasing the cost and latency of the development loop.
+
+On the other hand, current "tricks" like `--tb=line -q` shorten the text but **blind the agent**, as they remove critical structural details (such as complex diffs of dictionaries or objects that failed in an `assert`), causing the AI to hallucinate corrections in loops.
 
 ---
 
-# Guía de Desarrollo: `pytest-receptor`
+## 2. The What (The Goal)
 
-## 1. El Porqué (La Visión)
+The goal of `pytest-receptor` is to introduce the concept of a **Receptor (Consumer Profile)** to the Python testing ecosystem. We want to decouple the internal execution logic of tests from the cosmetic way they are reported, optimizing the output based on *who* will digest the information.
 
-El ecosistema del desarrollo de software está experimentando un cambio de paradigma. Cada vez es más común que `pytest` no sea ejecutado por un humano en su terminal, sino por **Agentes de IA y CLIs LLM-nativas** (como Claude Code, Codex CLI, Aider, o bucles autónomos de TDD).
-
-### El problema actual
-
-`pytest` fue diseñado en su núcleo para ojos humanos. Su salida estándar (`stdout`) incluye barras de progreso, decoraciones visuales (`====`), colores ANSI y bloques redundantes de código fuente en los *tracebacks*.
-
-* Para un humano, esto es ergonomía visual.
-* Para un Modelo de Lenguaje (LLM), esto es **ruido semántico y un desperdicio masivo de tokens** de contexto, lo que eleva el costo y la latencia del bucle de desarrollo.
-
-Por otro lado, los "trucos" actuales como `--tb=line -q` recortan el texto pero **ciegan al agente**, ya que eliminan los detalles estructurales críticos (como los *diffs* complejos de diccionarios u objetos que fallaron en un `assert`), haciendo que la IA alucine correcciones en bucle.
-
----
-
-## 2. El Qué (El Objetivo)
-
-El objetivo de `pytest-receptor` es introducir el concepto de **Receptor (Consumer Profile)** en el ecosistema de pruebas de Python. Queremos desacoplar la lógica interna de la ejecución de los tests de la forma cosmética en que se reportan, optimizando la salida según *quién* va a digerir la información.
-
-El plugin expondrá un nuevo flag en la CLI:
+The plugin exposes a new CLI flag:
 
 ```bash
 pytest --receptor=[human|llm|ci]
-
 ```
 
-* **`--receptor=human` (Por defecto):** Mantiene el comportamiento clásico, visual y amigable de `pytest`.
-* **`--receptor=llm` (Nuestra prioridad):** Una salida diseñada puramente para arquitecturas de Transformers. Busca la máxima **densidad de información semántica** al menor costo de tokens posible.
-* **`--receptor=ci` (A futuro):** Salida limpia y plana optimizada para motores de logs tradicionales (Jenkins, GitHub Actions) sin animaciones interactivas.
+* **`--receptor=human` (Default):** Preserves pytest's classic, visual, and user-friendly behavior.
+* **`--receptor=llm`:** An output designed purely for Transformer architectures. It aims for maximum **semantic information density** at the lowest possible token cost.
+* **`--receptor=ci`:** A clean and flat output optimized for traditional log engines (Jenkins, GitHub Actions) without interactive animations.
 
 ---
 
-## 3. El Cómo (Primeras Ideas de Implementación)
+## 3. The How (Initial Implementation Ideas)
 
-Para construir la variante `--receptor=llm` de forma sólida y eficiente, nos basaremos en los siguientes pilares técnicos:
+To build the `--receptor=llm` variant in a solid and efficient way, we base it on the following technical pillars:
 
-### A. Heurísticas de Salida Eficientes
+### A. Efficient Output Heuristics
 
-* **Silencio en el Éxito (Green Suite):** Si todos los tests pasan, no se listan archivos ni entornos. El plugin responderá con un string atómico y único: `OK: 42 passed in 1.4s`. Cero tokens desperdiciados en regresiones exitosas.
-* **Mutilación de Código Redundante:** En caso de fallo, **no** imprimiremos las líneas de código fuente circundantes de la excepción. El agente de IA ya tiene los archivos fuente indexados en su contexto de trabajo; imprimir el código de vuelta en el *stdout* es redundancia pura.
+* **Silence on Success (Green Suite):** If all tests pass, no files or environments are listed. The plugin responds with a single atomic string: `OK: 42 passed in 1.4s`. Zero tokens wasted on successful regressions.
+* **Mutilating Redundant Code:** In case of failure, we **do not** print the surrounding source code lines of the exception. The AI agent already has the source files indexed in its workspace context; printing the code back into `stdout` is pure redundancy.
 
-### B. Densidad Semántica mediante XML/Markdown Minificado
+### B. Semantic Density via Minified XML/Markdown
 
-En lugar de formatear tablas o líneas de guiones (`----`), envolveremos los fallos en etiquetas estructurales ligeras (ej. `<test_failure>`, `<diff>`). Los modelos de lenguaje modernos han sido entrenados masivamente con datos de la web (HTML/XML); sus mecanismos de atención identifican y procesan los límites de estas etiquetas con un ruido de contexto drásticamente menor que el texto plano arbitrario.
+Instead of formatting tables or dashes (`----`), we wrap failures in lightweight structural tags (e.g., `<test_failures>`, `<failure_group>`). Modern language models have been heavily trained on web data (HTML/XML); their attention mechanisms identify and process the boundaries of these tags with drastically less context noise than arbitrary plain text.
 
-### C. Estrategia de Inyección vía Hooks
+### C. Injection Strategy via Hooks
 
-No limpiaremos el texto mediante post-procesamiento de strings (lo cual desperdicia ciclos de CPU). En su lugar, interceptaremos el ciclo de vida de `pytest` usando sus hooks nativos:
+We will not clean the text using string post-processing (which wastes CPU cycles). Instead, we intercept the `pytest` lifecycle using its native hooks:
 
-1. Usar `pytest_addoption` para registrar el flag.
-2. Interceptar el `TerminalReporter` en `pytest_configure`.
-3. Sobrescribir o cortocircuitar `pytest_runtest_logreport` cuando `--receptor=llm` esté activo, extrayendo directamente los atributos crudos de `ExceptionInfo` (`err.type`, `err.value`, y la localización exacta del frame) para serializarlos directamente en nuestro formato optimizado para tokens.
-
----
-
-Este texto establece las reglas del juego claras: define el problema económico y técnico de los tokens, plantea la solución como una arquitectura de perfiles y traza la ruta técnica usando los ganchos internos de `pytest`.
+1. Use `pytest_addoption` to register the flag.
+2. Intercept `TerminalReporter` in `pytest_configure`.
+3. Override or short-circuit `pytest_runtest_logreport` when `--receptor=llm` is active, extracting the raw attributes of `ExceptionInfo` (`err.type`, `err.value`, and the exact frame location) to serialize them directly into our token-optimized format.

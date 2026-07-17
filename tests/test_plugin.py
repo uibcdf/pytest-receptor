@@ -102,9 +102,9 @@ def test_receptor_llm_deduplication(pytester):
     pytester.makepyfile(
         """
 def test_fail_1():
-    raise ValueError("error comun")
+    raise ValueError("common error")
 def test_fail_2():
-    raise ValueError("error comun")
+    raise ValueError("common error")
 """
     )
     result = pytester.runpytest("--receptor=llm")
@@ -113,7 +113,7 @@ def test_fail_2():
     # Should contain only one failure_group for ValueError
     assert stdout.count("<failure_group") == 1
     assert 'exception="ValueError"' in stdout
-    assert "error comun" in stdout
+    assert "common error" in stdout
 
     # But lists both tests inside
     assert 'test name="test_fail_1"' in stdout
