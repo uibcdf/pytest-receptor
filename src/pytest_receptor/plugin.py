@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import threading
 import pytest
 from _pytest.terminal import TerminalReporter
 
@@ -804,6 +805,35 @@ class CiTerminalReporter(TerminalReporter):
         self._last_heartbeat_time = time.monotonic()
         self._test_durations = {}
 
+        self._current_test = None
+        self._current_test_start = None
+        self._stop_watchdog = threading.Event()
+        self._watchdog_thread = threading.Thread(
+            target=self._watchdog_loop, daemon=True
+        )
+        self._watchdog_thread.start()
+
+    def pytest_runtest_setup(self, item):
+        self._current_test = item.nodeid
+        self._current_test_start = time.monotonic()
+
+    def pytest_runtest_teardown(self, item, nextitem):
+        self._current_test = None
+        self._current_test_start = None
+
+    def _watchdog_loop(self):
+        while not self._stop_watchdog.wait(10.0):
+            if self._stop_watchdog.is_set():
+                break
+            current = self._current_test
+            start = self._current_test_start
+            if current and start:
+                elapsed = time.monotonic() - start
+                if elapsed >= 30.0:
+                    self._original_tw.line(
+                        f"CI WARNING: Test '{current}' has been running for {elapsed:.1f}s (possible hang)."
+                    )
+
     def pytest_runtest_logreport(self, report):
         super().pytest_runtest_logreport(report)
         nodeid = report.nodeid
@@ -945,5 +975,10 @@ class CiTerminalReporter(TerminalReporter):
                     except ValueError:
                         pass
                 self._original_tw.line(f"- {short_nodeid} ({dur:.2f}s)")
+
+        if hasattr(self, "_stop_watchdog"):
+            self._stop_watchdog.set()
+            if hasattr(self, "_watchdog_thread"):
+                self._watchdog_thread.join(timeout=1.0)
 
         return result
