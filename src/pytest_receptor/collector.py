@@ -137,7 +137,7 @@ class EventCollector:
         )
         self._write_event(event)
 
-    def log_session_finish(self, exitstatus: int):
+    def log_session_finish(self, exitstatus: int, session: Any = None):
         if self.session_finished:
             return
         self.session_finished = True
@@ -179,6 +179,14 @@ class EventCollector:
                 elif p.outcome == "skipped":
                     counts["skipped"] += 1
 
+        # Populate collected count
+        collected = 0
+        if session:
+            collected = getattr(session, "testscollected", 0)
+        elif tr and hasattr(tr, "_numtests"):
+            collected = tr._numtests
+        counts["collected"] = collected
+
         exit_val = int(exitstatus)
         if exit_val == 0:
             outcome = "OK"
@@ -195,8 +203,12 @@ class EventCollector:
         else:
             outcome = "FAILED"
 
-        # completeness: complete=false if exitstatus is interrupted (2) or internal_error (3)
+        # completeness: complete=false if exitstatus is interrupted (2) or internal_error (3) or shouldstop is set
         complete = exit_val not in (2, 3)
+        stop_reason = None
+        if session and getattr(session, "shouldstop", False):
+            complete = False
+            stop_reason = str(session.shouldstop)
 
         event = SessionFinishEvent(
             run_id=self.run_id,
@@ -206,6 +218,7 @@ class EventCollector:
             duration=duration,
             complete=complete,
             counts=counts,
+            stop_reason=stop_reason,
         )
         self._write_event(event)
         self.close()
@@ -429,7 +442,7 @@ class EventCollector:
         self.log_warning(warning_message, when, nodeid, location)
 
     def pytest_sessionfinish(self, session, exitstatus):
-        self.log_session_finish(exitstatus)
+        self.log_session_finish(exitstatus, session)
 
     def pytest_runtest_setup(self, item):
         self.current_nodeid = item.nodeid

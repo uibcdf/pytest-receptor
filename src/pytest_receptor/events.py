@@ -103,12 +103,22 @@ class SessionFinishEvent:
     duration: float
     complete: bool
     counts: Dict[str, int]
+    stop_reason: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d = {
             "schema": "pytest-receptor.event.session_finish@1",
-            **dataclasses.asdict(self),
+            "run_id": self.run_id,
+            "timestamp_iso": self.timestamp_iso,
+            "exitstatus": self.exitstatus,
+            "outcome": self.outcome,
+            "duration": self.duration,
+            "complete": self.complete,
+            "counts": self.counts,
         }
+        if self.stop_reason:
+            d["stop_reason"] = self.stop_reason
+        return d
 
 
 @dataclasses.dataclass

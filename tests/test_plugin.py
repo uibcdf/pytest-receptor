@@ -518,6 +518,13 @@ def test_receptor_extension_and_reader():
             namespace="org.uibcdf.other", kind="metric", payload={"cpu": 12.5}
         )
 
+        # 4. Simulate session finish
+        session_mock = MagicMock()
+        session_mock.testscollected = 10
+        session_mock.shouldstop = "Stopping after 1 failure"
+
+        collector.pytest_sessionfinish(session_mock, 1)  # failed exit status
+
         # Close collector
         collector.close()
 
@@ -544,3 +551,10 @@ def test_receptor_extension_and_reader():
         assert len(other_evs) == 1
         assert other_evs[0]["kind"] == "metric"
         assert other_evs[0]["payload"] == {"cpu": 12.5}
+
+        # Verify SessionFinishEvent fields
+        finish = reader.get_session_finish()
+        assert finish is not None
+        assert finish["counts"]["collected"] == 10
+        assert finish["complete"] is False
+        assert finish["stop_reason"] == "Stopping after 1 failure"
