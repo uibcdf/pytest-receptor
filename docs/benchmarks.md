@@ -41,7 +41,7 @@ python devtools/benchmarks/run_benchmarks.py
 
 Environment for the run above:
 
-- python 3.13.14, pytest 9.1.1, pytest-receptor 0.1.0
+- python 3.13.14, pytest 9.1.1, pytest-receptor 0.6.0
 - tokenizer: `tiktoken` `cl100k_base`
 - platform: Linux 6.17, glibc 2.39
 - baseline: `pytest -q --no-header --tb=short`
