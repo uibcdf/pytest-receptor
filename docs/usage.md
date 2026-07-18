@@ -1,55 +1,242 @@
 # Usage Guide
 
-`pytest-receptor` integrates seamlessly with your standard pytest workflows via the `--receptor` command-line option.
+`pytest-receptor` adds one option to your normal pytest workflow.
+
+```bash
+pytest --receptor=[human|llm|ci]
+```
 
 ---
 
-## Receptor Profiles (`--receptor`)
+## Profiles
 
-### 1. `human` (Default Profile)
-This profile preserves pytest's native behavior: colorful progress bars, interactive status indicators, and full traceback code contexts. It is ideal for local human development.
+### `human` (default)
+
+Unchanged pytest. The plugin registers nothing at all, so the output is
+byte-identical to running pytest without it installed. Nothing is intercepted,
+suppressed, or buffered.
+
 ```bash
 pytest --receptor=human
 ```
 
-### 2. `llm` (AI-Optimized Profile)
-Optimized for AI coding agents and large language model prompts.
+### `llm`
+
+Compact output for a coding agent.
+
 ```bash
 pytest --receptor=llm
 ```
-**Key features of the `llm` profile:**
-* **Silence on success:** Outputs a single clean line: `OK: N passed in X.XXs`.
-* **Minified XML payload:** Failure tracebacks and logs are enclosed in semantic tags (e.g., `<failure_group>`, `<message>`, `<captured_stdout>`) with no indentations or decorative line breaks to optimize token counts.
-* **Failure deduplication:** Groups identical failures (sharing exception type and message) and lists the associated test names under a single block.
-* **Smart fingerprinting:** Strips Hex memory addresses and variable timestamps from messages before grouping, preventing deduplication failure on dynamic data.
-* **Local traceback pruning:** Truncates external packages from traceback frames, leaving only your project's files.
-* **Adaptive hints:** Detects the dependency manager of the project and suggests the exact install command (e.g., `poetry add` or `uv pip install`) for `ModuleNotFoundError`.
 
-### 3. `ci` (Continuous Integration Profile)
-Formated specifically for clean logs in CI/CD pipeline runs:
+```text
+FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
+
+[1] TypeError | 38 tests | setup
+    conftest.py:4
+    TypeError: 'NoneType' object is not subscriptable
+    tests:
+      tests/test_merge.py::test_merge[0]
+      tests/test_merge.py::test_merge[1]
+      tests/test_merge.py::test_merge[2]
+      +35 more
+    rerun: pytest tests/test_merge.py -q
+```
+
+* One line on success, with the exit status and counts.
+* Failures grouped by root cause, keeping every affected test ID.
+* No source echo. The agent already has your files; the assertion diff, which it
+  cannot reconstruct, is kept.
+* A literal rerun command per group.
+* The first three root causes in full, the rest one line each.
+
+### `ci`
+
+The same renderer with defaults suited to a build log.
+
 ```bash
 pytest --receptor=ci
 ```
-**Key features of the `ci` profile:**
-* **Silence on success:** Prints nothing during the run, showing only a final summary line if all tests pass.
-* **CI heartbeat progress:** Emits flat progress logs (e.g., `CI Progress: 20% (after 5.0s)`) in 10% increments only if the run exceeds 5 seconds, preventing CI platform timeout flags.
-* **Failures-only log:** If a test fails, it prints only the traceback in a flat, clean format without ANSI colors.
+
+The difference from `llm` is not cosmetic. A CI runner is destroyed when the job
+ends, so the on-disk full report is unreachable by the time anyone reads the log.
+The CI profile therefore expands **every** group rather than holding any back.
+
+| | `llm` | `ci` |
+| :--- | :--- | :--- |
+| ANSI colour | off | off |
+| Progress output | none | none |
+| Root causes expanded | first three | all |
+| On-disk report referenced | yes | no |
 
 ---
 
-## Advanced Options
+## Interaction with pytest's own output flags
 
-### Token Usage Statistics (`--receptor-stats`)
-Calculates the tokens consumed by the default human output compared to the optimized LLM output:
+**You do not need to add anything.** `--receptor=llm` already configures the
+standard reporter, and it goes further than the usual hand-tuned flags:
+
+| What the receptor sets | CLI equivalent | Why |
+| :--- | :--- | :--- |
+| `verbose = -2` | `-qq` | Removes the progress bar *and* the trailing `N passed in Xs` line, which would otherwise duplicate the receptor's own verdict. Plain `-q` leaves that line in place. |
+| `no_header = True` | `--no-header` | Removes the banner, `rootdir`, and plugin list. |
+| `no_summary = True` | `--no-summary` | Removes the `short test summary info` section. |
+
+So `pytest --receptor=llm` and `pytest --receptor=llm -q --no-header` produce
+byte-identical output. The extra flags are redundant.
+
+### Do not restrict `--tb`
+
+`--tb` is deliberately left alone, and you should leave it alone too.
+
+```{warning}
+`--tb=line` and `--tb=no` **degrade** the receptor's output. They save a
+handful of tokens and cost you the call chain.
+```
+
+| Command | Tokens | Call chain |
+| :--- | ---: | :--- |
+| `--receptor=llm` | 74 | present |
+| `--receptor=llm --tb=short` | 74 | present |
+| `--receptor=llm --tb=line` | 53 | **lost** |
+| `--receptor=llm --tb=no` | 53 | **lost** |
+
+The reason is that `--tb` does not control how a traceback is *printed*. It
+controls how `longrepr` is *built*. Under `--tb=no` pytest never generates the
+frame information in the first place, so there is nothing for the receptor to
+summarize, and this line disappears:
+
+```text
+frames: tests/test_merge.py:6 -> molsysmt/merge.py:41 -> molsysmt/topology.py:117
+```
+
+Twenty-one tokens saved in exchange for no longer knowing where to look.
+
+If your `addopts` in `pyproject.toml` or `pytest.ini` sets a restrictive `--tb`,
+remove it when using the receptor.
+
+---
+
+## Session outcomes
+
+The verdict is derived from pytest's exit status, never from the absence of
+failure reports. Every run produces exactly one of:
+
+| Output | Meaning |
+| :--- | :--- |
+| `PASS exit=0` | The suite ran and passed. |
+| `FAIL exit=1` | Tests failed. |
+| `INTERRUPTED exit=2` | The run was interrupted; the counts state how much ran. |
+| `COLLECTION_ERROR exit=2` | Collection failed before the suite could run. |
+| `ERROR exit=3` | An internal pytest error. |
+| `USAGE_ERROR exit=4` | pytest was invoked incorrectly. |
+| `NO_TESTS exit=5` | Nothing was collected. |
+| `RECEPTOR_ERROR` | The receptor itself failed; pytest's status and evidence follow. |
+
+A run stopped early by `-x` or `--maxfail` is marked `incomplete` with the
+executed and collected counts, even when nothing has failed yet.
+
+---
+
+## Recovering what was held back
+
+When `llm` holds back later root causes it names the file that has everything:
+
+```text
+full report: .pytest_cache/receptor/last-run.txt
+```
+
+That file is written **during** the run and contains every group, every
+occurrence, and every captured section. Reading it costs one file read. This
+matters because the alternative — re-running pytest with a different flag — costs
+a whole test execution, which is usually far more expensive than any formatting
+saving.
+
+If you know in advance that you want everything on stdout:
+
+```bash
+pytest --receptor=llm --receptor-full
+```
+
+`--receptor-full` is not the same as `--receptor=human`. Human output is complete
+but redundant: source echo, headers, colour, and a duplicated summary section.
+`--receptor-full` is complete in agent format and still grouped by root cause.
+
+When the cache provider is disabled (`-p no:cacheprovider`) no file is written
+and the output names the flag instead.
+
+---
+
+## Measuring what it costs you (`--receptor-stats`)
+
 ```bash
 pytest --receptor=llm --receptor-stats
 ```
-This appends an XML comment at the end:
-`<!-- [Receptor Stats] Human: 279 tokens | LLM: 202 tokens | Saved: 27.60% -->`
 
-### Log Auditing Volcado (`--receptor-dump-dir=path`)
-Saves a record of the human log and the LLM log for the same test run with unique filenames:
-```bash
-pytest --receptor=llm --receptor-dump-dir=./test_logs
+```text
+receptor stats: 38 tokens vs 148 for pytest as you configured it | 110 fewer (-74.3%) | cl100k_base
 ```
-This generates files named `pytest_human_YYYYMMDD_HHMMSS_PID.log` and `pytest_llm_YYYYMMDD_HHMMSS_PID.log`.
+
+**The baseline is your own pytest configuration**, whatever it happens to be.
+Nothing is overridden. If you normally run plain `pytest`, that is what you are
+compared against; if you already run `pytest -q`, the comparison is against that
+and the saving will look much smaller:
+
+```text
+receptor stats: 38 tokens vs 26 for pytest as you configured it | 12 more (+46.2%)
+```
+
+This is deliberate. The [benchmarks](benchmarks.md) page compares against a
+deliberately strict `pytest -q --no-header --tb=short`, because a published claim
+should not pick a weak opponent. But this flag answers a different, personal
+question — *against how I actually run pytest, what does this save me?* — and only
+your real settings can answer it. Expect the two numbers to differ.
+
+The baseline is **measured, not estimated**. During the same run the standard
+reporter renders into a temporary file instead of the terminal; that file is
+tokenized and deleted. There is no second pytest invocation, no extra memory, and
+your own output is byte-for-byte unchanged.
+
+Both a net token count and a percentage are reported, with the same sign, because
+on small runs only the net count is meaningful — "+46%" can be twelve tokens.
+
+Token counts use `tiktoken` when it is installed. Without it, the figure falls
+back to a labelled four-characters-per-token approximation.
+
+This option is a diagnostic, not something to leave on: the statistics line
+itself costs tokens.
+
+---
+
+## Grouping
+
+Failures are grouped by exception type, phase, normalized message, and call
+site.
+
+* **Cascades collapse.** Forty tests broken by one fixture become one group that
+  still lists all forty test IDs.
+* **Unrelated failures stay apart.** Two `ValueError('boom')` raised from
+  different places are two bugs, so they are two groups.
+* **Dynamic values do not split a group.** Memory addresses and timestamps are
+  normalized before grouping, so `0x7f8b...` differences do not fragment one
+  cause into many.
+* **Long messages are fingerprinted whole.** Grouping happens before any
+  truncation, so two long diffs differing only in the middle cannot be merged by
+  accident. When a message is shortened, the output states how much was omitted
+  and where the complete text is.
+
+---
+
+## Safety
+
+Test output is untrusted input. Exception messages, captured streams, parameter
+IDs, and paths come from your tests and their dependencies.
+
+* ANSI escapes and control characters are stripped.
+* No text produced by a test can forge a verdict line or otherwise alter the
+  structure of the report.
+* The receptor never suggests a command that mutates your environment. Guidance
+  is limited to the exact rerun selector for a failure.
+
+If rendering raises for any reason, the receptor emits `RECEPTOR_ERROR` followed
+by the underlying exception and the raw pytest evidence, and preserves pytest's
+original exit status. Enabling the plugin cannot lose a run.

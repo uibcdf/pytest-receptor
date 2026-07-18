@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "python": "3.13.14",
+    "pytest": "9.1.1",
+    "pytest_receptor": "0.1.0",
+    "tokenizer": "tiktoken cl100k_base",
+    "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+    "baseline": "pytest -q --no-header --tb=short"
+  },
+  "results": {
+    "Green suite (128 tests)": {
+      "pytest (default)": 97,
+      "pytest -q --no-header --tb=short": 23,
+      "pytest -q --tb=line": 23,
+      "--receptor=llm": 16
+    },
+    "Green with warnings": {
+      "pytest (default)": 167,
+      "pytest -q --no-header --tb=short": 93,
+      "pytest -q --tb=line": 93,
+      "--receptor=llm": 20
+    },
+    "Cascade (38 failures, one cause)": {
+      "pytest (default)": 3279,
+      "pytest -q --no-header --tb=short": 2863,
+      "pytest -q --tb=line": 1989,
+      "--receptor=llm": 101
+    },
+    "Single assertion failure": {
+      "pytest (default)": 331,
+      "pytest -q --no-header --tb=short": 197,
+      "pytest -q --tb=line": 230,
+      "--receptor=llm": 162
+    },
+    "Five distinct causes": {
+      "pytest (default)": 385,
+      "pytest -q --no-header --tb=short": 316,
+      "pytest -q --tb=line": 243,
+      "--receptor=llm": 181
+    },
+    "Collection error": {
+      "pytest (default)": 273,
+      "pytest -q --no-header --tb=short": 198,
+      "pytest -q --tb=line": 198,
+      "--receptor=llm": 215
+    },
+    "Mixed states (skip, xfail, xpass)": {
+      "pytest (default)": 103,
+      "pytest -q --no-header --tb=short": 31,
+      "pytest -q --tb=line": 31,
+      "--receptor=llm": 44
+    }
+  }
+}
