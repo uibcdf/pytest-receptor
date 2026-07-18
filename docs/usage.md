@@ -256,6 +256,10 @@ site.
 * **Dynamic values do not split a group.** Memory addresses and timestamps are
   normalized before grouping, so `0x7f8b...` differences do not fragment one
   cause into many.
+* **Tracebacks keep the decisive frame.** Every local frame survives; external
+  frames are pruned to the boundary and the terminal frame, marked `(ext)`, with
+  `...` where frames were elided. Dropping external frames entirely would hide
+  the answer whenever a failure originates inside a dependency.
 * **Long messages are fingerprinted whole.** Grouping happens before any
   truncation, so two long diffs differing only in the middle cannot be merged by
   accident. When a message is shortened, the output states how much was omitted
@@ -273,6 +277,10 @@ IDs, and paths come from your tests and their dependencies.
   structure of the report.
 * The receptor never suggests a command that mutates your environment. Guidance
   is limited to the exact rerun selector for a failure.
+* The on-disk report is created owner-only (`0600`) and will not follow a
+  symlink. It carries whatever your tests printed, so treat it as sensitive.
+  Redaction is not implemented yet: this bounds who can read the file, not what
+  goes into it.
 
 If rendering raises for any reason, the receptor emits `RECEPTOR_ERROR` followed
 by the underlying exception and the raw pytest evidence, and preserves pytest's

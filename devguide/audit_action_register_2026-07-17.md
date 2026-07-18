@@ -72,7 +72,7 @@ limitation`.
 | PR-FID-007 | Medium | Displayed traceback function is not a function name | Capture a real function identifier or label the field accurately | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-008 | High | Reporter bucket counts are treated as logical test outcomes | 0.6: aggregate by node ID and report the failing phase. Post: full logical/attempt/subtest model | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-011 | High | Omitted detail is only recoverable by re-running pytest | Write the complete agent-format report to `.pytest_cache/receptor/last-run.txt` and reference it | 0.6 | 0 | **done 2026-07-18** |
-| PR-FID-006 | Medium | External traceback origins are removed | Preserve local boundary, decisive external origin, cause chain, and full artifact | post | 1 | open |
+| PR-FID-006 | Medium | External traceback origins are removed | Keep every local frame, each local-to-external boundary, and the terminal frame, marking elisions. Cause chains remain post-0.6 | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-009 | High | Fixed character truncation is not an auditable information budget | Configurable semantic budgets reporting original size, retained size, hash, omissions, and reference | post | 2 | open |
 | PR-FID-010 | Medium | Skip and xfail reasons are not grouped or trackable | Group skip/xfail by reason; support an optional baseline to expose drift | post | 2 | open |
 | PR-UX-001 | Medium | Adaptive hints can prescribe the wrong dependency mutation | Delete installation hints; replace with the exact rerun command | 0.6 | 0 | **done 2026-07-18** |
@@ -93,7 +93,7 @@ limitation`.
 | PR-OPS-004 | Medium | Reporter depends on private pytest internals | Residual private usage isolated in one version-tested adapter | post | 3 | open |
 | PR-OPS-005 | Medium | Output-channel authority is undefined | Define stdout/stderr/artifact contract and degradation behavior | post | 1 | open |
 | PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
-| PR-SEC-002 | High | Artifacts may persist secrets without policy | Permissions, redaction, retention, size, path, and no-upload contracts | post | 1 | open |
+| PR-SEC-002 | High | Artifacts may persist secrets without policy | 0.6: the on-disk report is owner-only and refuses symlinks. Post: redaction, retention, size | post | 1 | in progress |
 | PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
@@ -122,7 +122,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-FID-003 | Runtime warning absent from LLM result | AUD |
 | PR-FID-004 | Code order is compress, normalize, group | AUD |
 | PR-FID-005 | Mixed-state probe returned counts only | AUD |
-| PR-FID-006 | Local-only filtering is destructive | AUD |
+| PR-FID-006 | Local-only filtering is destructive; salvaged from `event-model-v0.5`, which had solved it | AUD, OLD |
 | PR-FID-007 | Probe rendered `in ValueError` | AUD |
 | PR-FID-008 | Summaries derive from `TerminalReporter.stats`, which counts reports, not logical tests | AUD, ARCH |
 | PR-FID-009 | Fixed 1500-character cut keeps the first 1000 and last 400 characters with no omission record | AUD, ARCH |
@@ -359,6 +359,29 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18i** — Salvage from `event-model-v0.5`.
+
+A parallel implementation of this project existed on `origin/main` and was
+replaced by 0.6. It is preserved on the `event-model-v0.5` branch; the review is
+in `pending_proposals/salvage_from_event_model_branch.md`.
+
+Three things taken. Its traceback pruning closes PR-FID-006, which 0.6 had
+deferred and which mattered most for the MolSysMT pilot: dropping every external
+frame hides the decisive one whenever a failure originates inside a scientific
+library. Adapted rather than copied -- every local frame is kept, since those are
+the code a reader can change, and only external runs are elided.
+
+Its multi-tokenizer benchmarking is folded into the harness. Across cl100k,
+o200k, p50k, and r50k the cascade saving holds between -96.8% and -97.0%, so the
+headline is not an artifact of one vendor's tokenizer.
+
+Its artifact hardening applies to the report 0.6 already writes: owner-only
+permissions and a symlink refusal. That bounds who can read it, not what it
+contains, so PR-SEC-002 stays open for redaction.
+
+Rejected: the CI watchdog, already rejected with reasons, and `todo_list.md`, a
+second work queue overlapping this register.
 
 **2026-07-18h** — Distributed execution pulled into 0.6.
 

@@ -351,6 +351,59 @@ def test_call_chain_survives(pytester):
     result.stdout.fnmatch_lines(["*frames: *:3 -> *:2 -> *:1*"])
 
 
+def test_external_origin_is_preserved(pytester):
+    """PR-FID-006: dropping every external frame hides the decisive one.
+
+    When a failure originates inside a dependency -- NumPy, OpenMM, a
+    serializer -- the frame that matters is external. Earlier versions filtered
+    all of them out and left the reader with only their own call site.
+    """
+    pytester.makepyfile(
+        "import json\n"
+        "def parse(payload): return json.loads(payload)\n"
+        "def test_a(): parse('{not valid json')\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    frames = next(
+        line for line in result.stdout.str().splitlines() if "frames:" in line
+    )
+    # The local call site, the boundary into the dependency, and the crash.
+    assert "test_external_origin_is_preserved.py:3" in frames
+    assert "(ext)" in frames
+    assert "json" in frames
+
+
+def test_local_frames_are_all_kept(pytester):
+    """Local frames are the code the reader can change, so none are elided."""
+    pytester.makepyfile(
+        "def inner(): raise ValueError('deep')\n"
+        "def middle(): inner()\n"
+        "def outer(): middle()\n"
+        "def test_a(): outer()\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    frames = next(
+        line for line in result.stdout.str().splitlines() if "frames:" in line
+    )
+    for lineno in (4, 3, 2, 1):
+        assert f":{lineno}" in frames
+    assert "..." not in frames
+
+
+def test_full_report_is_owner_only(pytester):
+    """PR-SEC-002: the report carries whatever the tests printed."""
+    pytester.makepyfile(
+        "def test_a(): raise ValueError('a')\n"
+        "def test_b(): raise TypeError('b')\n"
+        "def test_c(): raise KeyError('c')\n"
+        "def test_d(): raise IndexError('d')\n"
+    )
+    pytester.runpytest("--receptor=llm")
+    reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
+    assert reports
+    assert reports[0].stat().st_mode & 0o777 == 0o600
+
+
 def test_quieting_flags_are_redundant(pytester):
     """`--receptor=llm` already configures the reporter; -q adds nothing."""
     pytester.makepyfile("def test_a(): assert 0\n")

@@ -18,6 +18,7 @@ Design notes that are easy to undo by accident:
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 import tempfile
@@ -43,6 +44,10 @@ _MAX_MESSAGE = 1500
 _SLOW_TEST_SECONDS = 0.5
 _SLOW_TEST_COUNT = 3
 _SHOWN_TESTS = 3
+_MAX_LOCAL_FRAMES = 8
+
+# O_NOFOLLOW is POSIX-only; on Windows the symlink check above is what we get.
+_NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 
 
 @dataclass(frozen=True)
@@ -287,7 +292,7 @@ class ReceptorPlugin:
         crash = getattr(longrepr, "reprcrash", None)
         if crash is not None:
             message = crash.message or ""
-            location = f"{self._relative(crash.path)}:{crash.lineno}"
+            location = f"{self._display_path(crash.path)}:{crash.lineno}"
         elif longrepr is not None:
             message = str(longrepr)
             location = self._relative(getattr(report, "fspath", "") or "")
@@ -305,19 +310,22 @@ class ReceptorPlugin:
         reprtraceback = getattr(report.longrepr, "reprtraceback", None)
         if reprtraceback is None:
             return []
-        frames = []
+
+        raw = []
         for entry in getattr(reprtraceback, "reprentries", []):
             loc = getattr(entry, "reprfileloc", None)
             if loc is None:
                 continue
             path = str(loc.path)
-            if "site-packages" in path or "lib/python" in path:
-                continue
+            external = "site-packages" in path or "lib/python" in path
             relative = self._relative(path)
             if relative.startswith(".."):
-                continue
-            frames.append(f"{relative}:{loc.lineno}")
-        return frames
+                external = True
+            raw.append(
+                (_short_path(path) if external else relative, loc.lineno, external)
+            )
+
+        return _prune_frames(raw)
 
     def _sections(self, report):
         sections = {}
@@ -330,6 +338,11 @@ class ReceptorPlugin:
                         sections[marker] = _truncate(text)
                     break
         return sections
+
+    def _display_path(self, path):
+        """Relative when the file is ours, recognizable when it is not."""
+        relative = self._relative(path)
+        return _short_path(path) if relative.startswith(("..", "/")) else relative
 
     def _relative(self, path):
         root = getattr(self.config, "rootpath", None)
@@ -489,7 +502,19 @@ class ReceptorPlugin:
             return None
         try:
             path = cache.mkdir("receptor") / "last-run.txt"
-            path.write_text(text, encoding="utf-8")
+            # The report carries whatever the tests printed, which can include
+            # credentials, tokens, or private paths. Refuse to follow a symlink
+            # and keep it owner-only (PR-SEC-002). Redaction is still to come:
+            # this bounds who can read it, not what it contains.
+            if path.is_symlink():
+                return None
+            with os.fdopen(
+                os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | _NOFOLLOW, 0o600),
+                "w",
+                encoding="utf-8",
+            ) as handle:
+                handle.write(text)
+            os.chmod(path, 0o600)
         except Exception:
             # Losing the report must never cost the run.
             return None
@@ -611,6 +636,54 @@ class ReceptorPlugin:
             tw.line("")
             tw.line(str(getattr(report, "nodeid", "?")))
             tw.line(str(getattr(report, "longrepr", "")))
+
+
+def _short_path(path):
+    """Enough of an external path to recognize the library, and no more."""
+    parts = Path(path).parts
+    return "/".join(parts[-3:]) if len(parts) > 3 else str(path)
+
+
+def _prune_frames(raw):
+    """Keep the frames that decide a failure, drop the ones that pad it.
+
+    Dropping every external frame is cheaper but destructive: when a failure
+    originates inside NumPy, OpenMM, or a serializer, the decisive frame is
+    external. What matters is the shape of the call, so this keeps
+
+    * the local frame that started it,
+    * the last local frame,
+    * every local-to-external boundary,
+    * and the terminal frame, always -- that is where it actually broke,
+
+    and marks each elision so nobody mistakes the summary for the whole stack.
+    """
+    if not raw:
+        return []
+
+    # Local frames are the signal: they are the code the reader can actually
+    # change, so they are all kept unless the stack is pathological. External
+    # runs are the noise, and only their entry and end points survive.
+    locals_ = [index for index, frame in enumerate(raw) if not frame[2]]
+    if len(locals_) > _MAX_LOCAL_FRAMES:
+        half = _MAX_LOCAL_FRAMES // 2
+        locals_ = locals_[:half] + locals_[-half:]
+
+    keep = set(locals_)
+    keep.add(len(raw) - 1)
+    for index in range(1, len(raw)):
+        if not raw[index - 1][2] and raw[index][2]:
+            keep.add(index)
+
+    rendered = []
+    previous = None
+    for index in sorted(keep):
+        if previous is not None and index > previous + 1:
+            rendered.append("...")
+        path, lineno, external = raw[index]
+        rendered.append(f"{path}:{lineno}{' (ext)' if external else ''}")
+        previous = index
+    return rendered
 
 
 def _count_tokens(text):

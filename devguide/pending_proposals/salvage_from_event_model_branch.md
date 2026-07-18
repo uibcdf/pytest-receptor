@@ -5,9 +5,9 @@
 **Source:** branch `event-model-v0.5`, sixteen commits that were on `origin/main`
 until 0.6 replaced them. Nothing was deleted; the branch is pushed and permanent.
 
-**Status:** untriaged. This file records what that branch contains and a
-recommendation for each part. Accepting any of it means giving it an identifier
-in [`../audit_action_register_2026-07-17.md`](../audit_action_register_2026-07-17.md).
+**Status:** triaged 2026-07-18. All three recommendations below were adopted;
+see the register revision log. This file is kept as the record of what the
+branch contained and why the rest was left.
 
 ## Context
 
@@ -29,7 +29,7 @@ evidence that the alternatives were built rather than only imagined.
 
 ## Worth taking
 
-### 1. Intelligent traceback pruning — recommend adopting
+### 1. Intelligent traceback pruning — **adopted** (PR-FID-006)
 
 This is the strongest thing on the branch and it closes `PR-FID-006`, which 0.6
 deferred. The algorithm selects, from the raw frame list:
@@ -51,7 +51,7 @@ Adapting it is not a copy-paste. It assumes the branch's frame dictionaries and
 its `at path:line (local) -> snippet` format; 0.6 renders a single compact
 `frames: a -> b -> c` line. The selection logic is the valuable part.
 
-### 2. Multi-tokenizer benchmarking — recommend adopting the idea, not the file
+### 2. Multi-tokenizer benchmarking — **adopted**, the idea and not the file
 
 `devtools/benchmark_tokenizers.py` measures four tokenizer families —
 `cl100k_base`, `o200k_base`, `p50k_base`, `r50k_base` — which is what Phase 4 of
@@ -67,7 +67,7 @@ dishonest baseline `PR-REL-002` exists to correct. Its green-suite figure of
 Its scenarios are also small — ten passing tests, one failing test — and so miss
 the cascade case where the receptor actually earns its keep.
 
-### 3. Artifact hardening — reference for `PR-SEC-002`
+### 3. Artifact hardening — **adopted** for the report we already write
 
 Restrictive permissions (`0o600`) and symlink handling on artifact creation.
 0.6 writes a plain-text report with default permissions, which is a real gap the
@@ -104,10 +104,20 @@ worked implementation to start from when `PR-SEC-002` is scheduled.
   register does not, so there is nothing to merge — but it should not be
   reintroduced alongside the register.
 
-## Suggested next step
+## What was done
 
-Only item 1 is worth doing soon, and it is worth doing before the MolSysMT
-pilot rather than after: their failures originate inside scientific libraries,
-which is precisely the case 0.6 currently handles worst.
+All three were taken, in 0.6.
 
-Items 2 and 3 can wait for the pilot to say whether they matter.
+Item 1 was adapted rather than copied. The branch kept only the first and last
+local frames; this keeps *every* local frame, because those are the code a
+reader can actually change, and elides only runs of external frames. External
+paths are shortened to their last three components so the library is
+recognizable without spending tokens on an absolute path.
+
+Item 2 confirmed the headline is robust: across `cl100k_base`, `o200k_base`,
+`p50k_base`, and `r50k_base` the cascade saving stays between -96.8% and -97.0%.
+
+Item 3 covers permissions only. Redaction is still absent, so `PR-SEC-002`
+remains open.
+
+The reference-only and rejected sections below stand.

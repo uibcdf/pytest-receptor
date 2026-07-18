@@ -173,10 +173,24 @@ first, so dynamic values do not fragment one cause into forty. The key is
 computed on the *complete* message, before any truncation, so two long diffs
 that differ only inside a region that later gets cut cannot be merged.
 
+**Tracebacks keep the decisive frame.** Every local frame is kept, because that
+is the code you can change. External frames are pruned to the boundary you
+entered the dependency at and the frame that actually broke, with elisions
+marked:
+
+```text
+frames: tests/test_merge.py:12 -> molsysmt/merge.py:41 -> numpy/core/shape.py:88 (ext) -> ... -> numpy/core/_methods.py:52 (ext)
+```
+
+Dropping external frames entirely is cheaper, and wrong: when a failure
+originates inside NumPy or a serializer, the external frame *is* the answer.
+
 **Nothing is thrown away.** Grouping is a presentation decision. Every
 occurrence keeps its node ID, phase, and location, and the complete report — every
 group, every occurrence, every captured section — is written to
-`.pytest_cache/receptor/last-run.txt` while the run is still going.
+`.pytest_cache/receptor/last-run.txt` while the run is still going. That file is
+created owner-only and refuses to follow a symlink, since it carries whatever
+your tests printed.
 
 **`--tb` is deliberately left alone.** It controls how pytest *builds*
 `longrepr`, not how it prints it. Forcing `--tb=no` would look like a sensible
