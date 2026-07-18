@@ -90,7 +90,7 @@ limitation`.
 | PR-OPS-008 | High | Receptor internal failure has no explicit degraded outcome | `RECEPTOR_ERROR` plus standard pytest output, preserving pytest's exit status | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-009 | Medium | `--receptor=human` is not a true passthrough | Register nothing in human mode; output must be byte-identical to pytest without the plugin | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-010 | Medium | `CiTerminalReporter` duplicates the LLM renderer | Delete the duplicated class; keep `--receptor=ci` as a profile of the single renderer with CI-appropriate defaults | 0.6 | 0 | **done 2026-07-18** |
-| PR-OPS-004 | Medium | Reporter depends on private pytest internals | Residual private usage isolated in one version-tested adapter | post | 3 | open |
+| PR-OPS-004 | Medium | Suppression depends on four undocumented pytest mechanisms | Isolate them in one version-tested adapter; drop the `tbstyle` workaround if pytest#14720 is resolved | post | 3 | open |
 | PR-OPS-005 | Medium | Output-channel authority is undefined | 0.6: silencing no longer suppresses other plugins' terminal summaries, with a coverage regression. Post: full stdout/stderr/artifact contract | post | 1 | in progress |
 | PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-SEC-002 | High | Artifacts may persist secrets without policy | 0.6: owner-only report, symlink refusal, and conservative credential redaction before anything is rendered or written. Post: configurable patterns, retention, size, audit metadata | post | 1 | in progress |
@@ -138,7 +138,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-OPS-001 | `<=3.13` rejected 3.13.1 through 3.13.14, including the active development environment; fixed in `pyproject.toml` and the conda recipe, with the regression in `tests/test_packaging.py` | AUD, ARCH |
 | PR-OPS-002 | A single six-second test emitted no heartbeat | AUD |
 | PR-OPS-003 | `captured_lines` receives every terminal write | AUD, ARCH |
-| PR-OPS-004 | Replaces `_pytest.terminal.TerminalReporter` | AUD |
+| PR-OPS-004 | No longer subclasses the reporter, but suppression still needs: `reporter.reportchars = ""`, mutating `config.option.tbstyle` inside `pytest_sessionfinish`, `create_terminal_writer` from `_pytest.config`, and `reporter._tw`. Collection is entirely public API | AUD, SCOPE |
 | PR-OPS-005 | Other plugins and early errors can bypass the replacement reporter; the inverse also bit us -- `no_summary` swallowed pytest-cov's report entirely | AUD |
 | PR-OPS-006 | `time.time()` used for durations and heartbeat | AUD |
 | PR-OPS-007 | Only dummy terminal-writer traffic is captured | AUD |
@@ -359,6 +359,28 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18p** — Upstream position recorded, and PR-OPS-004 made precise.
+
+The pytest issue that started this project was corrected in public rather than
+left standing: the follow-up comment retracts the minified-XML syntax, the
+attention-noise rationale behind it, and the `OK: {count} passed` output line
+that specified the defect 0.6 exists to fix. It also withdraws the request for
+a `--receptor` flag in core and invites the issue to be closed.
+
+What replaces it upstream are two API findings that outlive the proposal.
+pytest#14720 reports that `--tb` governs `longrepr` construction rather than
+only its display, so a plugin cannot suppress traceback output without losing
+the data. The second, that `--no-summary` gates the entire
+`pytest_terminal_summary` hook and therefore silences other plugins, is reported
+in the comment but does not yet have an issue of its own.
+
+`PR-OPS-004` said "replaces `_pytest.terminal.TerminalReporter`", which stopped
+being true in 0.6. The dependency is now exactly four undocumented mechanisms,
+all in the suppression path -- collection is entirely public API. One of them,
+mutating `tbstyle` inside `pytest_sessionfinish`, is a workaround that only
+works because of the coupling reported in pytest#14720, so resolving that issue
+should let us delete it.
 
 **2026-07-18o** — Two of the remaining gaps reconsidered before the pilot.
 

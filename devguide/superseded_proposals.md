@@ -190,8 +190,22 @@ scale.
 The original issue proposed a phased path: prove the idea as a plugin, then
 evaluate adopting the flag or a receptor hook into pytest core. Given pytest's
 core-minimization philosophy this is unlikely to be accepted, and planning around
-it distorts priorities. The plugin path is the product. If core adoption ever
-happens it will be a consequence of adoption, not a milestone to design for.
+it distorts priorities. The plugin path is the product.
+
+**Withdrawn publicly on 2026-07-18.** The
+[follow-up comment](https://github.com/pytest-dev/pytest/issues/14710#issuecomment-5012232396)
+states that a `--receptor` flag does not belong in core and invites the issue to
+be closed. What replaced it upstream are two API findings that outlive the
+proposal and affect any plugin rendering its own view of a run:
+[pytest#14720](https://github.com/pytest-dev/pytest/issues/14720) on `--tb`
+governing construction rather than display, and `--no-summary` gating the whole
+`pytest_terminal_summary` hook.
+
+The qualifier matters and was initially left out. A plugin *is* sufficient, but
+only by depending on four undocumented mechanisms, one of which — mutating
+`tbstyle` inside `pytest_sessionfinish` — is a workaround that works precisely
+because of the defect in #14720. Collection is entirely public API; suppression
+is not. See `PR-OPS-004`.
 
 ---
 

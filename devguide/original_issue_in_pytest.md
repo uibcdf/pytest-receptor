@@ -4,10 +4,27 @@
 preserved as written.
 
 > **Note.** The problem statement still holds and remains the clearest summary of
-> why the project exists. Three parts of the proposed solution no longer apply:
-> minified XML as the output syntax, the "token attention optimization" rationale
-> behind it, and upstreaming `--receptor` into pytest core as a project
-> milestone. See `superseded_proposals.md` entries 1 and 9.
+> why the project exists. Three parts of the proposed solution do not, and the
+> author has said so publicly rather than leaving the record uncorrected:
+> [a follow-up comment](https://github.com/pytest-dev/pytest/issues/14710#issuecomment-5012232396)
+> on the issue itself retracts the minified-XML syntax, the "token attention
+> optimization" rationale behind it, and the `OK: {count} passed in {time}s`
+> output line, which is the specification of the defect that motivated 0.6.
+>
+> The upstream position also changed. `--receptor` in core is no longer sought;
+> an external plugin is sufficient, and the comment invites the issue to be
+> closed. What the implementation surfaced instead were two pytest API problems
+> that outlive the proposal, and those are what we are pursuing upstream:
+>
+> - [pytest-dev/pytest#14720](https://github.com/pytest-dev/pytest/issues/14720)
+>   — `--tb` affects how `longrepr` is *built*, not only how it is displayed, so
+>   a plugin cannot suppress traceback output without destroying the data it
+>   wanted to summarise. Our own suppression is a workaround that exploits this.
+> - `--no-summary` gates the whole `pytest_terminal_summary` hook, so a plugin
+>   quietening pytest silences every other plugin too. Reported in the same
+>   comment; not yet a separate issue.
+>
+> See `superseded_proposals.md` entries 1 and 9.
 
 ---
 
