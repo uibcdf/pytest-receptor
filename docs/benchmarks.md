@@ -33,15 +33,22 @@ Headline comparison, `cl100k_base`:
 
 | Scenario | `pytest` | tuned pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3305 | 2863 | 1989 | **106** | -96.3% |
-| Green with warnings | 195 | 94 | 94 | **46** | -51.1% |
-| Five distinct causes | 410 | 316 | 238 | **212** | -32.9% |
-| Green suite (128 tests) | 125 | 23 | 23 | **16** | -30.4% |
-| Single assertion failure | 356 | 197 | 229 | **167** | -15.2% |
-| Collection error | 299 | 198 | 198 | **220** | +11.1% |
-| Mixed states (skip, xfail, xpass) | 130 | 31 | 31 | **78** | +151.6% |
+| Cascade (38 failures, one cause) | 3308 | 2863 | 1989 | **106** | -96.3% |
+| Green with many distinct warnings | 1946 | 1846 | 1846 | **669** | -63.8% |
+| Green with warnings | 189 | 91 | 91 | **46** | -49.5% |
+| Five distinct causes | 411 | 316 | 243 | **212** | -32.9% |
+| Green suite (128 tests) | 126 | 23 | 23 | **16** | -30.4% |
+| Single assertion failure | 354 | 197 | 227 | **167** | -15.2% |
+| Collection error | 295 | 196 | 196 | **218** | +11.2% |
+| Mixed states (skip, xfail, xpass) | 131 | 31 | 31 | **78** | +151.6% |
 
 The `Change` column compares against tuned pytest, the strict baseline.
+
+The `Green with many distinct warnings` row is there because of a defect the
+benchmarks failed to catch. Until a real pilot ran, the only warning scenario
+here emitted the *same* warning forty times — one group — so it could not detect
+that only three groups of sixty were being reported on a real suite. A scenario
+that exercises variety rather than volume now sits beside it.
 
 ### At the scale that matters
 
@@ -52,9 +59,9 @@ workers, against a pytest that has *already* been quietened:
 
 | Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: | ---: |
-| Whole suite green | 909 | 812 | **24** | 97.0% |
-| One fixture breaks 200 tests | 25,574 | 25,481 | **114** | 99.6% |
-| Six unrelated bugs | 1,596 | 1,497 | **285** | 81.0% |
+| Whole suite green | 910 | 812 | **24** | 97.0% |
+| One fixture breaks 200 tests | 25,579 | 25,474 | **114** | 99.6% |
+| Six unrelated bugs | 1,595 | 1,497 | **285** | 81.0% |
 
 Reproduce with `python devtools/benchmarks/run_benchmarks.py --scale`.
 
@@ -85,11 +92,11 @@ between them, so the comparison against plain `pytest` is repeated across four:
 | :--- | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | -96.8% | -96.9% | -96.9% | -96.7% |
 | Green suite (128 tests) | -87.2% | -87.4% | -89.6% | -89.7% |
-| Green with warnings | -76.2% | -76.3% | -79.6% | -81.1% |
-| Mixed states (skip, xfail, xpass) | -40.0% | -40.9% | -44.4% | -59.1% |
-| Five distinct causes | -48.3% | -46.8% | -50.7% | -56.5% |
+| Green with warnings | -75.9% | -76.0% | -79.6% | -81.1% |
+| Green with many distinct warnings | -65.6% | -65.6% | -68.5% | -69.7% |
 | Single assertion failure | -53.1% | -53.5% | -54.2% | -58.9% |
-| Collection error | -26.1% | -26.2% | -23.8% | -15.4% |
+| Five distinct causes | -48.2% | -46.6% | -50.7% | -56.5% |
+| Collection error | -26.3% | -26.5% | -23.7% | -15.2% |
 
 The headline holds. The cascade sits between -96.7% and -96.9% across all four,
 so it is a property of the output rather than of GPT-4's tokenizer. The older

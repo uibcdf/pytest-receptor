@@ -37,7 +37,7 @@ agent reads the same traceback forty times.
 ```console
 $ pytest --receptor=llm
 
-FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
+FAIL exit=1 | 38 errors, 90 passed | 12.40s | 1 root cause
 
 [1] TypeError | 38 tests | setup
     conftest.py:31
@@ -50,7 +50,7 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
-That is 106 tokens. Plain `pytest` spends 3,305 on the same run.
+That is 106 tokens. Plain `pytest` spends 3,308 on the same run.
 
 ---
 
@@ -251,13 +251,14 @@ Measured with `tiktoken` (`cl100k_base`):
 
 | Scenario | `pytest` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3305 | **106** | **-96.8%** |
-| Green suite (128 tests) | 125 | **16** | -87.2% |
-| Green with warnings | 195 | **46** | -76.2% |
-| Mixed states (skip, xfail, xpass) | 130 | **78** | -40.0% |
-| Five distinct causes | 410 | **212** | -48.5% |
-| Single assertion failure | 356 | **167** | -53.1% |
-| Collection error | 299 | **220** | -26.1% |
+| Cascade (38 failures, one cause) | 3308 | **106** | **-96.8%** |
+| Green suite (128 tests) | 126 | **16** | -87.2% |
+| Green with warnings | 189 | **46** | -75.9% |
+| Green with many distinct warnings | 1946 | **669** | -65.6% |
+| Single assertion failure | 354 | **167** | -53.1% |
+| Five distinct causes | 411 | **212** | -48.2% |
+| Collection error | 295 | **218** | -26.3% |
+| Mixed states (skip, xfail, xpass) | 131 | **78** | -39.5% |
 
 Every scenario is cheaper, most of them by half or better. In a TDD loop that
 runs the suite twenty times, the cascade row alone is sixty thousand tokens.
@@ -269,7 +270,7 @@ been quietened:
 | Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: |
 | Whole suite green | 812 | **24** | 97.0% |
-| One fixture breaks 200 tests | 25,481 | **114** | 99.6% |
+| One fixture breaks 200 tests | 25,474 | **114** | 99.6% |
 | Six unrelated bugs | 1,497 | **285** | 81.0% |
 
 `-q` prints one progress character per test, so a *successful* eight-thousand
@@ -283,11 +284,12 @@ If you are the kind of person who already runs `pytest -q --no-header
 | Scenario | tuned pytest | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 2863 | **106** | -96.3% |
-| Green with warnings | 94 | **46** | -51.1% |
+| Green with many distinct warnings | 1846 | **669** | -63.8% |
+| Green with warnings | 91 | **46** | -49.5% |
 | Five distinct causes | 316 | **212** | -32.9% |
 | Green suite (128 tests) | 23 | **16** | -30.4% |
 | Single assertion failure | 197 | **167** | -15.2% |
-| Collection error | 198 | **220** | +11.1% |
+| Collection error | 196 | **218** | +11.2% |
 | Mixed states (skip, xfail, xpass) | 31 | **78** | +151.6% |
 
 Both positive rows are scenarios of a handful of tests, where any fixed overhead

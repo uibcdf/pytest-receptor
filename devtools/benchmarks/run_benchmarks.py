@@ -42,6 +42,19 @@ SCENARIOS = {
             "def test_ok(i): assert True\n"
         )
     },
+    # The pilot found 216 warnings in 60 distinct groups on a real suite. A
+    # scenario with a single repeated warning cannot detect a defect in how
+    # many *kinds* are reported, and ours could not.
+    "Green with many distinct warnings": {
+        "test_suite.py": (
+            "import warnings, pytest\n"
+            "class W(UserWarning): pass\n"
+            + "".join(
+                f"def test_w{k}():\n    warnings.warn('condition {k} detected', W)\n"
+                for k in range(40)
+            )
+        )
+    },
     "Green with warnings": {
         "test_suite.py": (
             "import warnings, pytest\n"

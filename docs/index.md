@@ -32,7 +32,7 @@ benchmarks
 ```console
 $ pytest --receptor=llm
 
-FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
+FAIL exit=1 | 38 errors, 90 passed | 12.40s | 1 root cause
 
 [1] TypeError | 38 tests | setup
     conftest.py:31

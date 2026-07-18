@@ -37,7 +37,7 @@ pytest --receptor=llm
 ```
 
 ```text
-FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
+FAIL exit=1 | 38 errors, 90 passed | 12.40s | 1 root cause
 
 [1] TypeError | 38 tests | setup
     conftest.py:31
@@ -51,8 +51,10 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
 ```
 
 * One line on success, with the exit status and counts.
-* Warnings grouped by category and message, with counts and origin, so a green
-  run with a new deprecation does not look like a clean one.
+* Every distinct warning group listed, with counts and origin, so a green run
+  with a new deprecation does not look like a clean one. Ranking by frequency
+  and truncating would hide precisely the group that appears once, which is the
+  one most likely to be new.
 * Skips and xfails grouped by reason. A suite with optional dependencies skips
   heavily, and `412 skipped` does not say which capability is missing:
 

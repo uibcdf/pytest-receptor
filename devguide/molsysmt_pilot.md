@@ -37,7 +37,7 @@ The agent pays for all of it on every iteration.
 The receptor renders the same run differently:
 
 ```text
-FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
+FAIL exit=1 | 38 errors, 90 passed | 12.40s | 1 root cause
 
 [1] TypeError | 38 tests | setup
     conftest.py:31
@@ -75,8 +75,8 @@ Measured on eight thousand tests, twelve workers, `cl100k_base`:
 | Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: |
 | Whole suite green | 812 | **24** | 97.0% |
-| One fixture breaks 200 tests | 25,481 | **114** | 99.6% |
-| Six unrelated bugs | 1,479 | **279** | 81.1% |
+| One fixture breaks 200 tests | 25,474 | **114** | 99.6% |
+| Six unrelated bugs | 1,497 | **285** | 81.0% |
 
 Two things worth noticing.
 
