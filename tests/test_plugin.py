@@ -216,18 +216,25 @@ def test_skips_are_grouped_by_reason(pytester):
     assert "known upstream bug" in output
 
 
-def test_reasonless_skips_add_no_noise(pytester):
-    """Nothing is gained by printing "no reason given" forty times."""
+def test_undocumented_skips_are_reported_as_such(pytester):
+    """A skip with no reason is a finding, not a missing field.
+
+    It means tests are switched off and nobody recorded why, which someone
+    should either document or delete. It costs one line to say so.
+    """
     pytester.makepyfile(
         "import pytest\n"
         "@pytest.mark.parametrize('i', range(5))\n"
         "@pytest.mark.skipif(True, reason='')\n"
         "def test_a(i): pass\n"
+        "@pytest.mark.skipif(True, reason='openmm not installed')\n"
+        "def test_b(): pass\n"
     )
     result = pytester.runpytest("--receptor=llm")
     output = result.stdout.str()
-    assert "5 skipped" in output
-    assert "skipped: 5 in" not in output
+    assert "skipped: 6 in 2 groups" in output
+    assert "x5 | (no reason declared)" in output
+    assert "x1 | openmm not installed" in output
 
 
 def test_xpass_is_identified_with_reason(pytester):

@@ -596,7 +596,7 @@ class ReceptorPlugin:
             grouped = {}
             for reason in reasons.values():
                 grouped[reason] = grouped.get(reason, 0) + 1
-            if not grouped or (len(grouped) == 1 and not next(iter(grouped))):
+            if not grouped:
                 continue
             ordered = sorted(grouped.items(), key=lambda item: -item[1])
             limit = None if list_all else _SHOWN_TESTS
@@ -606,7 +606,9 @@ class ReceptorPlugin:
                 f"group{'s' if len(ordered) != 1 else ''}"
             )
             for reason, count in ordered[:limit]:
-                lines.append(f"  x{count} | {reason or 'no reason given'}")
+                # A skip with no declared reason is itself worth reporting: it
+                # means tests are switched off and nobody wrote down why.
+                lines.append(f"  x{count} | {reason or '(no reason declared)'}")
             remaining = len(ordered) - len(ordered[:limit])
             if remaining:
                 lines.append(f"  +{remaining} more")

@@ -62,8 +62,9 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
     x8 | requires a GPU
   ```
 
-  Reasonless skips are not listed, since a line saying "no reason given" adds
-  nothing.
+  A skip with no declared reason is reported as its own group,
+  `x5 | (no reason declared)`, because that is a finding in its own right: tests
+  are switched off and nobody recorded why.
 * Failures grouped by root cause, keeping every affected test ID.
 * No source echo. The agent already has your files; the assertion diff, which it
   cannot reconstruct, is kept.
