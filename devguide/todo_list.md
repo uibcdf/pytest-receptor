@@ -119,3 +119,27 @@ As of the **v0.5.0 release**, all tasks have been successfully implemented, veri
 - [x] **PR-REL-001: Compatibility testing CI workflow**
   - *Requirement:* Establish automated test coverage matrix testing Python 3.11-3.13, pytest 8/9, serial, and xdist workers.
   - *Verification:* Configured and verified test run matrix.
+
+---
+
+## 5. Future Roadmap & Ecosystem Integration (MolSysSuite / SMonitor)
+
+The following integration and dogfooding steps are planned for execution across the UIBCDF ecosystem repositories to promote `pytest-receptor` to a fully trusted, production-grade tool:
+
+- [ ] **SMonitor-side Integration Bridge**
+  - *Task:* Implement the SMonitor integration bridge on the SMonitor side to invoke the `pytest_receptor_extension_event` hook and pass structured diagnostics.
+  - *Repository:* `uibcdf/smonitor`
+- [ ] **MolSysMT Dogfooding - Stage A (Shadow Comparison)**
+  - *Task:* Run `pytest-receptor` in parallel with conventional pytest/JUnit in MolSysMT test runs to collect telemetry on token efficiency and parity, without using it to decide release success.
+  - *Repository:* `uibcdf/molsysmt`
+- [ ] **MolSysMT Dogfooding - Stage B (Agent-Facing Default)**
+  - *Task:* Configure coding agents to consume `pytest-receptor` output as default in MolSysMT development cycles, tracking any missing evidence as a diagnostic-sufficiency incident.
+  - *Repository:* `uibcdf/molsysmt`
+- [ ] **MolSysViewer Dogfooding & Diagnostic Validation**
+  - *Task:* Run shadow test comparisons on MolSysViewer to validate diagnostic capturing and correct mapping of visual molecular payloads.
+  - *Repository:* `uibcdf/molsysviewer`
+- [ ] **QA/CI Policy and Configuration Design**
+  - *Task:* Stabilize shared diagnostic expectation profiles, known-warning baselines, and sharding configurations.
+  - *Repository:* Multi-project / QA standards
+- [ ] **Evaluate pytest-molsyssuite Extraction**
+  - *Task:* Assess the need for extracting a dedicated thin policy wrapper (`pytest-molsyssuite`) to standardize local/CI configs and baseline comparisons across UIBCDF.
