@@ -34,7 +34,7 @@ Headline comparison, `cl100k_base`:
 | Scenario | `pytest` | tuned pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 3304 | 2863 | 1989 | **106** | -96.3% |
-| Green with warnings | 193 | 93 | 93 | **47** | -49.5% |
+| Green with warnings | 191 | 92 | 92 | **46** | -50.0% |
 | Five distinct causes | 411 | 316 | 243 | **181** | -42.7% |
 | Green suite (128 tests) | 125 | 23 | 23 | **16** | -30.4% |
 | Single assertion failure | 354 | 197 | 227 | **167** | -15.2% |
@@ -53,7 +53,7 @@ between them, so the comparison against plain `pytest` is repeated across four:
 | :--- | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | -96.8% | -96.9% | -96.9% | -96.7% |
 | Green suite (128 tests) | -87.2% | -87.4% | -89.6% | -89.7% |
-| Green with warnings | -75.6% | -75.8% | -79.5% | -80.2% |
+| Green with warnings | -75.9% | -76.0% | -79.6% | -81.1% |
 | Mixed states (skip, xfail, xpass) | -66.4% | -66.9% | -66.7% | -75.5% |
 | Five distinct causes | -56.0% | -54.8% | -58.5% | -64.5% |
 | Single assertion failure | -52.8% | -53.1% | -54.2% | -58.9% |
@@ -116,9 +116,17 @@ seven tokens. The 96.3% on the cascade is 2,757. Same plugin, three orders of
 magnitude apart in value, and the difference is entirely down to how your
 failures cluster.
 
-The `Green with warnings` row moved from -78.5% to -49.5% when warning grouping
-landed: naming the groups costs tokens that counting them did not. That is the
-trade being made deliberately, and it is left visible rather than reverted.
+The `Green with warnings` row moved from -78.5% to -50.0% when warning grouping
+landed, and it is worth reading carefully rather than as a regression. The
+receptor is still half the size of a tuned pytest and a quarter the size of a
+plain one; it simply stopped being a *twentieth*. What the extra tokens buy is
+that `12 warnings` becomes twelve warnings you can act on.
+
+The scenario also flatters the cost. It is forty tests emitting warnings from a
+single group, so the warning section is proportionally enormous. The section is
+bounded by the number of *distinct* warnings, not by the size of the suite: a
+suite of eight thousand tests with three distinct warnings pays three lines,
+and only the first three groups are shown unless `--receptor-full` is passed.
 
 So the practical conclusion is not "use it when your suite is red". Enabling it
 costs nothing measurable in the worst case here and saves almost everything in

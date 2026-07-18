@@ -216,7 +216,7 @@ Measured with `tiktoken` (`cl100k_base`):
 | :--- | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 3304 | **106** | **-96.8%** |
 | Green suite (128 tests) | 125 | **16** | -87.2% |
-| Green with warnings | 193 | **47** | -75.6% |
+| Green with warnings | 191 | **46** | -75.9% |
 | Mixed states (skip, xfail, xpass) | 131 | **44** | -66.4% |
 | Five distinct causes | 411 | **181** | -56.0% |
 | Single assertion failure | 354 | **167** | -52.8% |
@@ -233,7 +233,7 @@ If you are the kind of person who already runs `pytest -q --no-header
 | Scenario | tuned pytest | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 2863 | **106** | -96.3% |
-| Green with warnings | 93 | **47** | -49.5% |
+| Green with warnings | 92 | **46** | -50.0% |
 | Five distinct causes | 316 | **181** | -42.7% |
 | Green suite (128 tests) | 23 | **16** | -30.4% |
 | Single assertion failure | 197 | **167** | -15.2% |

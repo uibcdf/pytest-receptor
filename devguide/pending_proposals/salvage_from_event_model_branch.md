@@ -16,6 +16,34 @@ absent, and the third found warning grouping and configurable normalizers. Only
 the third pass actually read the files. If another branch ever needs salvaging,
 read it.
 
+## When this branch may be deleted
+
+Not yet, and not on a date. Three conditions, all of which must hold:
+
+1. **The `pytest-reportlog` gate is resolved.** The architecture decision gate
+   requires evaluating it before any bespoke event schema is designed. Until
+   that decision is recorded, `collector.py`, `events.py`, and `reader.py` are
+   the only worked example of the schema shape this project has produced, and
+   they are cited as reference material below.
+2. **`PR-ARCH-002` is decided.** The extension protocol must be designed against
+   a neutral dummy producer. Until then `hooks.py` and the SMonitor bridge are
+   the only concrete proposal of what that protocol might look like, even though
+   they cannot be adopted as they stand.
+3. **`ci_error_annotations.md` is accepted or rejected.** Its implementation
+   sketch was reconstructed from this branch; if it is accepted, the branch is
+   where the original lives.
+
+When all three hold, the branch has no remaining referent and can go.
+
+Until then it costs one ref on the remote and nothing else. The asymmetry is
+stark: keeping it costs nothing, and deleting it destroys the only copy of
+roughly 2,400 lines. Three of the five things eventually salvaged from it were
+found *after* it had been declared exhausted, which is the strongest argument
+against trusting a judgement that it is finished.
+
+Whoever deletes it should first check that no document still describes it as
+preserved. This file does, twice.
+
 ## Context
 
 Two implementations of this project were developed in parallel from the same

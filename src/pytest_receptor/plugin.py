@@ -504,11 +504,16 @@ class ReceptorPlugin:
                 f"warnings: {self._warnings} in {len(self._warning_groups)} groups"
             )
             for group in groups_shown[:limit]:
-                where = f" | {group['origin']}" if group["origin"] else ""
-                lines.append(f"  {group['category']} x{group['count']}{where}")
+                # One line per group. Two read better, but this section is pure
+                # overhead on an otherwise clean run and the whole point is that
+                # it stays cheap enough to leave on.
                 head = group["message"].splitlines()[0] if group["message"] else ""
+                parts_ = [f"  {group['category']} x{group['count']}"]
+                if group["origin"]:
+                    parts_.append(group["origin"])
                 if head:
-                    lines.append(f"    {head}")
+                    parts_.append(head)
+                lines.append(" | ".join(parts_))
             remaining = len(groups_shown) - len(groups_shown[:limit])
             if remaining:
                 lines.append(f"  +{remaining} more groups")
