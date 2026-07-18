@@ -1182,6 +1182,25 @@ def test_redaction_leaves_ordinary_test_data_alone(pytester):
     assert "1234" in output and "5678" in output
 
 
+def test_forced_colour_cannot_reach_the_report(pytester, monkeypatch):
+    """`FORCE_COLOR` makes pytest emit ANSI into a pipe.
+
+    With one escape pair per progress character that took an 8,000-test green
+    run from 9 kB to 82 kB. Our own text is plain by construction; this asserts
+    it stays that way, and that the option is set rather than relied upon.
+    """
+    monkeypatch.setenv("FORCE_COLOR", "3")
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(20))\n"
+        "def test_ok(i): assert True\n"
+        "def test_bad(): assert {'a': 1} == {'a': 2}\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    assert "\x1b[" not in result.stdout.str()
+    result.stdout.fnmatch_lines(["FAIL exit=1*"])
+
+
 def test_test_output_cannot_forge_a_verdict(pytester):
     """Prompt-injection-shaped text stays inside a failure group."""
     pytester.makepyfile(

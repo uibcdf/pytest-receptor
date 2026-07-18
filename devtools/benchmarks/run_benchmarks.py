@@ -17,6 +17,7 @@ a couple of minutes, so they are opt-in.
 from __future__ import annotations
 
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -176,12 +177,25 @@ SCALE_SCENARIOS = {
 }
 
 
+# A measurement that changes with the caller's shell is not a measurement.
+# `FORCE_COLOR` in the environment makes pytest emit ANSI even into a pipe, and
+# with one escape pair per progress character an 8,000-test green run went from
+# 9 kB to 82 kB -- inflating every baseline sevenfold and, incidentally, making
+# the receptor look far better than it is. Colour is disabled explicitly so the
+# numbers reproduce on anyone's machine.
+_NEUTRAL_ENV = {"NO_COLOR": "1"}
+_DROPPED_ENV = ("FORCE_COLOR", "PY_COLORS", "COLORTERM")
+
+
 def _run(directory, args):
+    env = {k: v for k, v in os.environ.items() if k not in _DROPPED_ENV}
+    env.update(_NEUTRAL_ENV)
     process = subprocess.run(
         [sys.executable, "-m", "pytest", *args, "-p", "no:cacheprovider"],
         capture_output=True,
         text=True,
         cwd=directory,
+        env=env,
     )
     return process.stdout
 

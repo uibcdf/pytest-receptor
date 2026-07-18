@@ -376,6 +376,28 @@ The audit program is complete only when:
 
 ## Revision log
 
+**2026-07-18u** — Forced colour, found while verifying a number for publication.
+
+`FORCE_COLOR` in the environment makes pytest emit ANSI into a pipe. With one
+escape pair per progress character, an 8,000-test green run went from 9 kB to
+82 kB, and the benchmark harness reported baselines seven times larger than the
+published ones -- which would have made the receptor look far *better* than it
+is.
+
+Two fixes. The harness now runs its subprocesses with colour explicitly
+disabled, so the figures reproduce on anyone's machine rather than depending on
+the caller's shell; the pilot ran it too, and their numbers were exposed to the
+same variable. And the receptor sets `color = "no"` in compact modes. Its own
+text was already plain by construction, but that was incidental rather than
+guaranteed, and the option also covers anything a third-party plugin writes
+through the reporter.
+
+Not applied while measuring a baseline: there the point is to record what pytest
+would really have emitted in that environment, forced colour included.
+
+Republished figures are unchanged, which is the reassuring half: the numbers in
+the README and docs were taken without forced colour and remain correct.
+
 **2026-07-18t** — First real development cycle, and the first evidence of the
 kind the pilot exists to produce.
 

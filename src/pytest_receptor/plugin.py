@@ -193,6 +193,17 @@ def _silence_standard_reporter(config):
     """
     config.option.verbose = -2
     config.option.no_header = True
+    # Colour is decoration for a terminal, and this output is not for one. It is
+    # also not optional: `FORCE_COLOR` in the environment makes pytest emit ANSI
+    # into a pipe, and with one escape pair per progress character that inflated
+    # an 8,000-test run from 9 kB to 82 kB. Our own text is plain by
+    # construction, but saying so explicitly also covers anything a third-party
+    # plugin writes through this reporter.
+    #
+    # Deliberately not set while measuring a baseline: there, the point is to
+    # record what pytest would really have emitted in this environment, forced
+    # colour included.
+    config.option.color = "no"
     # Deliberately *not* no_summary: that option gates the whole
     # pytest_terminal_summary hook, and third-party plugins write their reports
     # there. Setting it swallowed pytest-cov's coverage table entirely. Emptying
