@@ -97,7 +97,7 @@ limitation`.
 | PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-004 | Medium | The term "lossless" overstates achievable durability | Narrow the claim to evidence-preserving during normal pytest lifecycle operation | 0.6 | 0 | **done 2026-07-18** |
-| PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11 and 3.13 against pytest 8 and 9. Post: full matrix with xdist | 0.6 | 0 | open |
+| PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11 and 3.13 against pytest 8 and 9. Post: full matrix with xdist | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-003 | Low | Benchmark module fails collection without the optional tokenizer | Resolved: benchmarking moved out of the test suite into `devtools/benchmarks/`, which degrades to a labelled approximation without `tiktoken` | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-004 | Low | Package metadata is incomplete and the version is duplicated | Version centralized in `__init__.py` via `[tool.hatch.version]`, with a recipe-drift regression. Remaining: license expression, authors, URLs, classifiers | post | 3 | in progress |
@@ -354,6 +354,16 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18g** — Compatibility CI added; every 0.6 blocker is now closed.
+
+`.github/workflows/tests.yml` runs Python 3.11, 3.12, and 3.13 against pytest 8
+and 9 (six combinations), plus lint, the benchmark harness, and a packaging job
+that builds a wheel and installs it into a clean environment. 3.12 is included
+rather than only the boundaries, because claiming support for a version without
+testing it is the mistake PR-OPS-001 already made once.
+
+Verified locally against pytest 8.4.2 before publishing the matrix: 47 passed.
 
 **2026-07-18f** — Public documentation rewritten; `--receptor-stats` restored.
 

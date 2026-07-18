@@ -1,5 +1,6 @@
 # pytest-receptor
 
+[![Tests](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml/badge.svg)](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
 [![Pytest Version](https://img.shields.io/badge/pytest-%3E%3D8.0.0-green)](https://docs.pytest.org/)
@@ -59,7 +60,9 @@ That is 101 tokens. Plain `pytest` spends 3,279 on the same run.
 pip install pytest-receptor
 ```
 
-Requires Python 3.11-3.13 and pytest 8 or later.
+Requires Python 3.11-3.13 and pytest 8 or later. Every combination of
+Python 3.11/3.12/3.13 with pytest 8 and 9 is exercised in CI, so the support
+claim is evidence rather than intent.
 
 ## Use
 

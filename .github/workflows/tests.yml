@@ -1,0 +1,95 @@
+name: Tests
+
+# A pytest plugin's primary dependency is also its extension host, and this one
+# reaches into reporter behaviour, so compatibility has to be evidence rather
+# than an open-ended `pytest>=8` claim (PR-REL-001).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install ruff
+      - run: ruff check src tests devtools
+      - run: ruff format --check src tests devtools
+
+  test:
+    name: py${{ matrix.python }} / pytest ${{ matrix.pytest }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The supported range, at both pytest majors. Claiming 3.12 without
+        # testing it would repeat the mistake this workflow exists to prevent.
+        python: ["3.11", "3.12", "3.13"]
+        pytest: ["8", "9"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install pinned pytest, then the plugin without touching it
+        run: |
+          python -m pip install --upgrade pip
+          pip install "pytest~=${{ matrix.pytest }}.0"
+          pip install -e . --no-deps
+
+      - name: Record what is actually installed, and prove the pin took
+        env:
+          WANT: ${{ matrix.pytest }}
+        run: |
+          python -c "import sys, pytest; print(sys.version); print('pytest', pytest.__version__)"
+          python -c "import os, pytest; got = pytest.__version__.split('.')[0]; want = os.environ['WANT']; raise SystemExit(0 if got == want else f'wanted pytest {want}, got {pytest.__version__}')"
+
+      - name: Run the suite
+        run: pytest tests/ -q
+
+  benchmarks:
+    # The published figures are a claim about behaviour, so the harness that
+    # produces them has to keep running.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: |
+          pip install pytest tiktoken
+          pip install -e . --no-deps
+      - run: python devtools/benchmarks/run_benchmarks.py
+
+  packaging:
+    # PR-OPS-001 shipped a requires-python that rejected the very interpreter
+    # the project was developed on. Build and install for real.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install build
+      - run: python -m build
+      - name: Install the built wheel into a clean environment
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist/*.whl
+          /tmp/clean/bin/python -c "import pytest_receptor; print(pytest_receptor.__version__)"
+          cd /tmp && /tmp/clean/bin/pytest --receptor=llm --help > /dev/null
