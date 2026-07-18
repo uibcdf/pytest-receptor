@@ -217,7 +217,19 @@ class ReceptorPlugin:
         self._start = time.monotonic()  # PR-OPS-006
         self._failures = []
         self._durations = {}
+        # pytest's states are per phase, not per test: a test that passes and
+        # then fails its teardown counts as both `passed` and `error`. A single
+        # value per node ID cannot represent that, and folding it into `failed`
+        # disagrees with pytest about what happened.
         self._outcomes = {}
+        self._errors = set()
+        # Where the reader ran pytest. Every path we print has to resolve from
+        # here, or they cannot act on it.
+        self._invocation = Path(
+            getattr(config, "invocation_params", None).dir
+            if getattr(config, "invocation_params", None) is not None
+            else Path.cwd()
+        )
         self._collected = 0
         self._warnings = 0
         self._warning_groups = {}
@@ -276,9 +288,12 @@ class ReceptorPlugin:
 
         if report.failed:
             self._failures.append(report)
-            # A logical test that fails in any phase is a failure, even if its
-            # call phase passed (PR-FID-008).
-            self._outcomes[nodeid] = "failed"
+            # pytest_report_teststatus in _pytest/runner.py: a failure outside
+            # the call phase is an *error*, not a failed test.
+            if report.when in ("setup", "teardown"):
+                self._errors.add(nodeid)
+            else:
+                self._outcomes[nodeid] = "failed"
         elif report.when == "call":
             if hasattr(report, "wasxfail"):
                 if report.passed:
@@ -451,12 +466,7 @@ class ReceptorPlugin:
                 continue
             path = str(loc.path)
             external = "site-packages" in path or "lib/python" in path
-            relative = self._relative(path)
-            if relative.startswith(".."):
-                external = True
-            raw.append(
-                (_short_path(path) if external else relative, loc.lineno, external)
-            )
+            raw.append((self._display_path(path), loc.lineno, external))
 
         return _prune_frames(raw)
 
@@ -483,18 +493,39 @@ class ReceptorPlugin:
         return message
 
     def _display_path(self, path):
-        """Relative when the file is ours, recognizable when it is not."""
-        relative = self._relative(path)
-        return _short_path(path) if relative.startswith(("..", "/")) else relative
+        """A path that resolves from where pytest was actually invoked.
 
-    def _relative(self, path):
-        root = getattr(self.config, "rootpath", None)
-        if not path or root is None:
-            return str(path)
+        The reference is the invocation directory, not ``rootpath``. When a test
+        outside the project is passed on the command line, pytest sets rootdir
+        to the common ancestor, and paths relative to *that* resolve from
+        nowhere: `mypkg/__init__.py` came out as `proj/mypkg/__init__.py`, which
+        looks like a duplicated directory and does not exist from the shell the
+        reader is sitting in.
+        """
+        if not path:
+            return ""
+        absolute = self._absolute(path)
+        text = str(absolute)
+        if "site-packages" in text or "lib/python" in text:
+            # A dependency: recognizable beats resolvable, and the reader is not
+            # going to open it anyway.
+            return _short_path(text)
         try:
-            return str(Path(path).relative_to(root))
-        except ValueError:
-            return str(path)
+            relative = os.path.relpath(absolute, self._invocation)
+        except ValueError:  # different drive on Windows
+            return text
+        # `../ext/test_x.py` still resolves; a chain of them stops being useful.
+        return text if relative.startswith("../../..") else relative
+
+    def _absolute(self, path):
+        """Best effort at the real location of a path pytest handed us."""
+        candidate = Path(str(path))
+        if candidate.is_absolute():
+            return candidate
+        root = getattr(self.config, "rootpath", None)
+        if root is not None and (root / candidate).exists():
+            return root / candidate
+        return (self._invocation / candidate).resolve()
 
     # ---------------------------------------------------------------- render
 
@@ -502,7 +533,9 @@ class ReceptorPlugin:
         counts = {}
         for outcome in self._outcomes.values():
             counts[outcome] = counts.get(outcome, 0) + 1
-        executed = len(self._outcomes)
+        if self._errors:
+            counts["errors"] = len(self._errors)
+        executed = len(set(self._outcomes) | self._errors)
         duration = time.monotonic() - self._start
 
         verdict, note = _verdict(exitstatus)
@@ -513,7 +546,7 @@ class ReceptorPlugin:
         parts = [f"{verdict} exit={int(exitstatus)}"]
 
         detail = []
-        for label in ("failed", "passed", "skipped", "xfailed", "xpassed"):
+        for label in ("failed", "errors", "passed", "skipped", "xfailed", "xpassed"):
             if counts.get(label):
                 detail.append(f"{counts[label]} {label}")
         if detail:
@@ -567,14 +600,21 @@ class ReceptorPlugin:
 
         if self._warning_groups:
             lines.append("")
+            # Every distinct warning, always. Truncating by frequency is
+            # exactly backwards: the group that appears once is the one most
+            # likely to be new, and a reader cannot tell whether a hidden group
+            # matters without going to read another artefact. The list is
+            # bounded by how many *kinds* of warning a suite emits, not by how
+            # many tests it has -- a pilot run of 9,332 tests produced 216
+            # warnings in 60 groups.
             groups_shown = sorted(
-                self._warning_groups.values(), key=lambda g: -g["count"]
+                self._warning_groups.values(),
+                key=lambda g: (-g["count"], g["category"], g["origin"]),
             )
-            warning_limit = None if list_all else _SHOWN_TESTS
             lines.append(
                 f"warnings: {self._warnings} in {len(self._warning_groups)} groups"
             )
-            for group in groups_shown[:warning_limit]:
+            for group in groups_shown:
                 # One line per group. Two read better, but this section is pure
                 # overhead on an otherwise clean run and the whole point is that
                 # it stays cheap enough to leave on.
@@ -585,9 +625,6 @@ class ReceptorPlugin:
                 if head:
                     parts_.append(head)
                 lines.append(" | ".join(parts_))
-            remaining = len(groups_shown) - len(groups_shown[:warning_limit])
-            if remaining:
-                lines.append(f"  +{remaining} more groups")
 
         # A scientific suite skips heavily for missing optional dependencies,
         # and "412 skipped" does not tell you which capability is absent. The
@@ -618,7 +655,7 @@ class ReceptorPlugin:
             lines.append("unexpected passes:")
             for nodeid, reason in self._xpassed:
                 suffix = f" - {_sanitize(reason)}" if reason else ""
-                lines.append(f"  {nodeid}{suffix}")
+                lines.append(f"  {self._selector(nodeid)}{suffix}")
 
         slow = self._slow_tests()
         if slow:
@@ -671,11 +708,11 @@ class ReceptorPlugin:
                     if occurrence.attempts > 1
                     else ""
                 )
-                lines.append(f"      {occurrence.nodeid}{retried}")
+                lines.append(f"      {self._selector(occurrence.nodeid)}{retried}")
             remaining = len(group.occurrences) - len(shown)
             if remaining:
                 lines.append(f"      +{remaining} more")
-        lines.append(f"    rerun: {_rerun(group)}")
+        lines.append(f"    rerun: {self._rerun(group)}")
         return lines
 
     def _section_sources(self, group, list_all):
@@ -690,6 +727,28 @@ class ReceptorPlugin:
         if list_all:
             return with_sections
         return with_sections[:_SHOWN_TESTS]
+
+    def _selector(self, nodeid):
+        """A node ID whose path resolves from the invocation directory.
+
+        Node IDs are rootdir-relative. A reader who copies one out of the list
+        should be able to paste it straight back, exactly as with the rerun
+        command.
+        """
+        path, sep, rest = nodeid.partition("::")
+        return self._display_path(path) + sep + rest
+
+    def _rerun(self, group):
+        """A command that selects the group *and* runs from where they are.
+
+        Node IDs are relative to rootdir, which is not necessarily where pytest
+        was invoked. Pasting one back produced `file or directory not found`.
+        """
+        nodeids = [occurrence.nodeid for occurrence in group.occurrences]
+        if len(nodeids) == 1:
+            return f"pytest {self._selector(nodeids[0])} -q"
+        files = sorted({nodeid.split("::", 1)[0] for nodeid in nodeids})
+        return "pytest " + " ".join(self._display_path(f) for f in files) + " -q"
 
     def _slow_tests(self):
         slow = [
@@ -999,15 +1058,6 @@ def _exception_type(message):
 def _tests(group):
     count = len(group.occurrences)
     return f"{count} test" if count == 1 else f"{count} tests"
-
-
-def _rerun(group):
-    """A command that actually selects the group (PR-UX-003)."""
-    nodeids = [occurrence.nodeid for occurrence in group.occurrences]
-    if len(nodeids) == 1:
-        return f"pytest {nodeids[0]} -q"
-    files = {nodeid.split("::", 1)[0] for nodeid in nodeids}
-    return "pytest " + " ".join(sorted(files)) + " -q"
 
 
 def _sanitize(text):

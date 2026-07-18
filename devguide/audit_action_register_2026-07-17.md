@@ -16,6 +16,7 @@ decomposed, xpass contradiction resolved, and reorganized around the accepted
 | TRUST | `trust_and_adoption_criteria.md` |
 | SMON | `smonitor_and_molsyssuite_integration.md` |
 | OLD | `superseded_proposals.md` — rejected and replaced proposals, preserved |
+| PILOT | `pending_bugs/` — field reports from the MolSysMT shadow evaluation |
 | ISSUE | `original_issue_in_pytest.md` |
 
 ## Purpose
@@ -52,6 +53,7 @@ a required outcome, SCOPE wins and this register is corrected.
 | PR-DOC | Documentation accuracy |
 | PR-REL | Packaging, benchmarking, and release evidence |
 | PR-XD | Distributed execution |
+| PR-PILOT | Defects found by a field pilot |
 
 ## Work queue
 
@@ -99,6 +101,9 @@ limitation`.
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-004 | Medium | The term "lossless" overstates achievable durability | Narrow the claim to evidence-preserving during normal pytest lifecycle operation | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11-3.13 against pytest 8 and 9, serial and xdist. Post: coverage, JUnit, reruns, subtests | 0.6 | 0 | **done 2026-07-18** |
+| PR-PILOT-001 | Critical | Setup and teardown failures were counted as `failed`, disagreeing with pytest's `errors` | Track phase states separately, as pytest does; report both counts | 0.6 | 0 | **done 2026-07-18** |
+| PR-PILOT-002 | High | Printed paths and rerun commands did not resolve from the invocation directory | Render every path relative to `invocation_params.dir` | 0.6 | 0 | **done 2026-07-18** |
+| PR-PILOT-003 | High | Warning groups were truncated by frequency, hiding 57 of 60 | List every distinct warning group | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-012 | Medium | Bare assertions were typed as `Failure` | Recognize an assertion crash that carries no exception name | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
@@ -152,6 +157,9 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-DOC-003 | `draft_ideas.md` described extracting raw `ExceptionInfo` attributes, which was never implemented; moved verbatim into `superseded_proposals.md` | AUD, OLD |
 | PR-DOC-004 | No plugin can guarantee complete evidence after `SIGKILL` or host loss | AUD, ARCH |
 | PR-REL-001 | Repository has no test CI workflow, only documentation deployment | AUD, ARCH, TRUST |
+| PR-PILOT-001 | MolSysMT pilot: pytest reported `20 errors`, the receptor `20 failed`, on a fixture cascade; reproduced serially and with twelve workers | PILOT |
+| PR-PILOT-002 | MolSysMT pilot: `rerun: pytest test_fixture_cascade.py -q` exited with `file or directory not found`, and a location rendered as `molsysmt/molsysmt/__init__.py` | PILOT |
+| PR-PILOT-003 | MolSysMT pilot: a green 9,332-test run showed 3 of 60 warning groups, ranked by frequency | PILOT |
 | PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
 | PR-FID-012 | `assert 0` crashes with the message `assert 0` and no exception name, so the type heuristic fell through to `Failure` | SCOPE |
 | PR-REL-002 | The published table compares against default pytest; against `-q --no-header` the green case is roughly 12 tokens versus 9, not an 87.88% saving | AUD, SCOPE |
@@ -359,6 +367,33 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18q** — First field reports from the MolSysMT pilot. Three defects,
+all fixed, and the first one is the kind the whole project exists to prevent.
+
+`PR-PILOT-001`: pytest reported a fixture cascade as `20 errors` and we reported
+`20 failed`. The label was a symptom; the model was wrong. pytest's states are
+per *phase*, not per test — a test that passes and then fails its teardown is
+both `passed` and `error` — and one outcome per node ID cannot represent that.
+The report was internally inconsistent too: the headline said `failed` while the
+group header said `setup`.
+
+`PR-PILOT-002`: paths were rendered relative to `rootpath`, which is not where
+pytest was invoked. Naming a test outside the project sets rootdir to the common
+ancestor, so the rerun command exited `file or directory not found`. The
+`molsysmt/molsysmt/__init__.py` duplication was the same bug's fallback keeping
+the last three path components. Everything printed is now relative to
+`invocation_params.dir`, including the node IDs in the occurrence list, which
+the report did not mention but which had the same defect.
+
+`PR-PILOT-003`: 57 of 60 warning groups hidden, ranked by frequency — backwards,
+since the group appearing once is the one most likely to be new. All groups are
+now listed: 90 tokens becomes 1,110 against `pytest -q`'s 8,150, so still 86.4%
+and now sufficient. This was the same withholding mistake already corrected for
+root causes, surviving in a place nobody had looked.
+
+The pilot's verdict — useful, compression extraordinary, not yet trustworthy as
+sole output — was correct on every count.
 
 **2026-07-18p** — Upstream position recorded, and PR-OPS-004 made precise.
 

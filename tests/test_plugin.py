@@ -105,6 +105,28 @@ def test_warnings_are_grouped_not_just_counted(pytester):
     assert "UserWarning x2" in output
 
 
+def test_every_warning_group_is_listed(pytester):
+    """Reported by the pilot: 57 of 60 groups were hidden, ranked by frequency.
+
+    That is backwards. The group appearing once is the one most likely to be
+    new, and a reader cannot tell whether a hidden group matters without going
+    to read another artefact -- which the sufficiency rule forbids.
+    """
+    pytester.makepyfile(
+        "import warnings, pytest\n"
+        "class W(UserWarning): pass\n"
+        "@pytest.mark.parametrize('i', range(12))\n"
+        "def test_w(i):\n"
+        "    warnings.warn(f'condition {i} detected', W)\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "warnings: 12 in 12 groups" in output
+    assert "more groups" not in output
+    for index in range(12):
+        assert f"condition {index} detected" in output
+
+
 def test_project_normalizers_collapse_message_variants(pytester):
     """PR-FID-009: we cannot guess which values are non-semantic; projects can.
 
@@ -730,7 +752,7 @@ def test_xdist_cascade_still_collapses(pytester):
     pytester.makeconftest(CASCADE_CONFTEST)
     pytester.makepyfile(CASCADE_SUITE)
     result = pytester.runpytest("--receptor=llm", "-n", "4")
-    result.stdout.fnmatch_lines(["*13 failed, 8 passed*2 root causes*"])
+    result.stdout.fnmatch_lines(["*1 failed, 12 errors, 8 passed*2 root causes*"])
     assert "[1] TypeError | 12 tests | setup" in result.stdout.str()
 
 
@@ -739,6 +761,108 @@ def _without_xdist_chatter(text):
     return "\n".join(
         line for line in text.splitlines() if "bringing up nodes" not in line
     )
+
+
+# ------------------------------------------------ parity with pytest's states
+
+
+def test_setup_and_teardown_failures_are_errors_not_failures(pytester):
+    """Reported by the MolSysMT pilot: pytest said 20 errors, we said 20 failed.
+
+    pytest categorises a failure outside the call phase as an *error*
+    (`_pytest/runner.py::pytest_report_teststatus`). Folding those into `failed`
+    disagrees with pytest about what happened, which the reliability contract
+    forbids -- and it contradicted our own group header, which said `setup`.
+    """
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.fixture\n"
+        "def bad_setup(): raise RuntimeError('setup boom')\n"
+        "@pytest.fixture\n"
+        "def bad_teardown():\n"
+        "    yield 1\n"
+        "    raise RuntimeError('teardown boom')\n"
+        "def test_setup_err(bad_setup): pass\n"
+        "def test_teardown_err(bad_teardown): assert True\n"
+        "def test_call_fail(): assert 0\n"
+        "def test_ok(): assert 1\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    # pytest reports "1 failed, 2 passed, 2 errors": the teardown case counts as
+    # both passed and error, because these are phase states, not test states.
+    result.stdout.fnmatch_lines(["FAIL exit=1 | 1 failed, 2 errors, 2 passed*"])
+
+
+def test_a_pure_setup_cascade_reports_errors(pytester):
+    pytester.makeconftest(
+        "import pytest\n@pytest.fixture\ndef broken():\n    raise TypeError('boom')\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(20))\n"
+        "def test_a(broken, i): assert True\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "20 errors" in output
+    assert "20 failed" not in output
+    assert "[1] TypeError | 20 tests | setup" in output
+
+
+# ----------------------------------------------------------- pasteable paths
+
+
+def test_paths_resolve_from_the_invocation_directory(pytester, monkeypatch):
+    """Reported by the pilot: the rerun command exited with "file not found".
+
+    Node IDs and crash locations are rootdir-relative, and rootdir is not
+    necessarily where pytest was invoked. When a test outside the project is
+    named on the command line, pytest sets rootdir to the common ancestor and
+    everything printed resolves from nowhere.
+    """
+    outside = pytester.mkdir("outside")
+    outside.joinpath("test_far.py").write_text(
+        "def test_a(): assert 0\n", encoding="utf-8"
+    )
+    project = pytester.mkdir("project")
+    project.joinpath("pytest.ini").write_text("[pytest]\n", encoding="utf-8")
+
+    monkeypatch.chdir(project)
+    result = pytester.runpytest_subprocess(
+        "--receptor=llm", str(outside / "test_far.py")
+    )
+    rerun = next(
+        line.split("rerun: ", 1)[1]
+        for line in result.stdout.str().splitlines()
+        if "rerun: " in line
+    )
+    # The path in the command must exist from where pytest was invoked.
+    target = rerun.replace("pytest ", "").replace(" -q", "").split("::")[0]
+    assert (project / target).exists(), f"{target!r} does not resolve from cwd"
+
+
+def test_a_location_never_duplicates_a_directory(pytester, monkeypatch):
+    """`molsysmt/__init__.py` was rendered as `molsysmt/molsysmt/__init__.py`.
+
+    The old fallback kept the last three path components, which duplicates
+    whenever a package shares its name with the repository directory.
+    """
+    pkg = pytester.mkdir("myproj").joinpath("myproj")
+    pkg.mkdir()
+    pkg.joinpath("__init__.py").write_text(
+        "def build(): raise AttributeError('no attribute')\n", encoding="utf-8"
+    )
+    project = pytester.path / "myproj"
+    project.joinpath("pytest.ini").write_text("[pytest]\n", encoding="utf-8")
+    project.joinpath("test_use.py").write_text(
+        "import myproj\ndef test_a(): myproj.build()\n", encoding="utf-8"
+    )
+
+    monkeypatch.chdir(project)
+    result = pytester.runpytest_subprocess("--receptor=llm", "test_use.py")
+    output = result.stdout.str()
+    assert "myproj/myproj/__init__.py" not in output
+    assert "myproj/__init__.py" in output
 
 
 # --------------------------------------------------------------------- cost

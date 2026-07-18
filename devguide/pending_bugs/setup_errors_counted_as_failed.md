@@ -124,3 +124,22 @@ Cover serial and xdist runs containing:
 
 Assert parity with pytest's category counts as well as the exit code and total
 number of affected node IDs.
+
+---
+
+## Resolution
+
+**Fixed 2026-07-18.** The model was wrong, not just the label. pytest's states
+are per *phase*, not per test: a test that passes and then fails its teardown
+counts as both `passed` and `error`. A single outcome per node ID cannot
+represent that, so every unsuccessful test was folded into `failed`.
+
+Failures outside the call phase are now tracked separately, following
+`_pytest/runner.py::pytest_report_teststatus`, and the headline carries both
+counts. On the reporter's own mixed fixture case, pytest says
+`1 failed, 2 passed, 2 errors` and the receptor now says
+`FAIL exit=1 | 1 failed, 2 errors, 2 passed`.
+
+Regressions cover a pure setup cascade, a teardown error after a passing call,
+mixed states, and the same under xdist. One existing xdist test had encoded the
+wrong counts and was corrected.
