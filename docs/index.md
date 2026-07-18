@@ -48,6 +48,10 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
 One broken fixture, thirty-eight failing tests, one root cause. Plain `pytest`
 spends 3,304 tokens on that run. This is 106.
 
+The gap widens with the suite. On eight thousand tests under twelve workers, one
+fixture breaking two hundred tests costs `pytest -q -n 12` **25,474 tokens** and
+the receptor **114**.
+
 ---
 
 ## Profiles

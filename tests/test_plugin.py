@@ -646,6 +646,40 @@ def _without_xdist_chatter(text):
     )
 
 
+# --------------------------------------------------------------------- cost
+
+
+def test_a_cascade_stays_cheap(pytester):
+    """A budget, because correctness tests do not catch cost regressions.
+
+    Separating "expand every root cause" from "list every occurrence" was once
+    done with a single flag, and merging them silently printed all two hundred
+    node IDs of a cascade: 114 tokens became 2,079. Every assertion still
+    passed. Only measuring caught it.
+    """
+    pytester.makeconftest(
+        "import pytest\n@pytest.fixture\ndef broken():\n    raise TypeError('boom')\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(200))\n"
+        "def test_a(broken, i): assert True\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+
+    # Deliberately generous: this guards an order of magnitude, not a byte
+    # count, so ordinary wording changes do not trip it.
+    approx_tokens = len(output) // 4
+    assert approx_tokens < 250, (
+        f"a 200-test cascade rendered ~{approx_tokens} tokens; "
+        "one root cause should not scale with the number of occurrences"
+    )
+    # The evidence is still complete: every test is named in the report.
+    reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
+    assert reports[0].read_text(encoding="utf-8").count("test_a[") == 200
+
+
 # -------------------------------------------------------------------- safety
 
 

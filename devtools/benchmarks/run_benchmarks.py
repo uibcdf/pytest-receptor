@@ -7,6 +7,11 @@ comparison is against a pytest that has already been told to be quiet, so this
 script reports three baselines and lets the reader judge.
 
 Run:  python devtools/benchmarks/run_benchmarks.py
+      python devtools/benchmarks/run_benchmarks.py --scale
+
+The scale scenarios model a real suite -- eight thousand tests under twelve
+xdist workers -- because the small ones understate the saving badly. They take
+a couple of minutes, so they are opt-in.
 """
 
 from __future__ import annotations
@@ -119,6 +124,45 @@ def _count_tokens(text):
     return counts, TOKENIZERS[0]
 
 
+SCALE_TESTS = 8000
+SCALE_BASELINE = "pytest -q -n 12"
+SCALE_BASELINES = {
+    "pytest -n 12": ["-n", "12"],
+    SCALE_BASELINE: ["-q", "-n", "12"],
+}
+SCALE_RECEPTOR = ["--receptor=llm", "-n", "12"]
+
+_CONFTEST = (
+    "import pytest\n@pytest.fixture\ndef topology():\n"
+    "    raise TypeError(\"'NoneType' object is not subscriptable\")\n"
+)
+
+
+def _scale_suite(passing, cascade=0, distinct=0):
+    body = [
+        "import pytest",
+        f"@pytest.mark.parametrize('i', range({passing}))",
+        "def test_ok(i): assert True",
+    ]
+    if cascade:
+        body += [
+            f"@pytest.mark.parametrize('i', range({cascade}))",
+            "def test_merge(topology, i): assert True",
+        ]
+    body += [
+        f"def test_distinct{i}(): raise ValueError('unrelated cause {i}')"
+        for i in range(distinct)
+    ]
+    return {"conftest.py": _CONFTEST, "test_suite.py": "\n".join(body) + "\n"}
+
+
+SCALE_SCENARIOS = {
+    "Whole suite green": _scale_suite(SCALE_TESTS),
+    "One fixture breaks 200 tests": _scale_suite(SCALE_TESTS - 200, cascade=200),
+    "Six unrelated bugs": _scale_suite(SCALE_TESTS - 6, distinct=6),
+}
+
+
 def _run(directory, args):
     process = subprocess.run(
         [sys.executable, "-m", "pytest", *args, "-p", "no:cacheprovider"],
@@ -129,19 +173,22 @@ def _run(directory, args):
     return process.stdout
 
 
-def measure():
+def measure(scenarios=None, baselines=None, receptor=None):
+    scenarios = SCENARIOS if scenarios is None else scenarios
+    baselines = BASELINES if baselines is None else baselines
+    receptor = RECEPTOR if receptor is None else receptor
     results = {}
     encoding_name = None
-    for scenario, files in SCENARIOS.items():
+    for scenario, files in scenarios.items():
         directory = Path(tempfile.mkdtemp(prefix="receptor-bench-"))
         try:
             for name, content in files.items():
                 (directory / name).write_text(content, encoding="utf-8")
             row = {}
-            for label, args in BASELINES.items():
+            for label, args in baselines.items():
                 counts, encoding_name = _count_tokens(_run(directory, args))
                 row[label] = counts
-            counts, encoding_name = _count_tokens(_run(directory, RECEPTOR))
+            counts, encoding_name = _count_tokens(_run(directory, receptor))
             row["--receptor=llm"] = counts
             results[scenario] = row
         finally:
@@ -149,10 +196,35 @@ def measure():
     return results, encoding_name
 
 
+def _scale_report():
+    results, encoding = measure(SCALE_SCENARIOS, SCALE_BASELINES, SCALE_RECEPTOR)
+    print(f"Scale: {SCALE_TESTS} tests, twelve workers, `{encoding}`:")
+    print()
+    print(
+        "| Scenario | "
+        + " | ".join(SCALE_BASELINES)
+        + " | `--receptor=llm -n 12` | Saving |"
+    )
+    print(
+        "| :--- | " + " | ".join("---:" for _ in SCALE_BASELINES) + " | ---: | ---: |"
+    )
+    for scenario, row in results.items():
+        mine = row["--receptor=llm"][encoding]
+        base = row[SCALE_BASELINE][encoding]
+        saving = (1 - mine / base) * 100 if base else 0.0
+        cells = " | ".join(f"{row[label][encoding]:,}" for label in SCALE_BASELINES)
+        print(f"| {scenario} | {cells} | **{mine:,}** | {saving:.1f}% |")
+    print()
+
+
 def main():
     import pytest
 
     import pytest_receptor
+
+    if "--scale" in sys.argv:
+        _scale_report()
+        return
 
     results, encoding_name = measure()
     metadata = {

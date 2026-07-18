@@ -43,6 +43,38 @@ Headline comparison, `cl100k_base`:
 
 The `Change` column compares against tuned pytest, the strict baseline.
 
+### At the scale that matters
+
+The scenarios above are small — at most 128 tests — and they understate the
+saving badly, because the fixed cost of pytest's decoration is amortized while
+the repeated cost is not. Measured on eight thousand tests under twelve xdist
+workers, against a pytest that has *already* been quietened:
+
+| Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
+| :--- | ---: | ---: | ---: | ---: |
+| Whole suite green | 911 | 812 | **24** | 97.0% |
+| One fixture breaks 200 tests | 25,573 | 25,474 | **114** | 99.6% |
+| Six unrelated bugs | 1,594 | 1,497 | **285** | 81.0% |
+
+Reproduce with `python devtools/benchmarks/run_benchmarks.py --scale`.
+
+Two things are worth reading twice.
+
+**`-q` does not help much.** It removes the header and the summary, but it still
+prints one progress character per test. At eight thousand tests that is 812
+tokens of dots on a run where *nothing went wrong*, paid on every iteration of
+every loop.
+
+**The cascade figure is not a typo.** One broken fixture failing two hundred
+tests makes `-q` print two hundred tracebacks, most of them the same text: 25,474
+tokens. The receptor prints the cause once, names the affected tests, and gives
+the command to re-run them, in 114.
+
+That 99.6% is also the number most at risk from a careless change. It depends on
+one cause rendering once regardless of how many tests it broke, and a refactor
+once merged "expand every cause" with "list every occurrence" and pushed it back
+to 2,079 without failing a single test. There is now a budget test guarding it.
+
 ### Across tokenizer families
 
 A saving measured with one vocabulary can be an artifact of that vocabulary.

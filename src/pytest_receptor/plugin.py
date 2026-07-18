@@ -303,21 +303,21 @@ class ReceptorPlugin:
         try:
             groups = self._build_groups()
             summary = self._summary_line(session, exitstatus, groups)
-            full_report = self._render(summary, groups, expand_all=True)
+            full_report = self._render(summary, groups, limit=None, list_all=True)
             path = self._write_full_report(full_report)
-            # Holding detail back is only permissible when that detail is
-            # actually reachable. If the report could not be written -- no cache
-            # provider, an unwritable directory -- expand everything instead.
-            # Nothing may ever be recoverable only by running the suite again.
-            withhold = (
-                not self.full
-                and self.profile.detailed_groups is not None
-                and path is not None
-            )
-            if withhold:
-                shown = self._render(summary, groups, expand_all=False, path=path)
-            else:
+            if self.full:
                 shown = full_report
+            else:
+                # Two independent decisions. Every root cause is rendered in
+                # full unless there is a pathological spread of them, and that
+                # summarizing only happens when the report exists to hold what
+                # is left out. Occurrence lists are always truncated: that is
+                # where the volume is, and the rerun command already selects
+                # what was cut, so nothing becomes unreachable.
+                limit = self.profile.detailed_groups if path is not None else None
+                shown = self._render(
+                    summary, groups, limit=limit, list_all=False, path=path
+                )
             tw.line("")
             tw.write(shown)
             self._shown = shown
@@ -523,9 +523,8 @@ class ReceptorPlugin:
             return f"incomplete: {executed} of {self._collected} executed"
         return ""
 
-    def _render(self, summary, groups, expand_all, path=None):
+    def _render(self, summary, groups, limit, list_all, path=None):
         lines = [summary]
-        limit = None if expand_all else self.profile.detailed_groups
 
         for index, group in enumerate(groups, start=1):
             if limit is not None and index > limit:
@@ -536,18 +535,18 @@ class ReceptorPlugin:
                 )
                 continue
             lines.append("")
-            lines.extend(self._render_group(index, group, expand_all))
+            lines.extend(self._render_group(index, group, list_all))
 
         if self._warning_groups:
             lines.append("")
             groups_shown = sorted(
                 self._warning_groups.values(), key=lambda g: -g["count"]
             )
-            limit = None if expand_all else _SHOWN_TESTS
+            warning_limit = None if list_all else _SHOWN_TESTS
             lines.append(
                 f"warnings: {self._warnings} in {len(self._warning_groups)} groups"
             )
-            for group in groups_shown[:limit]:
+            for group in groups_shown[:warning_limit]:
                 # One line per group. Two read better, but this section is pure
                 # overhead on an otherwise clean run and the whole point is that
                 # it stays cheap enough to leave on.
@@ -558,7 +557,7 @@ class ReceptorPlugin:
                 if head:
                     parts_.append(head)
                 lines.append(" | ".join(parts_))
-            remaining = len(groups_shown) - len(groups_shown[:limit])
+            remaining = len(groups_shown) - len(groups_shown[:warning_limit])
             if remaining:
                 lines.append(f"  +{remaining} more groups")
 
@@ -585,7 +584,7 @@ class ReceptorPlugin:
 
         return "\n".join(lines) + "\n"
 
-    def _render_group(self, index, group, expand_all):
+    def _render_group(self, index, group, list_all):
         lines = [
             f"[{index}] {group.exc_type} | {_tests(group)} | {group.phase}",
             f"    {group.location}",
@@ -605,7 +604,7 @@ class ReceptorPlugin:
         if len(group.frames) > 1:
             lines.append("    frames: " + " -> ".join(group.frames))
 
-        for occurrence in self._section_sources(group, expand_all):
+        for occurrence in self._section_sources(group, list_all):
             for name, content in occurrence.sections.items():
                 lines.append(f"    captured {name} ({occurrence.nodeid}):")
                 for line in content.splitlines():
@@ -613,9 +612,7 @@ class ReceptorPlugin:
 
         if len(group.occurrences) > 1:
             lines.append("    tests:")
-            shown = (
-                group.occurrences if expand_all else group.occurrences[:_SHOWN_TESTS]
-            )
+            shown = group.occurrences if list_all else group.occurrences[:_SHOWN_TESTS]
             for occurrence in shown:
                 lines.append(f"      {occurrence.nodeid}")
             remaining = len(group.occurrences) - len(shown)
@@ -624,7 +621,7 @@ class ReceptorPlugin:
         lines.append(f"    rerun: {_rerun(group)}")
         return lines
 
-    def _section_sources(self, group, expand_all):
+    def _section_sources(self, group, list_all):
         """Occurrences whose captured output is worth printing.
 
         Captured output usually differs per test even when the exception does
@@ -633,7 +630,7 @@ class ReceptorPlugin:
         the full report.
         """
         with_sections = [item for item in group.occurrences if item.sections]
-        if expand_all:
+        if list_all:
             return with_sections
         return with_sections[:_SHOWN_TESTS]
 
