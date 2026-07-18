@@ -186,6 +186,28 @@ def _silence_standard_reporter(config):
     reporter = config.pluginmanager.getplugin("terminalreporter")
     if reporter is not None:
         reporter.reportchars = ""
+    _silence_xdist_startup(config)
+
+
+def _silence_xdist_startup(config):
+    """Stop `bringing up nodes...` landing in front of the verdict.
+
+    This is infrastructure chatter, the distributed equivalent of the progress
+    characters already suppressed -- not a report. The distinction matters:
+    pytest-cov's table is a report and is deliberately preserved, and silencing
+    that by accident is a mistake already made once here.
+
+    So this neuters exactly one method rather than unregistering the plugin,
+    because the same object also carries `pytest_testnodedown`, which announces
+    a worker dying. That is a completeness signal and must survive.
+    """
+    dist = config.pluginmanager.getplugin("terminaldistreporter")
+    if dist is None:
+        return
+    try:
+        dist.ensure_show_status = lambda: None
+    except Exception:
+        pass
 
 
 @dataclass
@@ -415,7 +437,8 @@ class ReceptorPlugin:
                 shown = self._render(
                     summary, groups, limit=limit, list_all=False, path=path
                 )
-            tw.line("")
+            # No leading blank: the verdict is the first thing on stdout, so a
+            # consumer reading line one gets the answer.
             tw.write(shown)
             self._shown = shown
         except Exception as exc:  # pragma: no cover - exercised via tests

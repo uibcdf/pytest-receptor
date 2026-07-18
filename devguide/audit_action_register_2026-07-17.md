@@ -105,6 +105,7 @@ limitation`.
 | PR-PILOT-002 | High | Printed paths and rerun commands did not resolve from the invocation directory | Render every path relative to `invocation_params.dir` | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-003 | High | Warning groups were truncated by frequency, hiding 57 of 60 | List every distinct warning group | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-004 | High | Under xdist every worker emitted its own progress deciles | Emit only from the controller; take the total from `pytest_xdist_node_collection_finished` | 0.6 | 0 | **done 2026-07-18** |
+| PR-PILOT-005 | Low | xdist startup chatter preceded the verdict on compact stdout | Neuter only `ensure_show_status`; keep worker-crash reporting | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-012 | Medium | Bare assertions were typed as `Failure` | Recognize an assertion crash that carries no exception name | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
@@ -162,6 +163,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-002 | MolSysMT pilot: `rerun: pytest test_fixture_cascade.py -q` exited with `file or directory not found`, and a location rendered as `molsysmt/molsysmt/__init__.py` | PILOT |
 | PR-PILOT-003 | MolSysMT pilot: a green 9,332-test run showed 3 of 60 warning groups, ranked by frequency | PILOT |
 | PR-PILOT-004 | MolSysMT pilot, second pass: `-n 12` produced repeated and denominator-less progress lines, far more than the nine advertised | PILOT |
+| PR-PILOT-005 | MolSysMT pilot, reverification: two `bringing up nodes...` lines appeared on stdout before the verdict | PILOT |
 | PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
 | PR-FID-012 | `assert 0` crashes with the message `assert 0` and no exception name, so the type heuristic fell through to `Failure` | SCOPE |
 | PR-REL-002 | The published table compares against default pytest; against `-q --no-header` the green case is roughly 12 tokens versus 9, not an 87.88% saving | AUD, SCOPE |
@@ -369,6 +371,22 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18s** — Reverification passed; one low-severity observation, fixed.
+
+The pilot confirmed the xdist progress contract holds: nine lines, 10% to 90%,
+strictly increasing, every one carrying `finished/collected`, no worker
+emission, total agreeing with pytest at 9,338.
+
+`PR-PILOT-005`: xdist's `bringing up nodes...` reached compact stdout ahead of
+the verdict. The report's own third criterion supplied the principle -- chatter
+may be suppressed, a third-party *report* may not -- which is the line that
+`--no-summary` crossed when it swallowed pytest-cov. The fix neuters exactly one
+method on `TerminalDistReporter`, because the same object carries
+`pytest_testnodedown` and a worker dying must never be silently lost.
+
+The receptor also stopped printing a blank line before its verdict, so compact
+stdout begins with `PASS`/`FAIL`.
 
 **2026-07-18r** — Second pilot pass. Result integrity confirmed; one new defect.
 

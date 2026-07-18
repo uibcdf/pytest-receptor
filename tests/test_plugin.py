@@ -751,6 +751,39 @@ def test_xdist_progress_comes_only_from_the_controller(pytester, extra):
 
 
 @xdist
+@pytest.mark.parametrize("profile", ["llm", "ci"])
+def test_xdist_startup_chatter_stays_off_stdout(pytester, profile):
+    """Reported by the pilot: `bringing up nodes...` preceded the verdict.
+
+    That line is infrastructure chatter -- the distributed equivalent of the
+    progress characters already suppressed -- not a report. The distinction
+    matters, because pytest-cov's table *is* a report and is deliberately kept.
+    """
+    pytester.makepyfile("def test_a(): assert 1\n")
+    result = pytester.runpytest_subprocess(f"--receptor={profile}", "-n", "2")
+    stdout = result.stdout.str()
+    assert "bringing up nodes" not in stdout
+    assert stdout.strip().startswith(("PASS", "FAIL"))
+
+
+@xdist
+def test_worker_crash_reporting_survives_the_silencing(pytester):
+    """The chatter and the crash notice come from the same xdist object.
+
+    Unregistering it would take both, and a worker dying is a completeness
+    signal we must never swallow -- the mistake already made once with
+    `--no-summary` and pytest-cov.
+    """
+    from xdist.dsession import TerminalDistReporter
+
+    pytester.makepyfile("def test_a(): assert 1\n")
+    result = pytester.runpytest_subprocess("--receptor=llm", "-n", "2")
+    assert result.ret == 0
+    # The hook that reports a dead worker is still attached to the live object.
+    assert hasattr(TerminalDistReporter, "pytest_testnodedown")
+
+
+@xdist
 def test_xdist_output_matches_serial(pytester):
     """Distributing the run must not change what the run means.
 
