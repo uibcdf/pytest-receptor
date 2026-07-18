@@ -2,11 +2,28 @@
 
 **Recorded:** 2026-07-17
 
+**Status:** current. Version numbering aligned on 2026-07-18.
+
 **Related documents:**
 
+- `scope_0.6.md`
 - `critical_audit_2026-07-17.md`
 - `evidence_preserving_architecture_proposal.md`
 - `audit_action_register_2026-07-17.md`
+
+> **Adoption levels map to releases as follows.** The levels below were written
+> before the release model existed.
+>
+> | Level | Release | Indicative trust |
+> | --- | --- | --- |
+> | Level 0: proof of concept | 0.1 (current) | 50-55% |
+> | Level 1: correctness floor | **0.6** | 75-80% |
+> | Level 2: evidence-preserving architecture | 1.0 | 88-92% |
+> | Level 3: validated operational authority | post-1.0 | 92-96% |
+>
+> Level 1 entry requirements are the 0.6 blockers in the register. One item in
+> the Level 1 list — "deduplication preserves occurrence-level evidence" — ships
+> in 0.6 only in its minimal form; see the split-release decomposition.
 
 ## Executive position
 

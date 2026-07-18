@@ -1,5 +1,5 @@
 {% set name = "pytest-receptor" %}
-{% set version = "0.1.1" %}
+{% set version = "0.1.0" %}
 
 package:
   name: {{ name|lower }}
@@ -15,11 +15,11 @@ build:
 
 requirements:
   host:
-    - python >=3.11,<=3.13
+    - python >=3.11,<3.14
     - hatchling
     - pip
   run:
-    - python >=3.11,<=3.13
+    - python >=3.11,<3.14
     - pytest >=8.0.0
 
 test:

@@ -1,8 +1,32 @@
 # Evidence-Preserving Receptor Architecture
 
-**Status:** proposed after the 2026-07-17 critical audit
+**Status:** post-0.6 reference. Proposed after the 2026-07-17 critical audit;
+partially superseded on 2026-07-18 by `scope_0.6.md`.
 
 **Operational work queue:** `audit_action_register_2026-07-17.md`
+
+> **Read this first.** The goal of this document is intact: the receptor should
+> eventually collect evidence once and render it for several consumers without
+> changing the meaning of the run. What changed is sequencing and scope.
+>
+> `scope_0.6.md` is the authority for the next release. The following parts of
+> this document no longer apply as written, and the reasons are recorded in
+> `superseded_proposals.md`:
+>
+> - **The recommended implementation order.** Phase 0 here is roughly the 0.6
+>   correctness floor, but 0.6 also deletes features this document assumed would
+>   be repaired: XML output, installation hints, the heartbeat, and the separate
+>   CI reporter.
+> - **Building a bespoke `events@1` JSONL schema first.** `pytest-reportlog`
+>   already streams per-report JSONL, including under xdist. It must be evaluated
+>   before any bespoke schema is designed.
+> - **"Lossless".** Narrowed to evidence-preserving during normal pytest
+>   lifecycle operation.
+> - **The XML presentation option.** Rejected; 0.6 uses compact plain text.
+>
+> Everything else — the event model, reversible grouping, semantic budgets,
+> redaction, the artifact reader, and the compatibility strategy — remains the
+> reference for work after 0.6.
 
 ## Objective
 

@@ -1,3 +1,16 @@
+# Original Upstream Feature Request
+
+**Status:** historical record. This is the pytest issue that started the project,
+preserved as written.
+
+> **Note.** The problem statement still holds and remains the clearest summary of
+> why the project exists. Three parts of the proposed solution no longer apply:
+> minified XML as the output syntax, the "token attention optimization" rationale
+> behind it, and upstreaming `--receptor` into pytest core as a project
+> milestone. See `superseded_proposals.md` entries 1 and 9.
+
+---
+
 #### What's the problem this feature will solve?
 With the massive adoption of terminal-based AI Agents (such as Claude Code, Codex CLI, Aider, and custom LLM-driven TDD loops), pytest is increasingly being executed by non-human actors. 
 

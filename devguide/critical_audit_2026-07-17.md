@@ -9,6 +9,11 @@ tests, packaging metadata, and representative runtime behavior
 
 **Operational follow-up:** `audit_action_register_2026-07-17.md`
 
+**Status:** historical record, still accurate as an assessment. It is not updated
+as findings are fixed — the register tracks that. Where this document recommends
+repairing a feature that 0.6 instead deletes (XML, installation hints, the
+heartbeat), `scope_0.6.md` and `superseded_proposals.md` record the decision.
+
 ## Executive assessment
 
 `pytest-receptor` addresses a real and increasingly important problem. Pytest's
