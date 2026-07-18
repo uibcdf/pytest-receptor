@@ -34,6 +34,10 @@ is safe — that is what the fallback exists for — but we want the traceback.
 
 ## Lifecycle
 
+Once fixed, a report moves to [`../resolved_bugs/`](../resolved_bugs/README.md)
+with its resolution appended, so this directory stays an inbox and the evidence
+behind a register entry stays reachable.
+
 Triaged bugs get an identifier in
 [`../audit_action_register_2026-07-17.md`](../audit_action_register_2026-07-17.md),
 which is the single complete work queue. Nothing is closed by deletion: a bug is

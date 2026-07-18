@@ -16,7 +16,7 @@ decomposed, xpass contradiction resolved, and reorganized around the accepted
 | TRUST | `trust_and_adoption_criteria.md` |
 | SMON | `smonitor_and_molsyssuite_integration.md` |
 | OLD | `superseded_proposals.md` — rejected and replaced proposals, preserved |
-| PILOT | `pending_bugs/` — field reports from the MolSysMT shadow evaluation |
+| PILOT | `resolved_bugs/` and `pending_bugs/` — field reports from the MolSysMT shadow evaluation |
 | ISSUE | `original_issue_in_pytest.md` |
 
 ## Purpose
