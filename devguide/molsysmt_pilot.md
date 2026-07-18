@@ -171,6 +171,20 @@ fixing: the first cut of the silencing swallowed pytest-cov's table completely,
 because the option that suppresses pytest's own summary also gates the hook
 third-party plugins write into. There is a regression test for it now.
 
+**Skips are grouped by reason.** Your suite skips heavily for optional
+dependencies, and `412 skipped` does not say which capability is missing:
+
+```text
+skipped: 412 in 3 groups
+  x380 | openmm not installed
+  x30 | requires a GPU
+  x2 | (no reason declared)
+```
+
+The last group is deliberate. A skip with no recorded reason means tests are
+switched off and nobody wrote down why — worth someone documenting or deleting,
+and nothing else in a run points it out.
+
 **Subtests and reruns work.** With `pytest-rerunfailures`, a test retried three
 times is reported as one test that took three attempts, not as three tests.
 

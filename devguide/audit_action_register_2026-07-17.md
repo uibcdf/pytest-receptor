@@ -367,7 +367,13 @@ deferred as a nice-to-have, which underrated it for the suite it is aimed at: a
 project with optional scientific dependencies skips in the hundreds, and `412
 skipped` does not say whether OpenMM is missing or a GPU is absent. The list is
 bounded by the variety of reasons rather than the number of tests, so it stays
-cheap. Reasonless skips are suppressed.
+cheap.
+
+Skips with no declared reason are reported as their own group rather than
+suppressed. The first cut hid them as noise, which confused two things: printing
+four hundred identical lines would be noise, but *stating* that four hundred
+tests are switched off with no recorded reason is a finding, and it costs one
+line.
 
 Worker identity under xdist was investigated and **rejected**, and the reasoning
 is recorded so it is not reopened by default. `report.worker_id` is available and
