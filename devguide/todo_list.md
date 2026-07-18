@@ -129,6 +129,15 @@ The following integration and dogfooding steps are planned for execution across 
 - [ ] **SMonitor-side Integration Bridge**
   - *Task:* Implement the SMonitor integration bridge on the SMonitor side to invoke the `pytest_receptor_extension_event` hook and pass structured diagnostics.
   - *Repository:* `uibcdf/smonitor`
+- [ ] **Joint Extension Schema & Bundle Contract Review**
+  - *Task:* Conduct a joint review of the `pytest-receptor.extension-event@1` schema with SMonitor's event and bundle specifications, finalizing policies for payload size, external blobs, trust boundaries, and redaction propagation.
+  - *Collaboration:* `smonitor` / `pytest-receptor`
+- [ ] **Context Propagation Boundary Definition**
+  - *Task:* Define and test propagation boundaries (using `contextvars` or process/thread wrappers) to preserve current active correlation metadata when background threads or async tasks emit diagnostics.
+  - *Collaboration:* `smonitor` / `pytest-receptor`
+- [ ] **Cross-Source Relationship & Deduplication Model**
+  - *Task:* Formulate a model to relate warnings, SMonitor events, captured logs, and test exceptions using explicit semantic links (`representation_of`, `caused_by`, `emitted_during`, `duplicate_of`, `derived_from`) instead of naive message-text deduplication.
+  - *Collaboration:* `smonitor` / `pytest-receptor`
 - [ ] **MolSysMT Dogfooding - Stage A (Shadow Comparison)**
   - *Task:* Run `pytest-receptor` in parallel with conventional pytest/JUnit in MolSysMT test runs to collect telemetry on token efficiency and parity, without using it to decide release success.
   - *Repository:* `uibcdf/molsysmt`
