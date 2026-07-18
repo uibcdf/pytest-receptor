@@ -114,7 +114,7 @@ limitation`.
 | PR-REL-003 | Low | Benchmark module fails collection without the optional tokenizer | Resolved: benchmarking moved out of the test suite into `devtools/benchmarks/`, which degrades to a labelled approximation without `tiktoken` | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-004 | Low | Package metadata is incomplete and the version is duplicated | Version centralized in `__init__.py` via `[tool.hatch.version]`, with a recipe-drift regression. Remaining: license expression, authors, URLs, classifiers | post | 3 | in progress |
 | PR-REL-005 | Medium | No differential parity harness against pytest and JUnit | Compare semantic models automatically across the supported matrix | post | 3 | open |
-| PR-REL-006 | Medium | No dogfooding program is scheduled | Execute the MolSysMT shadow, agent-facing, and CI stages | post | 4 | open |
+| PR-REL-006 | Medium | No dogfooding program is scheduled | Stage A running: shadow comparison on MolSysMT, seven defects found and fixed, first real development cycle passed on sufficiency. Post: Stage B and C | post | 4 | in progress |
 
 **0.6 blockers: 31. Post-0.6: 12.** Most 0.6 items are corrections or deletions;
 only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
@@ -174,7 +174,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-REL-003 | `tests/test_token_savings.py` could not be collected without `tiktoken` | AUD |
 | PR-REL-004 | `pyproject.toml` and `devtools/conda-build/meta.yaml` declared 0.1.0 and 0.1.1; now single-sourced and guarded by `tests/test_packaging.py` | ARCH |
 | PR-REL-005 | Semantic parity with pytest and JUnit is asserted but never measured | TRUST |
-| PR-REL-006 | MolSysMT is identified as the proving ground but no stage is scheduled | TRUST |
+| PR-REL-006 | MolSysMT is identified as the proving ground but no stage is scheduled; Stage A began 2026-07-18, evidence in the `molsysmt_*` documents and `resolved_bugs/` | TRUST, PILOT |
 
 ## Split-release decomposition
 
@@ -375,6 +375,32 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18t** — First real development cycle, and the first evidence of the
+kind the pilot exists to produce.
+
+MolSysMT used the receptor in shadow mode during an actual PDB fidelity change
+rather than a constructed scenario. A regression failed with
+`assert [] == [[0, 1]]`, and the compact report alone was enough to reach the
+cause: the topology parser stopped scanning at the first `ENDMDL` and never saw
+the global `CONECT` records written after the model block. They consulted
+neither ordinary pytest output nor the on-disk artifact, and the printed rerun
+command confirmed the fix.
+
+Every defect found before this was in the receptor, discovered by pointing it at
+a suite. This is the first datum on the question the project actually turns on:
+whether the output is *sufficient to work from*. One cycle is not sustained
+parity and does not move the adoption stage, but it is the right kind of
+evidence, and it is the first.
+
+Two broader runs -- 435 tests in 141s and 373 in 123s -- also passed with
+progress bounded and monotonic, which is the xdist fix holding over real
+durations rather than synthetic ones.
+
+Noticed while reading their report rather than reported by them: rendered
+message lines carried pytest's whitespace-only padding, which costs a token and
+reads as corruption. Lines are now right-stripped; genuinely empty lines are
+kept, since a diff of multi-line strings can contain them as content.
 
 **2026-07-18s** — Reverification passed; one low-severity observation, fixed.
 
