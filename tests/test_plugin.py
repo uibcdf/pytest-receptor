@@ -651,3 +651,59 @@ def test_receptor_ci_reporter_features(pytester):
     assert "A test warning" in stdout
     # Check completeness
     assert "complete=true" in stdout
+
+
+def test_receptor_warnings_and_xpassed_in_green_runs(pytester):
+    pytester.makepyfile(
+        """
+        import pytest
+        import warnings
+
+        def test_ok():
+            warnings.warn("Custom LLM green warning", UserWarning)
+            assert True
+
+        @pytest.mark.skip(reason="skipping this capability")
+        def test_skip():
+            pass
+
+        @pytest.mark.xfail(reason="known issue")
+        def test_xfail():
+            assert False
+
+        @pytest.mark.xfail(reason="unexpectedly passes")
+        def test_xpass():
+            assert True
+        """
+    )
+    result = pytester.runpytest("--receptor=llm")
+    stdout = result.stdout.str()
+
+    assert "OK exit=0" in stdout
+    assert "<skipped_tests>" in stdout
+    assert 'reason="Skipped: skipping this capability"' in stdout
+    assert "<xfailed_tests>" in stdout
+    assert 'reason="known issue"' in stdout
+    assert "<xpassed_tests>" in stdout
+    assert "test_xpass" in stdout
+    assert 'reason="unexpectedly passes"' in stdout
+    assert "<warnings>" in stdout
+    assert "Custom LLM green warning" in stdout
+
+
+def test_receptor_exit_codes(pytester):
+    # Test exit code 5 (NO_TESTS) by creating an empty directory
+    empty_dir = pytester.mkdir("empty_test_dir")
+    result = pytester.runpytest("--receptor=llm", str(empty_dir))
+    stdout = result.stdout.str()
+    assert "NO_TESTS exit=5" in stdout
+
+    # Test collection error
+    pytester.makepyfile(
+        test_syntax_error="""
+        import non_existent_package_to_force_error
+        """
+    )
+    result = pytester.runpytest("--receptor=llm")
+    stdout = result.stdout.str()
+    assert "exit=4" in stdout or "exit=1" in stdout or "exit=2" in stdout

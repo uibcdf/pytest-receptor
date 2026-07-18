@@ -753,7 +753,7 @@ class LlmTerminalReporter(TerminalReporter):
         ):
             return ""
 
-        frames = []
+        raw_frames = []
         for entry in report.longrepr.reprtraceback.reprentries:
             if not hasattr(entry, "reprfileloc") or entry.reprfileloc is None:
                 continue
@@ -775,12 +775,59 @@ class LlmTerminalReporter(TerminalReporter):
                 except ValueError:
                     is_local = False
 
-            if is_local:
-                frames.append(f"  at {path}:{lineno} -> {msg_snippet}")
+            raw_frames.append(
+                {
+                    "path": path,
+                    "lineno": lineno,
+                    "msg_snippet": msg_snippet,
+                    "is_local": is_local,
+                }
+            )
 
-        if frames:
-            return "\n" + "\n".join(frames)
-        return ""
+        if not raw_frames:
+            return ""
+
+        n = len(raw_frames)
+        selected_indices = set()
+
+        first_local_idx = None
+        last_local_idx = None
+        for idx, f in enumerate(raw_frames):
+            if f["is_local"]:
+                if first_local_idx is None:
+                    first_local_idx = idx
+                last_local_idx = idx
+
+        # 1. Initiating local frame
+        if first_local_idx is not None:
+            selected_indices.add(first_local_idx)
+        # 2. Final local frame
+        if last_local_idx is not None:
+            selected_indices.add(last_local_idx)
+        # 3. Terminal/crash frame (always keep the last frame)
+        selected_indices.add(n - 1)
+        # 4. Local-to-external boundaries
+        for idx in range(1, n):
+            prev_local = raw_frames[idx - 1]["is_local"]
+            curr_local = raw_frames[idx]["is_local"]
+            if prev_local and not curr_local:
+                # Transition local -> external
+                selected_indices.add(idx)
+
+        # Build output in order
+        frames_out = []
+        last_added = -1
+        for idx in sorted(selected_indices):
+            if last_added != -1 and idx > last_added + 1:
+                frames_out.append("  [... external/internal frames omitted ...]")
+            f = raw_frames[idx]
+            loc_label = "local" if f["is_local"] else "external"
+            frames_out.append(
+                f"  at {f['path']}:{f['lineno']} ({loc_label}) -> {f['msg_snippet']}"
+            )
+            last_added = idx
+
+        return "\n" + "\n".join(frames_out)
 
     def _compress_message(self, msg, max_len=1500, nodeid=None, phase=None):
         budget_opt = self.config.getoption("--receptor-budget", None)
