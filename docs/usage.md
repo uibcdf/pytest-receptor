@@ -127,20 +127,31 @@ pytest --receptor=llm --receptor-stats
 ```
 
 ```text
-receptor stats: 100 tokens vs 3205 for `pytest -q --no-header --tb=auto` | saved 3105 (+96.9%) | cl100k_base
+receptor stats: 38 tokens vs 148 for pytest as you configured it | 110 fewer (-74.3%) | cl100k_base
 ```
 
+**The baseline is your own pytest configuration**, whatever it happens to be.
+Nothing is overridden. If you normally run plain `pytest`, that is what you are
+compared against; if you already run `pytest -q`, the comparison is against that
+and the saving will look much smaller:
+
+```text
+receptor stats: 38 tokens vs 26 for pytest as you configured it | 12 more (+46.2%)
+```
+
+This is deliberate. The [benchmarks](benchmarks.md) page compares against a
+deliberately strict `pytest -q --no-header --tb=short`, because a published claim
+should not pick a weak opponent. But this flag answers a different, personal
+question — *against how I actually run pytest, what does this save me?* — and only
+your real settings can answer it. Expect the two numbers to differ.
+
 The baseline is **measured, not estimated**. During the same run the standard
-reporter renders its quiet output into a temporary file instead of the terminal;
-that file is tokenized and deleted. There is no second pytest invocation, no
-extra memory, and your own output is byte-for-byte unchanged.
+reporter renders into a temporary file instead of the terminal; that file is
+tokenized and deleted. There is no second pytest invocation, no extra memory, and
+your own output is byte-for-byte unchanged.
 
-The result is reported both as a net token count and as a percentage, because on
-small runs only the net count is meaningful — a "-40%" can be twelve tokens.
-
-The label names the traceback style in effect, because that is what the baseline
-was rendered with. If you want the comparison the published benchmarks use, add
-`--tb=short`.
+Both a net token count and a percentage are reported, with the same sign, because
+on small runs only the net count is meaningful — "+46%" can be twelve tokens.
 
 Token counts use `tiktoken` when it is installed. Without it, the figure falls
 back to a labelled four-characters-per-token approximation.

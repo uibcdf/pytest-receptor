@@ -2,17 +2,22 @@
 
 ## What is being compared
 
-Token counts are only meaningful against a fair baseline. An earlier version of
-this page compared the receptor against pytest's **default** output, which
-includes a header, a platform banner, a progress bar, and the source code of
-every failing test. Nobody driving pytest from an agent leaves those switched on,
-so that comparison inflated every figure and told the reader nothing.
+Two baselines matter, for different reasons, so both are published.
 
-The figures below are measured against **`pytest -q --no-header --tb=short`**: a
-pytest that has already been told to be quiet, and which still shows the
-assertion diff. `pytest -q --tb=line` is included as a third column because it is
-the other common choice, even though it discards the diff and so is not really
-comparable in usefulness.
+**`pytest`, plain.** This is what actually happens. An agent told to run the
+tests runs `pytest`, and reads a platform banner, a `rootdir` line, a plugin
+list, a progress bar, and the full source of every failing test. This is the
+comparison that describes real token spend.
+
+**`pytest -q --no-header --tb=short`.** A pytest already tuned by someone who
+thought about it, still showing the assertion diff. This is the comparison a
+published claim should have to survive, because picking the chatty default as an
+opponent would inflate every figure. `pytest -q --tb=line` appears as a third
+column as the other common choice, though it discards the diff and so is not
+really comparable in usefulness.
+
+An earlier version of this page quoted only savings against the default and
+described them as though they held generally. They did not.
 
 Reproduce everything on your own machine:
 
@@ -24,15 +29,15 @@ python devtools/benchmarks/run_benchmarks.py
 
 ## Results
 
-| Scenario | pytest (default) | quiet pytest | `--tb=line` | `--receptor=llm` | Saving |
+| Scenario | pytest (default) | quiet pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3279 | 2863 | 1989 | **101** | 96.5% |
-| Green with warnings | 167 | 93 | 93 | **20** | 78.5% |
-| Five distinct causes | 385 | 316 | 243 | **181** | 42.7% |
-| Green suite (128 tests) | 97 | 23 | 23 | **16** | 30.4% |
-| Single assertion failure | 331 | 197 | 230 | **162** | 17.8% |
-| Collection error | 273 | 198 | 198 | **215** | -8.6% |
-| Mixed states (skip, xfail, xpass) | 103 | 31 | 31 | **44** | -41.9% |
+| Cascade (38 failures, one cause) | 3279 | 2863 | 1989 | **101** | -96.5% |
+| Green with warnings | 167 | 93 | 93 | **20** | -78.5% |
+| Five distinct causes | 385 | 316 | 243 | **181** | -42.7% |
+| Green suite (128 tests) | 97 | 23 | 23 | **16** | -30.4% |
+| Single assertion failure | 331 | 197 | 230 | **162** | -17.8% |
+| Collection error | 273 | 198 | 198 | **215** | +8.6% |
+| Mixed states (skip, xfail, xpass) | 103 | 31 | 31 | **44** | +41.9% |
 
 Environment for the run above:
 
@@ -45,10 +50,32 @@ Environment for the run above:
 
 ## Reading the table
 
+**The receptor is smaller than `--receptor=human` in every scenario above.**
+That is worth stating plainly, because the negative rows invite the opposite
+conclusion. They are negative against *quiet* pytest, not against the default
+output you would otherwise be reading. On the mixed-state run: 148 tokens for
+default pytest, 26 for quiet pytest, 39 for the receptor.
+
 **Percentages mislead at the bottom of the table.** Read the negative rows in
-absolute terms: -41.9% on a mixed-state run is *thirteen tokens*, and -8.6% on a
+absolute terms: +46.2% on a mixed-state run is *thirteen tokens*, and +8.6% on a
 collection error is seventeen. Those are rounding errors in any real context
 window.
+
+Those thirteen tokens are also the whole difference between
+
+```text
+1 passed, 1 skipped, 1 xpassed
+```
+
+and the same line plus
+
+```text
+unexpected passes:
+  test_mix.py::test_xp - known bug
+```
+
+`1 xpassed` tells you something passed unexpectedly. It does not tell you which
+test or why, and you cannot act on it without both.
 
 They are also not accidental. The receptor spends those tokens naming the tests
 that passed unexpectedly and why; pytest reports `1 xpassed` and moves on. An
@@ -76,20 +103,22 @@ pytest --receptor=llm --receptor-stats
 ```
 
 ```text
-receptor stats: 100 tokens vs 3205 for `pytest -q --no-header --tb=auto` | saved 3105 (+96.9%) | cl100k_base
+receptor stats: 38 tokens vs 148 for pytest as you configured it | 110 fewer (-74.3%) | cl100k_base
 ```
 
+**That number will not match this page, and should not.** The table above uses a
+deliberately strict baseline, because a published claim has no business choosing
+a weak opponent. The flag uses *your* configuration untouched, because it answers
+a personal question: against how you actually run pytest, what does this save
+you? If you already run `pytest -q`, expect a much smaller figure than the table
+suggests. If you run plain `pytest`, expect a larger one.
+
 The baseline is measured, not estimated. During the same run pytest genuinely
-renders its quiet output into a temporary file, which is then tokenized and
-discarded. Your terminal output is unchanged, and nothing extra is accumulated in
-memory.
+renders into a temporary file, which is then tokenized and discarded. Your
+terminal output is unchanged and nothing extra is accumulated in memory.
 
-The reported baseline uses whichever traceback style you have configured, which
-is why the label names it. Comparing under `--tb=short` reproduces the numbers in
-the table above exactly.
-
-Both figures are given as a net token count and a percentage, because on small
-runs only the net count means anything.
+Both figures carry the same sign, and both are reported, because on small runs
+only the net count means anything.
 
 ---
 

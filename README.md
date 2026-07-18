@@ -21,11 +21,15 @@ exactly what to re-run.
 
 ## The problem
 
-`pytest -q --tb=line` is compact but strips the assertion diff, so the agent
-guesses. Default pytest keeps the diff but spends thousands of tokens on
-headers, progress bars, and source code the agent already has indexed. Neither
-handles the common case where one broken fixture fails forty tests and the agent
-reads the same traceback forty times.
+Your agent was told to run the tests, so it runs `pytest`, and pytest answers
+the way it has always answered: for a human sitting at a terminal. Banner,
+`rootdir`, plugin list, progress bar, and the full source of every failing test.
+The agent pays for all of it, on every iteration.
+
+Tuning the flags does not fix it. `pytest -q --tb=line` is compact but strips
+the assertion diff, so the agent guesses and loops. And nothing pytest offers
+handles the case that hurts most: one broken fixture fails forty tests, and the
+agent reads the same traceback forty times.
 
 ## What it does
 
@@ -45,7 +49,7 @@ FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
-That is 101 tokens where a fairly configured pytest spends 2,863.
+That is 101 tokens. Plain `pytest` spends 3,279 on the same run.
 
 ---
 
@@ -118,33 +122,51 @@ are stripped, and no text produced by a test can forge a verdict line.
 
 ---
 
-## Token cost, measured honestly
+## What your agent is doing right now
 
-Measured with `tiktoken` (`cl100k_base`) against **`pytest -q --no-header
---tb=short`** — a pytest that has already been told to be quiet. Comparing
-against pytest's chatty default would roughly double every figure below and
-would not tell you anything useful.
+Your agent runs `pytest`. Plain, because that is the obvious command and nobody
+told it otherwise. So every test run spends tokens on a platform banner, a
+`rootdir` line, a plugin list, a progress bar, and the source code of every
+failing test — none of which the agent needs, all of which you pay for, on every
+iteration of every loop.
 
-| Scenario | quiet pytest | `--receptor=llm` | Saving |
+Measured with `tiktoken` (`cl100k_base`):
+
+| Scenario | `pytest` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 2863 | **101** | 96.5% |
-| Green with warnings | 93 | **20** | 78.5% |
-| Five distinct causes | 316 | **181** | 42.7% |
-| Green suite (128 tests) | 23 | **16** | 30.4% |
-| Single assertion failure | 197 | **162** | 17.8% |
-| Collection error | 198 | **215** | -8.6% |
-| Mixed states (skip, xfail, xpass) | 31 | **44** | -41.9% |
+| Cascade (38 failures, one cause) | 3279 | **101** | **-96.9%** |
+| Green with warnings | 167 | **20** | -88.0% |
+| Green suite (128 tests) | 97 | **16** | -83.5% |
+| Mixed states (skip, xfail, xpass) | 103 | **44** | -57.3% |
+| Five distinct causes | 385 | **181** | -53.0% |
+| Single assertion failure | 331 | **162** | -51.1% |
+| Collection error | 273 | **215** | -21.2% |
 
-**The last two rows are not typos**, but read them in absolute terms: -41.9%
-there is *twelve tokens*. On small, simple runs the receptor costs about the
-same as quiet pytest, occasionally a handful more, because it spends those
-tokens on things pytest omits — naming the tests that passed unexpectedly,
-stating the exit status, giving you a rerun command.
+Every scenario is cheaper, most of them by half or better. In a TDD loop that
+runs the suite twenty times, the cascade row alone is sixty thousand tokens.
 
-So the question is not really whether to turn it on. Turning it on is close to
-free in the worst measured case and saves 96% in the best one. The question is
-how much it will help *your* suite, which depends entirely on how your failures
-cluster.
+### And if you already tuned pytest
+
+If you are the kind of person who already runs `pytest -q --no-header
+--tb=short`, the picture is narrower and you deserve to see that too:
+
+| Scenario | tuned pytest | `--receptor=llm` | Change |
+| :--- | ---: | ---: | ---: |
+| Cascade (38 failures, one cause) | 2863 | **101** | -96.5% |
+| Green with warnings | 93 | **20** | -78.5% |
+| Five distinct causes | 316 | **181** | -42.7% |
+| Green suite (128 tests) | 23 | **16** | -30.4% |
+| Single assertion failure | 197 | **162** | -17.8% |
+| Collection error | 198 | **215** | +8.6% |
+| Mixed states (skip, xfail, xpass) | 31 | **44** | +41.9% |
+
+The two positive rows are real, and they are thirteen and seventeen tokens. They
+buy the difference between `1 xpassed` and knowing *which* test passed
+unexpectedly and why — which is the thing you would otherwise have re-run pytest
+to discover.
+
+The cascade row does not move: grouping forty failures into one root cause is
+something no combination of pytest flags does.
 
 ### Measure it on your own suite
 
@@ -153,12 +175,15 @@ pytest --receptor=llm --receptor-stats
 ```
 
 ```text
-receptor stats: 100 tokens vs 3205 for `pytest -q --no-header --tb=auto` | saved 3105 (+96.9%) | cl100k_base
+receptor stats: 38 tokens vs 148 for pytest as you configured it | 110 fewer (-74.3%) | cl100k_base
 ```
 
-That baseline is not an estimate. pytest genuinely renders its quiet output
-during the same run, into a temporary file, and the bytes are counted. Nothing
-extra is held in memory and your own output is unaffected.
+The baseline here is *your* pytest configuration, not the strict one used in the
+table above, because the question this answers is personal: against how you
+actually run pytest, what does this save you? It is measured rather than
+estimated — pytest genuinely renders into a temporary file during the same run,
+which is then tokenized and deleted. No second invocation, no extra memory, and
+your own output is unaffected.
 
 Reproduce the table above with `python devtools/benchmarks/run_benchmarks.py`.
 

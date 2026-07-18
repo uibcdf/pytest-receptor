@@ -45,8 +45,8 @@ FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
-One broken fixture, thirty-eight failing tests, one root cause. A fairly
-configured pytest spends 2,863 tokens on that run; this is 101.
+One broken fixture, thirty-eight failing tests, one root cause. Plain `pytest`
+spends 3,279 tokens on that run. This is 101.
 
 ---
 
@@ -73,10 +73,14 @@ configured pytest spends 2,863 tokens on that run; this is 101.
 
 ## How much it helps
 
-Enormously in failure cascades, marginally on small green suites, and never
-meaningfully worse: the largest measured penalty is thirteen tokens. So the
-question is not whether to enable it but how much it will save on your code,
-which depends on how your failures cluster.
+Agents run `pytest` plain, because that is the obvious command. Against that,
+every scenario measured is cheaper — from 21% on a collection error to 97% on a
+failure cascade. In a TDD loop that runs the suite twenty times, the cascade case
+alone is sixty thousand tokens you were not getting anything for.
+
+Against a pytest you have already tuned with `-q --no-header --tb=short` the
+margin narrows, and on two small scenarios the receptor costs about a dozen
+tokens more. Both tables are published rather than only the flattering one.
 
 You can measure that directly rather than guessing:
 

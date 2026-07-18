@@ -260,19 +260,41 @@ def test_stats_reports_a_measured_comparison(pytester):
         "def test_a(broken, i): assert 1\n"
     )
     result = pytester.runpytest("--receptor=llm", "--receptor-stats")
-    result.stdout.fnmatch_lines(["receptor stats: * tokens vs * saved * | *"])
+    result.stdout.fnmatch_lines(["receptor stats: * tokens vs * | * fewer (-*%) | *"])
 
 
 def test_stats_admits_when_the_receptor_costs_more(pytester):
-    """The point of the flag is deciding, so it must be able to say 'no'."""
+    """The point of the flag is deciding, so it must be able to say 'no'.
+
+    Needs an already-tuned baseline: against plain pytest the receptor is
+    cheaper here, and only a quiet pytest is tight enough to lose against.
+    """
     pytester.makepyfile(
         "import pytest\n"
         "@pytest.mark.xfail(reason='known bug')\n"
         "def test_x(): assert 1\n"
         "def test_ok(): assert 1\n"
     )
-    result = pytester.runpytest("--receptor=llm", "--receptor-stats")
-    result.stdout.fnmatch_lines(["receptor stats: * cost * (-*%) | *"])
+    result = pytester.runpytest(
+        "--receptor=llm", "--receptor-stats", "-q", "--no-header"
+    )
+    result.stdout.fnmatch_lines(["receptor stats: * | * more (+*%) | *"])
+
+
+def test_stats_uses_the_configuration_the_user_actually_chose(pytester):
+    """The baseline must not be one we picked on their behalf."""
+    pytester.makepyfile("def test_a(): assert 0\n")
+
+    verbose = pytester.runpytest("--receptor=llm", "--receptor-stats").stdout.str()
+    quiet = pytester.runpytest(
+        "--receptor=llm", "--receptor-stats", "-q", "--no-header"
+    ).stdout.str()
+
+    def baseline(text):
+        return int(re.search(r"tokens vs (\d+) for", text).group(1))
+
+    # A chattier pytest must produce a bigger baseline than a quiet one.
+    assert baseline(verbose) > baseline(quiet)
 
 
 def test_stats_does_not_leak_the_baseline_into_the_terminal(pytester):

@@ -83,8 +83,8 @@ def pytest_addoption(parser):
     group.addoption(
         "--receptor-stats",
         action="store_true",
-        help="Append what this run cost against a quiet pytest baseline, so you "
-        "can judge on your own suite whether the plugin is worth it.",
+        help="Append what this run cost compared with pytest as you normally "
+        "run it, so you can judge on your own suite whether this is worth it.",
     )
 
 
@@ -97,9 +97,9 @@ def pytest_configure(config):
         return
     plugin = ReceptorPlugin(config, PROFILES[receptor])
     if plugin.stats:
-        # Let pytest render a real baseline into a temp file instead of the
-        # terminal, so the comparison is measured rather than estimated.
-        _configure_baseline(config)
+        # Measuring: leave every option exactly as the user set it and let the
+        # reporter render into a temp file. The baseline has to be what *they*
+        # would otherwise have read, not a configuration we picked for them.
         plugin.start_baseline_capture()
     else:
         _silence_standard_reporter(config)
@@ -125,17 +125,6 @@ def _silence_standard_reporter(config):
     config.option.verbose = -2
     config.option.no_header = True
     config.option.no_summary = True
-
-
-def _configure_baseline(config):
-    """Configure the reporter as the baseline we claim to beat.
-
-    ``-q --no-header`` with the traceback style the user already chose. The
-    reporter still renders in full; it just renders somewhere else.
-    """
-    config.option.verbose = -1
-    config.option.no_header = True
-    config.option.no_summary = False
 
 
 @dataclass
@@ -570,9 +559,11 @@ class ReceptorPlugin:
     def _stats_line(self, shown):
         """Compare our output against the baseline pytest actually rendered.
 
-        The baseline is a *quiet* pytest, not pytest's chatty default:
-        comparing against the default would roughly double the apparent saving
-        without telling anyone anything useful.
+        The baseline is the user's own pytest configuration, untouched. A
+        published benchmark should pick a strict opponent, but this flag answers
+        a personal question -- "against how I actually run pytest, what did this
+        save me?" -- and only their real settings answer it. The docs explain why
+        this number and the published table differ.
         """
         baseline = self._read_baseline()
         if not baseline:
@@ -584,14 +575,17 @@ class ReceptorPlugin:
             return ""
         if not theirs:
             return ""
-        delta = theirs - mine
-        percent = delta / theirs * 100
-        verb = "saved" if delta >= 0 else "cost"
-        tbstyle = getattr(self.config.option, "tbstyle", "auto")
+        # One convention for both numbers: they describe the change in output
+        # size, and they carry the same sign. Reporting an absolute count next
+        # to a signed *saving* reads as a contradiction -- "cost 12 (-46.2%)"
+        # looks like the cost went down.
+        change = mine - theirs
+        percent = change / theirs * 100
+        direction = "fewer" if change < 0 else "more"
         return (
-            f"\nreceptor stats: {mine} tokens vs {theirs} for "
-            f"`pytest -q --no-header --tb={tbstyle}` | "
-            f"{verb} {abs(delta)} ({percent:+.1f}%) | {unit}\n"
+            f"\nreceptor stats: {mine} tokens vs {theirs} for pytest as you "
+            f"configured it | {abs(change)} {direction} ({percent:+.1f}%) | "
+            f"{unit}\n"
         )
 
     # ------------------------------------------------------------- fallback
