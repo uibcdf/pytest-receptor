@@ -264,8 +264,13 @@ def test_each_group_carries_a_rerun_command(pytester):
     result.stdout.fnmatch_lines(["*rerun: pytest test_each_group*::test_a -q*"])
 
 
-def test_progressive_disclosure_holds_back_later_causes(pytester):
-    """PR-UX-002: an agent fixes one cause at a time."""
+def test_ordinary_failure_counts_are_never_withheld(pytester):
+    """PR-UX-002: grouping already collapsed the volume.
+
+    Withholding on top of it saves almost nothing -- 40 tokens at five distinct
+    causes -- and costs double if the consumer then has to read the file. The
+    consumer must be able to work from stdout alone.
+    """
     pytester.makepyfile(
         "def test_a(): raise ValueError('a')\n"
         "def test_b(): raise TypeError('b')\n"
@@ -276,11 +281,8 @@ def test_progressive_disclosure_holds_back_later_causes(pytester):
     result = pytester.runpytest("--receptor=llm")
     output = result.stdout.str()
     assert "5 root causes" in output
-    # The first three are expanded, the rest are one line each.
-    assert "rerun: " in output
-    assert output.count("rerun: ") == 3
-    assert "[4] IndexError" in output
-    assert "[5] RuntimeError" in output
+    assert output.count("rerun: ") == 5
+    assert "full report:" not in output
 
 
 def test_full_report_on_disk_expands_everything(pytester):
@@ -291,13 +293,41 @@ def test_full_report_on_disk_expands_everything(pytester):
         "def test_c(): raise KeyError('c')\n"
         "def test_d(): raise IndexError('d')\n"
     )
-    result = pytester.runpytest("--receptor=llm")
-    assert "full report:" in result.stdout.str()
+    pytester.runpytest("--receptor=llm")
 
     reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
     assert reports, "the full report should be written during the run"
     text = reports[0].read_text(encoding="utf-8")
     assert text.count("rerun: ") == 4
+
+
+def test_withholding_only_when_the_report_is_reachable(pytester):
+    """Nothing may be recoverable only by running the suite again.
+
+    Without a cache provider there is no file to point at, so holding detail
+    back would leave it reachable only via a second full run.
+    """
+    source = "".join(
+        f"def test_c{i}(): raise ValueError('cause {i}')\n" for i in range(15)
+    )
+    pytester.makepyfile(source)
+    result = pytester.runpytest("--receptor=llm", "-p", "no:cacheprovider")
+    output = result.stdout.str()
+    assert output.count("rerun: ") == 15
+    assert "full report:" not in output
+
+
+def test_many_causes_are_summarized_with_a_reachable_report(pytester):
+    source = "".join(
+        f"def test_c{i}(): raise ValueError('cause {i}')\n" for i in range(15)
+    )
+    pytester.makepyfile(source)
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "15 root causes" in output
+    assert "full report:" in output
+    reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
+    assert reports[0].read_text(encoding="utf-8").count("rerun: ") == 15
 
 
 def test_ci_profile_holds_nothing_back(pytester):

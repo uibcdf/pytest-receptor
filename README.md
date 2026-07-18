@@ -188,12 +188,12 @@ frames: tests/test_merge.py:12 -> molsysmt/merge.py:41 -> numpy/core/shape.py:88
 Dropping external frames entirely is cheaper, and wrong: when a failure
 originates inside NumPy or a serializer, the external frame *is* the answer.
 
-**Nothing is thrown away.** Grouping is a presentation decision. Every
-occurrence keeps its node ID, phase, and location, and the complete report — every
-group, every occurrence, every captured section — is written to
-`.pytest_cache/receptor/last-run.txt` while the run is still going. That file is
-created owner-only and refuses to follow a symlink, since it carries whatever
-your tests printed.
+**Nothing is thrown away, and nothing is deferred.** Grouping is a presentation
+decision; every occurrence keeps its node ID, phase, and location. The complete
+report is written to `.pytest_cache/receptor/last-run.txt` while the run is
+still going, owner-only and refusing symlinks. Detail is only ever held back
+when that file exists to hold it, so a consumer can never be left with
+information reachable solely by running the suite again.
 
 **`--tb` is deliberately left alone.** It controls how pytest *builds*
 `longrepr`, not how it prints it. Forcing `--tb=no` would look like a sensible
@@ -218,7 +218,7 @@ Measured with `tiktoken` (`cl100k_base`):
 | Green suite (128 tests) | 125 | **16** | -87.2% |
 | Green with warnings | 191 | **46** | -75.9% |
 | Mixed states (skip, xfail, xpass) | 131 | **44** | -66.4% |
-| Five distinct causes | 411 | **181** | -56.0% |
+| Five distinct causes | 410 | **212** | -48.3% |
 | Single assertion failure | 354 | **167** | -52.8% |
 | Collection error | 293 | **217** | -25.9% |
 
@@ -234,7 +234,7 @@ If you are the kind of person who already runs `pytest -q --no-header
 | :--- | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 2863 | **106** | -96.3% |
 | Green with warnings | 92 | **46** | -50.0% |
-| Five distinct causes | 316 | **181** | -42.7% |
+| Five distinct causes | 316 | **212** | -32.9% |
 | Green suite (128 tests) | 23 | **16** | -30.4% |
 | Single assertion failure | 197 | **167** | -15.2% |
 | Collection error | 195 | **217** | +11.3% |

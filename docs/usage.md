@@ -57,7 +57,7 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
 * No source echo. The agent already has your files; the assertion diff, which it
   cannot reconstruct, is kept.
 * A literal rerun command per group.
-* The first three root causes in full, the rest one line each.
+* Every root cause in full. Only a pathological spread is summarized.
 
 ### `ci`
 
@@ -75,7 +75,7 @@ The CI profile therefore expands **every** group rather than holding any back.
 | :--- | :--- | :--- |
 | ANSI colour | off | off |
 | Progress output | none | none |
-| Root causes expanded | first three | all |
+| Root causes expanded | all, unless more than ten | all |
 | On-disk report referenced | yes | no |
 
 ---
@@ -176,19 +176,38 @@ executed and collected counts, even when nothing has failed yet.
 
 ---
 
-## Recovering what was held back
+## What is on stdout, and what is not
 
-When `llm` holds back later root causes it names the file that has everything:
+**Everything you need is on stdout.** All root causes are rendered in full, with
+their message, frames, and rerun command. You should never have to open a file
+to act on a failure, and you must never have to run the suite again.
+
+That was not the original design. `llm` used to show the first three causes and
+point at a file for the rest, on the theory that an agent fixes one thing at a
+time. Measurement killed it: at five distinct causes, holding back saves forty
+tokens and costs two hundred more the moment the consumer reads the file, since
+the file repeats what was already shown. Grouping had already solved the volume
+problem, and withholding on top of it was solving a problem that no longer
+existed.
+
+What remains held back:
+
+* **Occurrence lists.** A group of thirty-eight failing tests names three and
+  counts the rest. The rerun command already selects all of them, so the
+  remaining node IDs are recoverable without being read.
+* **A pathological spread of causes.** Above ten *distinct* root causes,
+  expanding all of them stops being cheaper than naming the file.
+
+In both cases the complete report exists on disk before the summary is printed:
 
 ```text
 full report: .pytest_cache/receptor/last-run.txt
 ```
 
-That file is written **during** the run and contains every group, every
-occurrence, and every captured section. Reading it costs one file read. This
-matters because the alternative — re-running pytest with a different flag — costs
-a whole test execution, which is usually far more expensive than any formatting
-saving.
+It is written **during** the run and contains every group, every occurrence, and
+every captured section. Detail is only ever withheld when that file is actually
+reachable — with `-p no:cacheprovider`, nothing is withheld at all, because
+there would be nowhere to recover it from.
 
 If you know in advance that you want everything on stdout:
 
@@ -200,8 +219,9 @@ pytest --receptor=llm --receptor-full
 but redundant: source echo, headers, colour, and a duplicated summary section.
 `--receptor-full` is complete in agent format and still grouped by root cause.
 
-When the cache provider is disabled (`-p no:cacheprovider`) no file is written
-and the output names the flag instead.
+When the cache provider is disabled (`-p no:cacheprovider`) no file is written,
+and the output expands everything rather than pointing at something that does
+not exist.
 
 ---
 

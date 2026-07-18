@@ -35,7 +35,7 @@ Headline comparison, `cl100k_base`:
 | :--- | ---: | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 3304 | 2863 | 1989 | **106** | -96.3% |
 | Green with warnings | 191 | 92 | 92 | **46** | -50.0% |
-| Five distinct causes | 411 | 316 | 243 | **181** | -42.7% |
+| Five distinct causes | 410 | 316 | 238 | **212** | -32.9% |
 | Green suite (128 tests) | 125 | 23 | 23 | **16** | -30.4% |
 | Single assertion failure | 354 | 197 | 227 | **167** | -15.2% |
 | Collection error | 293 | 195 | 195 | **217** | +11.3% |
@@ -55,7 +55,7 @@ between them, so the comparison against plain `pytest` is repeated across four:
 | Green suite (128 tests) | -87.2% | -87.4% | -89.6% | -89.7% |
 | Green with warnings | -75.9% | -76.0% | -79.6% | -81.1% |
 | Mixed states (skip, xfail, xpass) | -66.4% | -66.9% | -66.7% | -75.5% |
-| Five distinct causes | -56.0% | -54.8% | -58.5% | -64.5% |
+| Five distinct causes | -48.3% | -46.8% | -50.7% | -56.5% |
 | Single assertion failure | -52.8% | -53.1% | -54.2% | -58.9% |
 | Collection error | -25.9% | -26.2% | -23.7% | -15.2% |
 

@@ -139,8 +139,18 @@ This is the main token saving in 0.6, and it is larger than any formatting
 change.
 
 When forty tests fail, an agent fixes one. Rendering all forty in full is the
-real waste. The rule is: **full detail for the first three distinct root causes,
-one line for the rest.**
+real waste — but the unit that matters is the *occurrence*, not the cause.
+
+The original rule here was "full detail for the first three root causes, one
+line for the rest". It was wrong and was reversed on 2026-07-18. Grouping has
+already collapsed the volume: a thousand failures become a handful of causes.
+Withholding on top of that saves almost nothing and costs double when the
+consumer reads the file back, because the file repeats what was already shown.
+Measured at five distinct causes: 40 tokens saved, 200 lost on a single read.
+
+The rule is now: **every root cause in full; occurrence lists truncated; the
+complete report on disk but not load-bearing.** A pathological spread, more than
+ten distinct causes, is the one case still summarized.
 
 ```text
 FAIL exit=1 · 41 failed, 87 passed · 12.4s · 3 root causes

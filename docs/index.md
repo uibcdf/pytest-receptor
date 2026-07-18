@@ -57,8 +57,8 @@ spends 3,304 tokens on that run. This is 106.
   plain `pytest` gets you this: installing the plugin changes nothing until you
   ask it to, which makes it safe to add to a shared environment.
 * **`--receptor=llm`** — compact output for a coding agent. Root-cause grouping,
-  the assertion diff without the source echo, a rerun command per group, and the
-  first three causes expanded with the rest one line each.
+  the assertion diff without the source echo, and a rerun command per group.
+  Everything you need is on stdout: no file to open, and never a second run.
 * **`--receptor=ci`** — the same renderer with build-log defaults. Expands every
   group, because a CI runner is destroyed when the job ends.
 
@@ -67,9 +67,9 @@ spends 3,304 tokens on that run. This is 106.
 * The verdict comes from pytest's exit status. An empty, interrupted, or
   fail-fast run can never render as a success.
 * Grouping never discards which tests were affected.
-* Anything held back from the summary is written to
-  `.pytest_cache/receptor/last-run.txt` during the run, so recovering it is a
-  file read rather than another test run.
+* Nothing is ever recoverable only by running the suite again. The complete
+  report is written to `.pytest_cache/receptor/last-run.txt` during the run, and
+  detail is withheld only when that file exists to hold it.
 * If the receptor raises, you get `RECEPTOR_ERROR`, the raw evidence, and
   pytest's original exit status.
 

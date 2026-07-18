@@ -60,6 +60,10 @@ The important part is not that it is shorter. It is that one broken fixture
 appears **once**, with every affected test still named, and with the command to
 re-run them.
 
+**Everything you need is on stdout.** Every root cause is rendered in full. You
+should never have to open a file to act on a failure, and you must never have to
+run the suite a second time to get information the first run already had.
+
 On that scenario: 3,304 tokens for plain `pytest`, 106 for the receptor.
 
 ---

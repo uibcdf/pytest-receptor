@@ -65,6 +65,9 @@ _SLOW_TEST_SECONDS = 0.5
 _SLOW_TEST_COUNT = 3
 _SHOWN_TESTS = 3
 _MAX_LOCAL_FRAMES = 8
+# Above this many distinct root causes, expanding all of them stops being
+# cheaper than pointing at the file.
+_MANY_CAUSES = 10
 
 # O_NOFOLLOW is POSIX-only; on Windows the symlink check above is what we get.
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
@@ -82,8 +85,13 @@ class Profile:
 
 
 PROFILES = {
-    # An agent can read the file, so only the first causes need expanding.
-    "llm": Profile("llm", detailed_groups=3, show_report_path=True),
+    # Show every root cause. Grouping has already collapsed the volume -- a
+    # thousand failures become a handful of causes -- so withholding on top of
+    # it saves almost nothing and risks costing double. Measured on distinct
+    # causes: at five, holding back saves 40 tokens and costs 200 more if the
+    # consumer then has to read the file. Only a pathological spread makes the
+    # trade worth taking, which is what the threshold is for.
+    "llm": Profile("llm", detailed_groups=_MANY_CAUSES, show_report_path=True),
     # A CI runner is destroyed at job end and the log gets one shot, so the
     # on-disk report is unreachable and nothing may be held back.
     "ci": Profile("ci", detailed_groups=None, show_report_path=False),
@@ -293,10 +301,19 @@ class ReceptorPlugin:
             summary = self._summary_line(session, exitstatus, groups)
             full_report = self._render(summary, groups, expand_all=True)
             path = self._write_full_report(full_report)
-            if self.full or self.profile.detailed_groups is None:
-                shown = full_report
-            else:
+            # Holding detail back is only permissible when that detail is
+            # actually reachable. If the report could not be written -- no cache
+            # provider, an unwritable directory -- expand everything instead.
+            # Nothing may ever be recoverable only by running the suite again.
+            withhold = (
+                not self.full
+                and self.profile.detailed_groups is not None
+                and path is not None
+            )
+            if withhold:
                 shown = self._render(summary, groups, expand_all=False, path=path)
+            else:
+                shown = full_report
             tw.line("")
             tw.write(shown)
             self._shown = shown
@@ -535,12 +552,9 @@ class ReceptorPlugin:
         held_back = (
             limit is not None and len(groups) > limit and self.profile.show_report_path
         )
-        if held_back:
+        if held_back and path is not None:
             lines.append("")
-            if path is not None:
-                lines.append(f"full report: {path}")
-            else:
-                lines.append("full report: rerun with --receptor-full")
+            lines.append(f"full report: {path}")
 
         return "\n".join(lines) + "\n"
 
