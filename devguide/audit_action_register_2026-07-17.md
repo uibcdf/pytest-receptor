@@ -60,38 +60,38 @@ limitation`.
 
 | ID | Sev | Finding | Required outcome | Release | Phase | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| PR-CRIT-001 | Critical | No-tests session rendered as `OK` | Render `NO_TESTS`, retain exit 5, never emit success | 0.6 | 0 | open |
-| PR-CRIT-002 | Critical | Interrupted session rendered as `OK` | Render `INTERRUPTED`, retain exit 2 and partial-session state | 0.6 | 0 | open |
-| PR-CRIT-003 | Critical | Session completeness is not modeled | Qualify incomplete runs even when nothing failed; state stop reason and executed/collected | 0.6 | 0 | open |
-| PR-FID-001 | High | Deduplication drops later occurrence context | 0.6: every occurrence retains node ID, phase, and location. Post: full deltas and per-occurrence references | 0.6 | 0 | open |
-| PR-FID-002 | High | XML-like output is malformed by unescaped values | Resolved by deleting XML output in favour of compact plain text | 0.6 | 0 | open |
-| PR-FID-003 | High | Warnings disappear from green runs | 0.6: warning count on the summary line. Post: grouped category/message/origin | 0.6 | 0 | open |
-| PR-FID-004 | High | Fingerprint is calculated after truncation | Fingerprint complete normalized evidence before presentation budgets | 0.6 | 0 | open |
-| PR-FID-005 | Medium | Xpass identities and reasons disappear | List every xpass with node ID and reason; respect pytest strictness for exit behavior | 0.6 | 0 | open |
-| PR-FID-007 | Medium | Displayed traceback function is not a function name | Capture a real function identifier or label the field accurately | 0.6 | 0 | open |
-| PR-FID-008 | High | Reporter bucket counts are treated as logical test outcomes | 0.6: aggregate by node ID and report the failing phase. Post: full logical/attempt/subtest model | 0.6 | 0 | open |
-| PR-FID-011 | High | Omitted detail is only recoverable by re-running pytest | Write the complete agent-format report to `.pytest_cache/receptor/last-run.txt` and reference it | 0.6 | 0 | open |
+| PR-CRIT-001 | Critical | No-tests session rendered as `OK` | Render `NO_TESTS`, retain exit 5, never emit success | 0.6 | 0 | **done 2026-07-18** |
+| PR-CRIT-002 | Critical | Interrupted session rendered as `OK` | Render `INTERRUPTED`, retain exit 2 and partial-session state | 0.6 | 0 | **done 2026-07-18** |
+| PR-CRIT-003 | Critical | Session completeness is not modeled | Qualify incomplete runs even when nothing failed; state stop reason and executed/collected | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-001 | High | Deduplication drops later occurrence context | 0.6: every occurrence retains node ID, phase, and location. Post: full deltas and per-occurrence references | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-002 | High | XML-like output is malformed by unescaped values | Resolved by deleting XML output in favour of compact plain text | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-003 | High | Warnings disappear from green runs | 0.6: warning count on the summary line. Post: grouped category/message/origin | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-004 | High | Fingerprint is calculated after truncation | Fingerprint complete normalized evidence before presentation budgets | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-005 | Medium | Xpass identities and reasons disappear | List every xpass with node ID and reason; respect pytest strictness for exit behavior | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-007 | Medium | Displayed traceback function is not a function name | Capture a real function identifier or label the field accurately | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-008 | High | Reporter bucket counts are treated as logical test outcomes | 0.6: aggregate by node ID and report the failing phase. Post: full logical/attempt/subtest model | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-011 | High | Omitted detail is only recoverable by re-running pytest | Write the complete agent-format report to `.pytest_cache/receptor/last-run.txt` and reference it | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-006 | Medium | External traceback origins are removed | Preserve local boundary, decisive external origin, cause chain, and full artifact | post | 1 | open |
 | PR-FID-009 | High | Fixed character truncation is not an auditable information budget | Configurable semantic budgets reporting original size, retained size, hash, omissions, and reference | post | 2 | open |
 | PR-FID-010 | Medium | Skip and xfail reasons are not grouped or trackable | Group skip/xfail by reason; support an optional baseline to expose drift | post | 2 | open |
-| PR-UX-001 | Medium | Adaptive hints can prescribe the wrong dependency mutation | Delete installation hints; replace with the exact rerun command | 0.6 | 0 | open |
-| PR-UX-002 | High | Every failure is rendered in full regardless of root-cause count | Progressive disclosure: full detail for the first three root causes, one line for the rest | 0.6 | 0 | open |
-| PR-UX-003 | Medium | Output provides no rerun target | Emit a literal rerun command per failure group that actually selects it | 0.6 | 0 | open |
-| PR-ARCH-003 | High | Renderer replaces the private `TerminalReporter` | Rebuild on public hooks with the standard reporter silenced through public options | 0.6 | 0 | open |
+| PR-UX-001 | Medium | Adaptive hints can prescribe the wrong dependency mutation | Delete installation hints; replace with the exact rerun command | 0.6 | 0 | **done 2026-07-18** |
+| PR-UX-002 | High | Every failure is rendered in full regardless of root-cause count | Progressive disclosure: full detail for the first three root causes, one line for the rest | 0.6 | 0 | **done 2026-07-18** |
+| PR-UX-003 | Medium | Output provides no rerun target | Emit a literal rerun command per failure group that actually selects it | 0.6 | 0 | **done 2026-07-18** |
+| PR-ARCH-003 | High | Renderer replaces the private `TerminalReporter` | Rebuild on public hooks with the standard reporter silenced through public options | 0.6 | 0 | **done 2026-07-18** |
 | PR-ARCH-001 | High | Renderer formats reporter text instead of owning structured evidence | Normalized event model populated from pytest hooks; stop inferring exception type from formatted text | post | 1 | open |
 | PR-ARCH-002 | Medium | No neutral extension-event protocol for third-party producers | Namespaced extension events, correlation service, unknown-namespace preservation, dummy-producer tests | post | 2 | open (gated) |
 | PR-API-001 | Medium | No programmatic consumer interface | Supported artifact reader and session/event API | post | 2 | open |
 | PR-OPS-001 | High | Python range rejects 3.13 patch releases | Change to `>=3.11,<3.14`; test representative versions | 0.6 | 0 | **done 2026-07-18** |
-| PR-OPS-002 | Medium | Heartbeat is not periodic | Delete the heartbeat feature and its claims; revisit only with lifecycle evidence | 0.6 | 0 | open |
-| PR-OPS-003 | High | Suppressed human output is retained in memory unconditionally | Resolved by the public-hook architecture: no terminal-writer capture exists | 0.6 | 0 | open |
-| PR-OPS-006 | Medium | Wall clock drives elapsed timing | Use `time.monotonic()` for elapsed time | 0.6 | 0 | open |
-| PR-OPS-007 | Medium | Human dump may omit direct plugin/process output | Resolved by the architecture change; document the dump boundary that remains | 0.6 | 0 | open |
-| PR-OPS-008 | High | Receptor internal failure has no explicit degraded outcome | `RECEPTOR_ERROR` plus standard pytest output, preserving pytest's exit status | 0.6 | 0 | open |
-| PR-OPS-009 | Medium | `--receptor=human` is not a true passthrough | Register nothing in human mode; output must be byte-identical to pytest without the plugin | 0.6 | 0 | open |
-| PR-OPS-010 | Medium | `CiTerminalReporter` duplicates the LLM renderer | Delete the duplicated class; keep `--receptor=ci` as a profile of the single renderer with CI-appropriate defaults | 0.6 | 0 | open |
+| PR-OPS-002 | Medium | Heartbeat is not periodic | Delete the heartbeat feature and its claims; revisit only with lifecycle evidence | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-003 | High | Suppressed human output is retained in memory unconditionally | Resolved by the public-hook architecture: no terminal-writer capture exists | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-006 | Medium | Wall clock drives elapsed timing | Use `time.monotonic()` for elapsed time | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-007 | Medium | Human dump may omit direct plugin/process output | Resolved by the architecture change; document the dump boundary that remains | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-008 | High | Receptor internal failure has no explicit degraded outcome | `RECEPTOR_ERROR` plus standard pytest output, preserving pytest's exit status | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-009 | Medium | `--receptor=human` is not a true passthrough | Register nothing in human mode; output must be byte-identical to pytest without the plugin | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-010 | Medium | `CiTerminalReporter` duplicates the LLM renderer | Delete the duplicated class; keep `--receptor=ci` as a profile of the single renderer with CI-appropriate defaults | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-004 | Medium | Reporter depends on private pytest internals | Residual private usage isolated in one version-tested adapter | post | 3 | open |
 | PR-OPS-005 | Medium | Output-channel authority is undefined | Define stdout/stderr/artifact contract and degradation behavior | post | 1 | open |
-| PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | open |
+| PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-SEC-002 | High | Artifacts may persist secrets without policy | Permissions, redaction, retention, size, path, and no-upload contracts | post | 1 | open |
 | PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | open |
 | PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | open |
@@ -354,6 +354,16 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18e** — Implemented the 0.6 renderer.
+
+Rewrote the plugin on public hooks. Closed 23 further findings; the remaining
+0.6 work is documentation (PR-DOC-001/002/004), the benchmark rebaseline
+(PR-REL-002/003), and compatibility CI (PR-REL-001).
+
+Measured on a 38-failure cascade over 128 tests, against the honest baseline
+`pytest -q --no-header --tb=short`: 2863 tokens to 101, a 96.5% reduction.
+Against `pytest -q --tb=line`, which loses the diff entirely, 1989 to 101.
 
 **2026-07-18d** — Reversed the decision to delete `--receptor=ci` (PR-OPS-010).
 
