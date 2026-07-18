@@ -49,7 +49,7 @@ jobs:
       - name: Install pinned pytest, then the plugin without touching it
         run: |
           python -m pip install --upgrade pip
-          pip install "pytest~=${{ matrix.pytest }}.0"
+          pip install "pytest~=${{ matrix.pytest }}.0" pytest-xdist
           pip install -e . --no-deps
 
       - name: Record what is actually installed, and prove the pin took
@@ -61,6 +61,11 @@ jobs:
 
       - name: Run the suite
         run: pytest tests/ -q
+
+      - name: Run the suite distributed
+        # MolSysMT runs twelve workers, so the plugin has to survive being run
+        # under the thing it is expected to report on.
+        run: pytest tests/ -q -n 2
 
   benchmarks:
     # The published figures are a claim about behaviour, so the harness that

@@ -130,6 +130,53 @@ case of enabling this plugin is standard pytest plus one line of noise.
 Test output is treated as untrusted input: ANSI escapes and control characters
 are stripped, and no text produced by a test can forge a verdict line.
 
+### It works under `pytest-xdist`
+
+A distributed run produces **byte-identical output to a serial one**. Workers
+finish in arbitrary order, so occurrences and groups are given a total order
+before rendering; otherwise the same failure would render differently on every
+run. Counts, grouping, and exit status are unaffected by `-n`.
+
+Worker identity is not yet reported — you are told a group has 38 occurrences
+and which tests they are, but not which worker ran each one. That is planned,
+not present.
+
+---
+
+## How it works
+
+Worth knowing before you trust it with your suite.
+
+**It does not replace pytest's reporter.** Earlier versions unregistered
+pytest's `TerminalReporter` and substituted a subclass of it. This one leaves it
+in place — so any plugin that looks it up still finds it — and quietens it
+through its documented options: `verbose = -2`, `no_header`, `no_summary`, plus
+a wrapper around `pytest_report_teststatus` that drops the progress characters
+while preserving pytest's own categorization.
+
+**It collects from public hooks.** `pytest_runtest_logreport` for phase results,
+`pytest_collectreport` for collection failures, `pytest_warning_recorded` for
+warnings, and `pytest_sessionfinish` to render. Rendering happens in
+`sessionfinish` rather than `terminal_summary` because pytest does not call the
+latter for internal errors, and an internal error is exactly when you most need
+to be told the truth.
+
+**Grouping is call-site aware.** The key is exception type, phase, normalized
+message, and crash location. Memory addresses and timestamps are normalized
+first, so dynamic values do not fragment one cause into forty. The key is
+computed on the *complete* message, before any truncation, so two long diffs
+that differ only inside a region that later gets cut cannot be merged.
+
+**Nothing is thrown away.** Grouping is a presentation decision. Every
+occurrence keeps its node ID, phase, and location, and the complete report — every
+group, every occurrence, every captured section — is written to
+`.pytest_cache/receptor/last-run.txt` while the run is still going.
+
+**`--tb` is deliberately left alone.** It controls how pytest *builds*
+`longrepr`, not how it prints it. Forcing `--tb=no` would look like a sensible
+way to suppress tracebacks and would silently destroy every frame this plugin
+exists to summarize.
+
 ---
 
 ## What your agent is doing right now

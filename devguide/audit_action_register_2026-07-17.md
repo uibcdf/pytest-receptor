@@ -51,6 +51,7 @@ a required outcome, SCOPE wins and this register is corrected.
 | PR-UX | Agent-facing output behavior and guidance |
 | PR-DOC | Documentation accuracy |
 | PR-REL | Packaging, benchmarking, and release evidence |
+| PR-XD | Distributed execution |
 
 ## Work queue
 
@@ -97,7 +98,9 @@ limitation`.
 | PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-004 | Medium | The term "lossless" overstates achievable durability | Narrow the claim to evidence-preserving during normal pytest lifecycle operation | 0.6 | 0 | **done 2026-07-18** |
-| PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11 and 3.13 against pytest 8 and 9. Post: full matrix with xdist | 0.6 | 0 | **done 2026-07-18** |
+| PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11-3.13 against pytest 8 and 9, serial and xdist. Post: coverage, JUnit, reruns, subtests | 0.6 | 0 | **done 2026-07-18** |
+| PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-012 | Medium | Bare assertions were typed as `Failure` | Recognize an assertion crash that carries no exception name | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-003 | Low | Benchmark module fails collection without the optional tokenizer | Resolved: benchmarking moved out of the test suite into `devtools/benchmarks/`, which degrades to a labelled approximation without `tiktoken` | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-004 | Low | Package metadata is incomplete and the version is duplicated | Version centralized in `__init__.py` via `[tool.hatch.version]`, with a recipe-drift regression. Remaining: license expression, authors, URLs, classifiers | post | 3 | in progress |
@@ -149,6 +152,8 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-DOC-003 | `draft_ideas.md` described extracting raw `ExceptionInfo` attributes, which was never implemented; moved verbatim into `superseded_proposals.md` | AUD, OLD |
 | PR-DOC-004 | No plugin can guarantee complete evidence after `SIGKILL` or host loss | AUD, ARCH |
 | PR-REL-001 | Repository has no test CI workflow, only documentation deployment | AUD, ARCH, TRUST |
+| PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
+| PR-FID-012 | `assert 0` crashes with the message `assert 0` and no exception name, so the type heuristic fell through to `Failure` | SCOPE |
 | PR-REL-002 | The published table compares against default pytest; against `-q --no-header` the green case is roughly 12 tokens versus 9, not an 87.88% saving | AUD, SCOPE |
 | PR-REL-003 | `tests/test_token_savings.py` could not be collected without `tiktoken` | AUD |
 | PR-REL-004 | `pyproject.toml` and `devtools/conda-build/meta.yaml` declared 0.1.0 and 0.1.1; now single-sourced and guarded by `tests/test_packaging.py` | ARCH |
@@ -207,7 +212,7 @@ its post-0.6 entry is satisfied or explicitly accepted as a limitation.
 | Missing import | Generic install command | Environment diagnosis and the exact rerun command |
 | Renderer or artifact failure | Undefined | `RECEPTOR_ERROR` plus standard pytest output, exit status preserved |
 | `--receptor=human` | Plugin registered, reporter untouched | Plugin registers nothing; byte-identical to plain pytest |
-| xdist failure | Compact result without worker traceability | Post-0.6: worker, sequence, attempt, and occurrence evidence |
+| xdist failure | Compact result without worker traceability | 0.6: identical to a serial run, deterministically ordered. Post: worker, sequence, and attempt evidence |
 | Third-party diagnostic event | Not represented | Post-0.6: namespaced extension record preserved |
 
 ## Release 0.6: correctness and truth floor
@@ -354,6 +359,18 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18h** — Distributed execution pulled into 0.6.
+
+MolSysMT runs twelve workers, so leaving xdist to a later phase would have meant
+handing them a plugin that could not be trusted on their own suite. Testing it
+found two defects: occurrence order was non-deterministic under `-n`, breaking
+the design rule that the same failure renders to the same bytes, and bare
+assertions were typed `Failure` because `assert 0` carries no exception name.
+
+Both fixed (PR-XD-001, PR-FID-012). Serial and distributed runs now produce
+byte-identical output, fixed by giving occurrences and groups a total order. CI
+runs the suite both ways.
 
 **2026-07-18g** — Compatibility CI added; every 0.6 blocker is now closed.
 

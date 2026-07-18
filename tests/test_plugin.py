@@ -4,6 +4,7 @@ Organized by the acceptance criteria in devguide/scope_0.6.md: truth, fidelity,
 safety, and compatibility. Each test names the register identifier it protects.
 """
 
+import importlib.util
 import re
 
 import pytest
@@ -181,6 +182,24 @@ def test_every_occurrence_keeps_its_node_id(pytester):
         assert f"test_a[{index}]" in output
 
 
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        # A bare assert crashes with the message "assert 0" and no exception
+        # name at all, which used to be filed under a useless "Failure".
+        ("def test_a(): assert 0\n", "AssertionError"),
+        ("def test_a(): assert {'a': 1} == {'a': 2}\n", "AssertionError"),
+        ("def test_a(): assert 0, 'why'\n", "AssertionError"),
+        ("def test_a(): raise ValueError('x')\n", "ValueError"),
+        ("def test_a(): raise KeyError('x')\n", "KeyError"),
+    ],
+)
+def test_exception_type_is_identified(pytester, source, expected):
+    pytester.makepyfile(source)
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines([f"[[]1[]] {expected} | *"])
+
+
 def test_each_group_carries_a_rerun_command(pytester):
     """PR-UX-003: the agent should not have to build the selector."""
     pytester.makepyfile("def test_a(): assert 0\n")
@@ -340,6 +359,82 @@ def test_quieting_flags_are_redundant(pytester):
         "--receptor=llm", "-q", "--no-header", "--no-summary"
     ).stdout.str()
     assert _stable(alone) == _stable(with_flags)
+
+
+# --------------------------------------------------------------------- xdist
+
+xdist = pytest.mark.skipif(
+    importlib.util.find_spec("xdist") is None,
+    reason="pytest-xdist is not installed",
+)
+
+CASCADE_CONFTEST = (
+    "import pytest\n@pytest.fixture\ndef broken():\n    raise TypeError('boom')\n"
+)
+CASCADE_SUITE = (
+    "import pytest\n"
+    "@pytest.mark.parametrize('i', range(12))\n"
+    "def test_cascade(broken, i): assert True\n"
+    "@pytest.mark.parametrize('i', range(8))\n"
+    "def test_ok(i): assert True\n"
+    "def test_solo(): assert 0\n"
+)
+
+
+@xdist
+def test_xdist_output_matches_serial(pytester):
+    """Distributing the run must not change what the run means.
+
+    MolSysMT runs twelve workers, so this is the property that decides whether
+    the receptor can be trusted there at all.
+    """
+    pytester.makeconftest(CASCADE_CONFTEST)
+    pytester.makepyfile(CASCADE_SUITE)
+
+    serial = pytester.runpytest("--receptor=llm")
+    parallel = pytester.runpytest("--receptor=llm", "-n", "4")
+
+    assert serial.ret == parallel.ret
+    assert _stable(_without_xdist_chatter(serial.stdout.str())) == _stable(
+        _without_xdist_chatter(parallel.stdout.str())
+    )
+
+
+@xdist
+def test_xdist_output_is_deterministic(pytester):
+    """Workers finish in arbitrary order; the report must not."""
+    pytester.makeconftest(CASCADE_CONFTEST)
+    pytester.makepyfile(CASCADE_SUITE)
+
+    runs = {
+        tuple(
+            _stable(
+                _without_xdist_chatter(
+                    pytester.runpytest(
+                        "--receptor=llm", "-n", "4", "--receptor-full"
+                    ).stdout.str()
+                )
+            )
+        )
+        for _ in range(3)
+    }
+    assert len(runs) == 1, "the same failures rendered differently across runs"
+
+
+@xdist
+def test_xdist_cascade_still_collapses(pytester):
+    pytester.makeconftest(CASCADE_CONFTEST)
+    pytester.makepyfile(CASCADE_SUITE)
+    result = pytester.runpytest("--receptor=llm", "-n", "4")
+    result.stdout.fnmatch_lines(["*13 failed, 8 passed*2 root causes*"])
+    assert "[1] TypeError | 12 tests | setup" in result.stdout.str()
+
+
+def _without_xdist_chatter(text):
+    """Drop the lines xdist writes straight to the terminal reporter."""
+    return "\n".join(
+        line for line in text.splitlines() if "bringing up nodes" not in line
+    )
 
 
 # -------------------------------------------------------------------- safety

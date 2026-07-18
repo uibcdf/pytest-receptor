@@ -116,6 +116,35 @@ remove it when using the receptor.
 
 ---
 
+## Distributed runs (`pytest-xdist`)
+
+Supported, and tested in CI both ways.
+
+```bash
+pytest --receptor=llm -n 12
+```
+
+A distributed run produces **byte-identical output to a serial one**. Counts,
+grouping, root-cause detection, and exit status do not change with `-n`.
+
+This is not automatic. Workers finish in arbitrary order, so reports arrive
+scrambled; occurrences and groups are given a total order before rendering.
+Without that, the same failure would render differently on every run, and a
+consumer could not tell "this is the same failure as before" from "this is
+something new".
+
+```{note}
+Not yet reported: **worker identity**. A group tells you it has 38 occurrences
+and names them, but not which worker ran each one. If a failure only reproduces
+on a particular worker, the receptor will not currently help you see that.
+```
+
+`xdist` writes a `bringing up nodes...` line straight to the terminal, which the
+receptor does not intercept. It costs a few tokens and is left alone rather than
+swallowing output belonging to another plugin.
+
+---
+
 ## Session outcomes
 
 The verdict is derived from pytest's exit status, never from the absence of

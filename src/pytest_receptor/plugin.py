@@ -266,8 +266,17 @@ class ReceptorPlugin:
                     sections=self._sections(report),
                 )
             )
-        # Largest blast radius first: that is the one worth fixing.
-        return sorted(groups.values(), key=lambda g: len(g.occurrences), reverse=True)
+        # Under xdist, reports arrive in whatever order the workers finish, so
+        # both levels need an explicit total order or the same failure renders
+        # differently between runs.
+        for group in groups.values():
+            group.occurrences.sort(key=lambda occurrence: occurrence.nodeid)
+        # Largest blast radius first -- that is the one worth fixing -- then a
+        # stable tiebreak.
+        return sorted(
+            groups.values(),
+            key=lambda g: (-len(g.occurrences), g.location, g.exc_type, g.message),
+        )
 
     def _describe(self, report):
         phase = getattr(report, "when", None) or "collection"
@@ -651,6 +660,10 @@ def _exception_type(message):
         candidate = head.split(":", 1)[0].strip()
         if candidate and all(part.isidentifier() for part in candidate.split(".")):
             return candidate
+    # A bare `assert 0` crashes with the message "assert 0" and no exception
+    # name at all, which would otherwise be filed under a useless "Failure".
+    if head.startswith("assert "):
+        return "AssertionError"
     return "Failure"
 
 
