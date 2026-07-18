@@ -277,10 +277,25 @@ IDs, and paths come from your tests and their dependencies.
   structure of the report.
 * The receptor never suggests a command that mutates your environment. Guidance
   is limited to the exact rerun selector for a failure.
+* Values that look like credentials are redacted before anything is rendered or
+  written:
+
+  ```text
+  ValueError: connect failed: api_key=[REDACTED] rejected
+  ```
+
+  This happens early enough that a secret reaches neither the terminal, nor the
+  on-disk report, nor a fingerprint.
+
+  ```{warning}
+  This is a conservative net, not a security boundary. It matches keyword-anchored
+  shapes -- `api_key=`, `token:`, `Bearer ...` -- with a minimum length. It cannot
+  catch a secret that does not look like one. Do not rely on it to make a log
+  safe to publish.
+  ```
+
 * The on-disk report is created owner-only (`0600`) and will not follow a
-  symlink. It carries whatever your tests printed, so treat it as sensitive.
-  Redaction is not implemented yet: this bounds who can read the file, not what
-  goes into it.
+  symlink.
 
 If rendering raises for any reason, the receptor emits `RECEPTOR_ERROR` followed
 by the underlying exception and the raw pytest evidence, and preserves pytest's

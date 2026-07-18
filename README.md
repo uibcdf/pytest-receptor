@@ -134,7 +134,10 @@ exception, the raw pytest evidence, and pytest's original exit status. The worst
 case of enabling this plugin is standard pytest plus one line of noise.
 
 Test output is treated as untrusted input: ANSI escapes and control characters
-are stripped, and no text produced by a test can forge a verdict line.
+are stripped, values that look like credentials are redacted before anything is
+rendered or written, and no text produced by a test can forge a verdict line.
+The redaction is a conservative net for obvious shapes — `api_key=`, `Bearer ...`
+— not a security boundary.
 
 ### It works under `pytest-xdist`
 

@@ -93,7 +93,7 @@ limitation`.
 | PR-OPS-004 | Medium | Reporter depends on private pytest internals | Residual private usage isolated in one version-tested adapter | post | 3 | open |
 | PR-OPS-005 | Medium | Output-channel authority is undefined | Define stdout/stderr/artifact contract and degradation behavior | post | 1 | open |
 | PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
-| PR-SEC-002 | High | Artifacts may persist secrets without policy | 0.6: the on-disk report is owner-only and refuses symlinks. Post: redaction, retention, size | post | 1 | in progress |
+| PR-SEC-002 | High | Artifacts may persist secrets without policy | 0.6: owner-only report, symlink refusal, and conservative credential redaction before anything is rendered or written. Post: configurable patterns, retention, size, audit metadata | post | 1 | in progress |
 | PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
@@ -146,7 +146,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-OPS-009 | Human mode still loads the plugin; byte-identity with plain pytest is untested | SCOPE |
 | PR-OPS-010 | `CiTerminalReporter` duplicates slow-test, summary, and counter logic from `LlmTerminalReporter` | SCOPE |
 | PR-SEC-001 | Raw captured text is inserted into LLM output | AUD, ARCH, TRUST |
-| PR-SEC-002 | Captured logs and tracebacks are written as plain files | AUD, ARCH, TRUST |
+| PR-SEC-002 | Captured logs and tracebacks are written as plain files; redaction patterns salvaged from `event-model-v0.5` | AUD, ARCH, TRUST, OLD |
 | PR-DOC-001 | Runtime probes contradict published claims | AUD |
 | PR-DOC-002 | `Sanitización`, `Volcado`, `Dumping`, `Formated`, and a `file://` license link appear in public documents | AUD |
 | PR-DOC-003 | `draft_ideas.md` described extracting raw `ExceptionInfo` attributes, which was never implemented; moved verbatim into `superseded_proposals.md` | AUD, OLD |
@@ -359,6 +359,30 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18j** — Second salvage pass; credential redaction added.
+
+The first pass judged the branch from commit messages and spot checks and got
+one thing wrong: it reported redaction as absent when the branch had it. A
+proper read of its 428 test lines found a working implementation.
+
+Taken, adapted. Two keyword-anchored patterns, applied inside `_sanitize` so a
+credential cannot reach the terminal, the on-disk report, or a fingerprint --
+and so two failures differing only in the token value group together, which is
+correct, since it is the same bug. `PR-SEC-002` remains open for configurable
+patterns and retention: this is a conservative net, not a security boundary, and
+is documented that way.
+
+Rejected on a second look: their subtests and reruns test asserts against
+`MagicMock` objects and their own collector API, so it never exercises
+`pytest-subtests` or `pytest-rerunfailures` and is not evidence of coexistence.
+Those remain genuinely untested.
+
+Deferred with a written proposal rather than silently dropped: CI error
+annotations, in `pending_proposals/ci_error_annotations.md`.
+
+Nothing else on the branch is usable at this stage. The extension hookspec is
+blocked on `PR-ARCH-002`, the event model on the `pytest-reportlog` gate.
 
 **2026-07-18i** — Salvage from `event-model-v0.5`.
 

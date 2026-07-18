@@ -518,6 +518,40 @@ def test_metacharacters_and_unicode_survive_intact(pytester):
     assert "你好" in output
 
 
+def test_credentials_are_redacted(pytester):
+    """PR-SEC-002: a leaked token would otherwise reach an LLM's context."""
+    pytester.makepyfile(
+        "def test_a():\n"
+        "    print('Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXIn0')\n"
+        "    raise ValueError(\"api_key='sk-live-9f8e7d6c5b4a3210' rejected\")\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "sk-live-9f8e7d6c5b4a3210" not in output
+    assert "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXIn0" not in output
+    assert "[REDACTED]" in output
+    # The shape of the failure survives; only the value is gone.
+    assert "api_key=" in output
+
+    # And it never reaches the file either.
+    reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
+    assert reports
+    assert "sk-live-9f8e7d6c5b4a3210" not in reports[0].read_text(encoding="utf-8")
+
+
+def test_redaction_leaves_ordinary_test_data_alone(pytester):
+    """False positives would be worse than the problem."""
+    pytester.makepyfile(
+        "def test_a():\n"
+        "    assert {'name': 'topology', 'n_atoms': 1234} == "
+        "{'name': 'topology', 'n_atoms': 5678}\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "[REDACTED]" not in output
+    assert "1234" in output and "5678" in output
+
+
 def test_test_output_cannot_forge_a_verdict(pytester):
     """Prompt-injection-shaped text stays inside a failure group."""
     pytester.makepyfile(

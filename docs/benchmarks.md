@@ -29,22 +29,52 @@ python devtools/benchmarks/run_benchmarks.py
 
 ## Results
 
-| Scenario | pytest (default) | quiet pytest | `--tb=line` | `--receptor=llm` | Change |
+Headline comparison, `cl100k_base`:
+
+| Scenario | `pytest` | tuned pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3279 | 2863 | 1989 | **101** | -96.5% |
-| Green with warnings | 167 | 93 | 93 | **20** | -78.5% |
-| Five distinct causes | 385 | 316 | 243 | **181** | -42.7% |
-| Green suite (128 tests) | 97 | 23 | 23 | **16** | -30.4% |
-| Single assertion failure | 331 | 197 | 230 | **162** | -17.8% |
-| Collection error | 273 | 198 | 198 | **215** | +8.6% |
-| Mixed states (skip, xfail, xpass) | 103 | 31 | 31 | **44** | +41.9% |
+| Cascade (38 failures, one cause) | 3289 | 2863 | 1989 | **101** | -96.5% |
+| Green with warnings | 176 | 93 | 93 | **20** | -78.5% |
+| Five distinct causes | 394 | 316 | 243 | **181** | -42.7% |
+| Green suite (128 tests) | 107 | 23 | 23 | **16** | -30.4% |
+| Single assertion failure | 337 | 197 | 227 | **162** | -17.8% |
+| Collection error | 276 | 195 | 195 | **212** | +8.7% |
+| Mixed states (skip, xfail, xpass) | 113 | 31 | 31 | **44** | +41.9% |
+
+The `Change` column compares against tuned pytest, the strict baseline.
+
+### Across tokenizer families
+
+A saving measured with one vocabulary can be an artifact of that vocabulary.
+Byte-pair encodings differ enough that the same text varies by thirty percent
+between families, so the comparison against plain `pytest` is repeated across
+four:
+
+| Scenario | `cl100k_base` | `o200k_base` | `p50k_base` | `r50k_base` |
+| :--- | ---: | ---: | ---: | ---: |
+| Cascade (38 failures, one cause) | -96.9% | -97.0% | -96.9% | -96.8% |
+| Green with warnings | -88.6% | -88.6% | -91.9% | -92.6% |
+| Green suite (128 tests) | -85.0% | -85.3% | -88.0% | -88.1% |
+| Mixed states (skip, xfail, xpass) | -61.1% | -61.7% | -62.4% | -73.3% |
+| Five distinct causes | -54.1% | -52.8% | -57.0% | -63.5% |
+| Single assertion failure | -51.9% | -52.4% | -53.1% | -58.3% |
+| Collection error | -23.2% | -23.4% | -21.3% | -12.6% |
+
+The headline holds. The cascade sits between -96.8% and -97.0% across all four,
+so it is a property of the output rather than of GPT-4's tokenizer. The older
+encodings (`p50k_base`, `r50k_base`) are consistently *more* favourable, because
+they spend more tokens on the punctuation-heavy decoration the receptor removes.
+
+Note that every row is negative here. Against plain `pytest` — which is what an
+agent actually runs — the receptor is cheaper in every scenario measured,
+including the two that cost more against a tuned pytest.
 
 Environment for the run above:
 
 - python 3.13.14, pytest 9.1.1, pytest-receptor 0.6.0
-- tokenizer: `tiktoken` `cl100k_base`
+- tokenizer: `tiktoken`, four encodings
 - platform: Linux 6.17, glibc 2.39
-- baseline: `pytest -q --no-header --tb=short`
+- strict baseline: `pytest -q --no-header --tb=short`
 
 ---
 

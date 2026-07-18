@@ -219,7 +219,7 @@ Stated plainly so you are not surprised:
 | Not yet | Notes |
 | :--- | :--- |
 | Worker identity under xdist | You get the tests, not which worker ran them. |
-| Secret redaction | The on-disk report is owner-only and refuses symlinks, but its *contents* are unredacted. Relevant if a test prints credentials or private paths. |
+| Thorough secret redaction | Obvious shapes are redacted (`api_key=`, `token:`, `Bearer ...`) before anything is rendered or written, and the report is owner-only. It is a conservative net, not a boundary: it cannot catch a secret that does not look like one. |
 | Warning detail | Green runs report a warning *count*, not which warnings. Grouping them is planned. |
 | Skip/xfail grouping | Counted, not grouped by reason. Unexpected passes *are* named. |
 | A machine-readable artifact | The full report is plain text, not JSON. A structured artifact is post-0.6. |

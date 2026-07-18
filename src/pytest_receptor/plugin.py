@@ -36,6 +36,26 @@ __all__ = ["Profile", "PROFILES"]
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
+# A conservative net for the obvious shapes of leaked credential. Anchored on a
+# keyword and a minimum length so ordinary test data is not mangled. This is not
+# a security boundary -- it cannot catch a secret that does not look like one --
+# and it is documented as such rather than sold as a guarantee (PR-SEC-002).
+_SECRETS = [
+    (
+        re.compile(
+            r"(?i)\b(api[_-]?key|token|password|passwd|secret|credential|auth)"
+            r"(\s*[=:]\s*)['\"]?([A-Za-z0-9_\-./+]{12,})['\"]?"
+        ),
+        r"\1\2[REDACTED]",
+    ),
+    (
+        re.compile(
+            r"(?i)\b(Authorization:\s*Basic\s+|Bearer\s+)[A-Za-z0-9_\-./+=]{10,}"
+        ),
+        r"\1[REDACTED]",
+    ),
+]
+
 # Non-semantic values that would otherwise split one root cause into many.
 _HEX_ADDR = re.compile(r"0x[0-9a-fA-F]+")
 _TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?")
@@ -755,10 +775,19 @@ def _rerun(group):
 
 
 def _sanitize(text):
-    """Test output is untrusted input, so strip anything non-textual."""
+    """Test output is untrusted input, so strip anything non-textual.
+
+    Redaction happens here, before anything else sees the text, so a secret
+    cannot reach the terminal, the on-disk report, or a fingerprint. Doing it
+    this early also means two failures differing only in the credential value
+    group together, which is right: it is the same bug.
+    """
     if not text:
         return ""
-    return _CONTROL.sub("", _ANSI.sub("", str(text)))
+    text = _CONTROL.sub("", _ANSI.sub("", str(text)))
+    for pattern, replacement in _SECRETS:
+        text = pattern.sub(replacement, text)
+    return text
 
 
 def _normalize(message):
