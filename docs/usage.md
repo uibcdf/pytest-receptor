@@ -140,6 +140,42 @@ remove it when using the receptor.
 
 ---
 
+## Knowing the run is alive
+
+pytest streams a progress character per test. The receptor suppresses those, and
+on a long suite that leaves the terminal completely silent — a 520-second run
+showed nothing at all until it finished. A consumer cannot tell a working suite
+from a stalled one, and if the process is killed on a timeout it learns nothing
+whatsoever, where plain pytest would at least have left a trail of dots.
+
+After the first minute, one line a minute goes to **stderr**:
+
+```text
+receptor: 4200/9332 240s
+```
+
+Three properties worth knowing:
+
+* **It never touches stdout.** The report stays exactly as parseable as before.
+  Discard stderr and you get the old behaviour.
+* **Short runs stay silent.** Nothing is emitted in the first minute, so an
+  ordinary run is unaffected.
+* **It is not a hang detector.** The line is emitted when a test finishes, so a
+  genuinely stuck test produces no further output. What it gives you is the
+  point the run reached — which is exactly what you want if something killed it.
+
+```{note}
+The predecessor of this feature claimed to be a periodic heartbeat and was not:
+it could only fire between tests, so a single slow test produced nothing. It was
+removed rather than fixed. This replacement makes the weaker claim it can
+actually keep.
+```
+
+Cost, measured on the pilot's 520-second suite: nine lines, 104 tokens, against
+a report of 386 and a configured pytest of 10,372.
+
+---
+
 ## Distributed runs (`pytest-xdist`)
 
 Supported, and tested in CI both ways.

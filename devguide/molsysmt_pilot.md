@@ -171,6 +171,15 @@ fixing: the first cut of the silencing swallowed pytest-cov's table completely,
 because the option that suppresses pytest's own summary also gates the hook
 third-party plugins write into. There is a regression test for it now.
 
+**A long run now says it is alive.** Your 520-second green run printed nothing
+at all until it finished, which makes a working suite indistinguishable from a
+hung one — and yields nothing whatsoever if a timeout kills it, where `pytest -q`
+would at least have left its dots. After the first minute, one line a minute goes
+to stderr (`receptor: 4200/9332 240s`), never to stdout. Nine lines on your run,
+104 tokens. It is a liveness signal, not a hang detector: it fires when a test
+finishes, so a stuck test produces no further lines — but the last one printed
+tells you where it got to.
+
 **Skips are grouped by reason.** Your suite skips heavily for optional
 dependencies, and `412 skipped` does not say which capability is missing:
 

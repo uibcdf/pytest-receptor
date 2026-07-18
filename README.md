@@ -167,6 +167,21 @@ rendered or written, and no text produced by a test can forge a verdict line.
 The redaction is a conservative net for obvious shapes — `api_key=`, `Bearer ...`
 — not a security boundary.
 
+### It shows the run is alive
+
+pytest streams a progress character per test; suppressing those leaves a long
+suite completely silent. After the first minute, one line a minute goes to
+**stderr** — never stdout, so the report stays as parseable as before:
+
+```text
+receptor: 4200/9332 240s
+```
+
+It is a liveness signal, not a hang detector: the line is emitted when a test
+finishes, so a stuck test produces no further output. What survives is how far
+the run got, which is what you want when something kills it. Nine lines on a
+520-second suite.
+
 ### It works under `pytest-xdist`
 
 A distributed run produces **byte-identical output to a serial one**. Workers

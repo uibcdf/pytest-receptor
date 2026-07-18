@@ -69,6 +69,15 @@ _MAX_LOCAL_FRAMES = 8
 # cheaper than pointing at the file.
 _MANY_CAUSES = 10
 
+# A long run must not look like a hung one. pytest streams progress characters;
+# suppressing them without replacement means a consumer -- an agent with a tool
+# timeout, a human, a CI job with an idle limit -- cannot tell a working suite
+# from a stalled one, and learns nothing at all if the process is killed.
+#
+# One line a minute: enough that nobody wonders whether it died, cheap enough
+# not to matter. A 520-second suite costs nine lines.
+_PROGRESS_AFTER = 60.0
+
 # O_NOFOLLOW is POSIX-only; on Windows the symlink check above is what we get.
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 
@@ -231,6 +240,8 @@ class ReceptorPlugin:
             else Path.cwd()
         )
         self._collected = 0
+        self._finished = 0
+        self._last_progress = self._start
         self._warnings = 0
         self._warning_groups = {}
         self._skipped = {}
@@ -252,6 +263,33 @@ class ReceptorPlugin:
             return outcome
         category, _letter, _word = outcome
         return (category, "", "")
+
+    def _emit_progress(self):
+        """A sign of life on stdout's quieter sibling.
+
+        Deliberately *not* a hang detector: it fires when a test finishes, so a
+        genuinely stuck test produces no further lines. That is still useful --
+        the last line printed says how far the run got -- but claiming more
+        would repeat the mistake of the heartbeat this replaces, which advertised
+        periodic output it could not deliver.
+
+        It goes to stderr so the report on stdout stays exactly as parseable as
+        it was.
+        """
+        now = time.monotonic()
+        if now - self._start < _PROGRESS_AFTER:
+            return
+        if now - self._last_progress < _PROGRESS_AFTER:
+            return
+        self._last_progress = now
+        total = f"/{self._collected}" if self._collected else ""
+        try:
+            sys.stderr.write(
+                f"receptor: {self._finished}{total} {now - self._start:.0f}s\n"
+            )
+            sys.stderr.flush()
+        except Exception:
+            pass
 
     def pytest_collection_modifyitems(self, items):
         self._collected = len(items)
@@ -285,6 +323,9 @@ class ReceptorPlugin:
     def pytest_runtest_logreport(self, report):
         nodeid = report.nodeid
         self._durations[nodeid] = self._durations.get(nodeid, 0.0) + report.duration
+        if report.when == "teardown":
+            self._finished += 1
+            self._emit_progress()
 
         if report.failed:
             self._failures.append(report)

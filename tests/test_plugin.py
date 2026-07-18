@@ -865,6 +865,51 @@ def test_a_location_never_duplicates_a_directory(pytester, monkeypatch):
     assert "myproj/__init__.py" in output
 
 
+# ----------------------------------------------------------------- liveness
+
+
+def test_short_runs_emit_no_progress(pytester):
+    """The signal exists for long runs; it must not clutter ordinary ones."""
+    pytester.makepyfile("def test_a(): assert 1\n")
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    assert "receptor: " not in result.stderr.str()
+    assert "receptor: " not in result.stdout.str()
+
+
+def test_a_long_run_shows_it_is_alive(pytester, monkeypatch):
+    """Suppressing pytest's progress characters without replacing them means a
+    consumer cannot tell a working suite from a stalled one, and learns nothing
+    at all if the process is killed on a timeout. pytest streams; so must we.
+    """
+    pytester.makeconftest(
+        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.0\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(4))\n"
+        "def test_a(i): assert True\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    assert "receptor: " in result.stderr.str()
+    # It reports how far the run got, which is what survives a kill.
+    assert "/4" in result.stderr.str()
+
+
+def test_progress_never_touches_stdout(pytester):
+    """stdout is the report. Liveness belongs on the other channel."""
+    pytester.makeconftest(
+        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.0\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(4))\n"
+        "def test_a(i): assert True\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    assert "receptor: " not in result.stdout.str()
+    result.stdout.fnmatch_lines(["PASS exit=0 | 4 passed*"])
+
+
 # --------------------------------------------------------------------- cost
 
 
