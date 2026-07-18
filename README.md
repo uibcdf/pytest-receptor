@@ -67,15 +67,21 @@ claim is evidence rather than intent.
 ## Use
 
 ```bash
+pytest                    # unchanged pytest -- installing this changes nothing
 pytest --receptor=llm     # compact output for a coding agent
 pytest --receptor=ci      # compact output for a CI log
-pytest --receptor=human   # unchanged pytest (the default)
+pytest --receptor=human   # the default, stated explicitly
 pytest --receptor=llm --receptor-full   # expand every failure group
 pytest --receptor=llm --receptor-stats  # what did this actually save?
 ```
 
-`human` is a true passthrough: the plugin registers nothing and the output is
-byte-identical to pytest without it installed.
+**Installing the plugin does not change anything until you ask it to.** The
+default is `human`, and `human` is a true passthrough: the plugin registers
+nothing at all, so `pytest` on its own produces output byte-identical to not
+having it installed. There is a test asserting exactly that.
+
+This matters in a shared environment. You can install it for yourself, or for
+your agent, without altering what anyone else sees.
 
 You do not need to combine these with pytest's own quieting flags —
 `--receptor=llm` already sets the equivalent of `-qq --no-header --no-summary`,

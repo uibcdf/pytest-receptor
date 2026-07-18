@@ -16,9 +16,17 @@ Unchanged pytest. The plugin registers nothing at all, so the output is
 byte-identical to running pytest without it installed. Nothing is intercepted,
 suppressed, or buffered.
 
+**This is what you get without asking.** These two are the same thing:
+
 ```bash
-pytest --receptor=human
+pytest                    # the default
+pytest --receptor=human   # the same, stated explicitly
 ```
+
+Installing `pytest-receptor` therefore changes nothing about how anyone else's
+runs behave. In a shared environment you can install it for yourself, or for an
+agent, without affecting colleagues who never pass `--receptor`. A regression
+test asserts the byte-for-byte equivalence.
 
 ### `llm`
 

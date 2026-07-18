@@ -109,13 +109,18 @@ To remove it, uninstall it. There is nothing to clean up beyond
 ## Invoking it
 
 ```bash
+pytest                         # unchanged pytest -- installing changes nothing
 pytest --receptor=llm          # compact output, for an agent
 pytest --receptor=ci           # compact output, nothing held back
-pytest --receptor=human        # unchanged pytest (the default)
 pytest --receptor=llm -n 12    # your normal parallel run
 ```
 
-Three things worth knowing before you start.
+**Installing it into your shared environment is safe.** The default is `human`,
+and `human` registers nothing at all, so anyone who does not pass `--receptor`
+gets output byte-identical to not having the plugin installed. Nobody else on
+the team is affected by your evaluation, and a regression test asserts it.
+
+Three more things worth knowing before you start.
 
 **You do not need to add quieting flags.** `--receptor=llm` already sets the
 equivalent of `-qq --no-header --no-summary`. Adding `-q` changes nothing.

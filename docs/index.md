@@ -53,7 +53,9 @@ spends 3,279 tokens on that run. This is 101.
 ## Profiles
 
 * **`--receptor=human`** (default) — unchanged pytest. The plugin registers
-  nothing, so output is byte-identical to not having it installed.
+  nothing, so output is byte-identical to not having it installed. Running
+  plain `pytest` gets you this: installing the plugin changes nothing until you
+  ask it to, which makes it safe to add to a shared environment.
 * **`--receptor=llm`** — compact output for a coding agent. Root-cause grouping,
   the assertion diff without the source echo, a rerun command per group, and the
   first three causes expanded with the rest one line each.
