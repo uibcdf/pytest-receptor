@@ -66,14 +66,14 @@ limitation`.
 | PR-CRIT-003 | Critical | Session completeness is not modeled | Qualify incomplete runs even when nothing failed; state stop reason and executed/collected | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-001 | High | Deduplication drops later occurrence context | 0.6: every occurrence retains node ID, phase, and location. Post: full deltas and per-occurrence references | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-002 | High | XML-like output is malformed by unescaped values | Resolved by deleting XML output in favour of compact plain text | 0.6 | 0 | **done 2026-07-18** |
-| PR-FID-003 | High | Warnings disappear from green runs | 0.6: warning count on the summary line. Post: grouped category/message/origin | 0.6 | 0 | **done 2026-07-18** |
+| PR-FID-003 | High | Warnings disappear from green runs | Grouped by category and normalized message, with count and origin. Post: baseline drift against a known-warning set | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-004 | High | Fingerprint is calculated after truncation | Fingerprint complete normalized evidence before presentation budgets | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-005 | Medium | Xpass identities and reasons disappear | List every xpass with node ID and reason; respect pytest strictness for exit behavior | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-007 | Medium | Displayed traceback function is not a function name | Capture a real function identifier or label the field accurately | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-008 | High | Reporter bucket counts are treated as logical test outcomes | 0.6: aggregate by node ID and report the failing phase. Post: full logical/attempt/subtest model | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-011 | High | Omitted detail is only recoverable by re-running pytest | Write the complete agent-format report to `.pytest_cache/receptor/last-run.txt` and reference it | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-006 | Medium | External traceback origins are removed | Keep every local frame, each local-to-external boundary, and the terminal frame, marking elisions. Cause chains remain post-0.6 | 0.6 | 0 | **done 2026-07-18** |
-| PR-FID-009 | High | Fixed character truncation is not an auditable information budget | Configurable semantic budgets reporting original size, retained size, hash, omissions, and reference | post | 2 | open |
+| PR-FID-009 | High | Fixed character truncation is not an auditable information budget | 0.6: project-declared normalizers so non-semantic values stop splitting a cause. Post: semantic budgets reporting original size, retained size, hash, and omissions | post | 2 | in progress |
 | PR-FID-010 | Medium | Skip and xfail reasons are not grouped or trackable | Group skip/xfail by reason; support an optional baseline to expose drift | post | 2 | open |
 | PR-UX-001 | Medium | Adaptive hints can prescribe the wrong dependency mutation | Delete installation hints; replace with the exact rerun command | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-002 | High | Every failure is rendered in full regardless of root-cause count | Progressive disclosure: full detail for the first three root causes, one line for the rest | 0.6 | 0 | **done 2026-07-18** |
@@ -125,7 +125,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-FID-006 | Local-only filtering is destructive; salvaged from `event-model-v0.5`, which had solved it | AUD, OLD |
 | PR-FID-007 | Probe rendered `in ValueError` | AUD |
 | PR-FID-008 | Summaries derive from `TerminalReporter.stats`, which counts reports, not logical tests | AUD, ARCH |
-| PR-FID-009 | Fixed 1500-character cut keeps the first 1000 and last 400 characters with no omission record | AUD, ARCH |
+| PR-FID-009 | Fixed 1500-character cut keeps the first 1000 and last 400 characters with no omission record; the `receptor_normalizers` ini option is salvaged from `event-model-v0.5` | AUD, ARCH, OLD |
 | PR-FID-010 | Skip and xfail reasons and node IDs are dropped from summaries | AUD |
 | PR-FID-011 | Any escape hatch requiring `--receptor-full` costs a full suite re-execution, the dominant term in the cost model | SCOPE |
 | PR-UX-001 | Import name is converted directly into an install command | AUD, ARCH |
@@ -359,6 +359,30 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18k** — Third salvage pass, after being asked twice more whether the
+branch was exhausted. It was not, and the two previous answers were given
+without having read most of it.
+
+Warning grouping closes `PR-FID-003` fully. The branch grouped by category and
+normalized message; ours does the same from `pytest_warning_recorded`, which
+hands over the real `WarningMessage`, so the category and origin are structured
+data rather than something to parse back out of a formatted string. Warnings are
+one of the things MolSysMT specifically cares about, and a count alone does not
+tell you which contract is decaying.
+
+Project-declared normalizers, `receptor_normalizers` in the ini file, advance
+`PR-FID-009`. The reason to take this now rather than defer it is that it turns
+the pilot into evidence gathering: scientific failures carry array shapes,
+dtypes, and device names that fragment one root cause into dozens, we cannot
+guess which of those are non-semantic, and what a real project had to declare is
+exactly the evidence needed before choosing built-in defaults.
+
+Confirmed as having nothing to take, on a proper read rather than a grep: their
+exception extraction is *worse* than ours -- it parses `E   ` line prefixes and
+misses bare assertions, which ours handles -- and carries no cause chains. Their
+normalization is the same two built-in patterns. The event model, reader, and
+extension hookspec remain blocked on their decision gates.
 
 **2026-07-18j** — Second salvage pass; credential redaction added.
 

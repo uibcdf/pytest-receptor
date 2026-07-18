@@ -91,6 +91,14 @@ PROFILES = {
 
 
 def pytest_addoption(parser):
+    parser.addini(
+        "receptor_normalizers",
+        type="linelist",
+        default=[],
+        help="Extra `regex -> replacement` rules applied before grouping, so "
+        "project-specific dynamic values do not split one root cause into many. "
+        "Example: `shape \\(\\d+, \\d+\\) -> shape (N, M)`",
+    )
     group = parser.getgroup("receptor")
     group.addoption(
         "--receptor",
@@ -189,9 +197,11 @@ class ReceptorPlugin:
         self._outcomes = {}
         self._collected = 0
         self._warnings = 0
+        self._warning_groups = {}
         self._skipped = set()
         self._xfailed = set()
         self._xpassed = []
+        self._project_normalizers = _compile_normalizers(config)
 
     # ------------------------------------------------------------------ hooks
 
@@ -212,7 +222,26 @@ class ReceptorPlugin:
         self._collected = len(items)
 
     def pytest_warning_recorded(self, warning_message, when, nodeid, location):
+        """Group warnings as they arrive.
+
+        pytest hands over the real ``warnings.WarningMessage``, so the category
+        and origin are structured data and there is no need to parse them back
+        out of a formatted string.
+        """
         self._warnings += 1
+        category = getattr(warning_message, "category", None)
+        name = getattr(category, "__name__", None) or "Warning"
+        text = _sanitize(str(getattr(warning_message, "message", "")))
+        filename = getattr(warning_message, "filename", "")
+        lineno = getattr(warning_message, "lineno", 0)
+        origin = f"{self._display_path(filename)}:{lineno}" if filename else ""
+
+        key = (name, self._normalize(text))
+        group = self._warning_groups.get(key)
+        if group is None:
+            group = {"category": name, "message": text, "origin": origin, "count": 0}
+            self._warning_groups[key] = group
+        group["count"] += 1
 
     def pytest_collectreport(self, report):
         if report.failed:
@@ -272,7 +301,7 @@ class ReceptorPlugin:
             # failures differing only inside a cut region cannot merge
             # (PR-FID-004). Grouping is call-site aware on purpose: equal
             # messages from unrelated places are different causes.
-            key = (exc_type, phase, _normalize(message), location)
+            key = (exc_type, phase, self._normalize(message), location)
             group = groups.get(key)
             if group is None:
                 group = Group(
@@ -359,6 +388,16 @@ class ReceptorPlugin:
                     break
         return sections
 
+    def _normalize(self, message):
+        """Built-in normalizers plus whatever the project declared."""
+        message = _normalize(message)
+        for pattern, replacement in self._project_normalizers:
+            try:
+                message = pattern.sub(replacement, message)
+            except Exception:
+                continue
+        return message
+
     def _display_path(self, path):
         """Relative when the file is ours, recognizable when it is not."""
         relative = self._relative(path)
@@ -438,6 +477,25 @@ class ReceptorPlugin:
                 continue
             lines.append("")
             lines.extend(self._render_group(index, group, expand_all))
+
+        if self._warning_groups:
+            lines.append("")
+            groups_shown = sorted(
+                self._warning_groups.values(), key=lambda g: -g["count"]
+            )
+            limit = None if expand_all else _SHOWN_TESTS
+            lines.append(
+                f"warnings: {self._warnings} in {len(self._warning_groups)} groups"
+            )
+            for group in groups_shown[:limit]:
+                where = f" | {group['origin']}" if group["origin"] else ""
+                lines.append(f"  {group['category']} x{group['count']}{where}")
+                head = group["message"].splitlines()[0] if group["message"] else ""
+                if head:
+                    lines.append(f"    {head}")
+            remaining = len(groups_shown) - len(groups_shown[:limit])
+            if remaining:
+                lines.append(f"  +{remaining} more groups")
 
         if self._xpassed:
             lines.append("")
@@ -656,6 +714,32 @@ class ReceptorPlugin:
             tw.line("")
             tw.line(str(getattr(report, "nodeid", "?")))
             tw.line(str(getattr(report, "longrepr", "")))
+
+
+def _compile_normalizers(config):
+    """Project-declared `regex -> replacement` rules from the ini file.
+
+    Scientific suites carry array shapes, dtypes, device names, and temporary
+    paths in their failure messages, and any of those can split one root cause
+    into dozens of groups. We cannot guess them, so the project declares them --
+    and what a project needed is exactly the evidence required before deciding
+    on built-in defaults.
+    """
+    rules = []
+    try:
+        declared = config.getini("receptor_normalizers") or []
+    except Exception:
+        return rules
+    for rule in declared:
+        pattern, separator, replacement = str(rule).partition("->")
+        if not separator:
+            continue
+        try:
+            rules.append((re.compile(pattern.strip()), replacement.strip()))
+        except re.error:
+            # A broken rule in someone's config must not break their run.
+            continue
+    return rules
 
 
 def _short_path(path):

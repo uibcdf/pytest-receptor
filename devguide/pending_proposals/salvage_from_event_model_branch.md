@@ -5,9 +5,16 @@
 **Source:** branch `event-model-v0.5`, sixteen commits that were on `origin/main`
 until 0.6 replaced them. Nothing was deleted; the branch is pushed and permanent.
 
-**Status:** triaged 2026-07-18. All three recommendations below were adopted;
-see the register revision log. This file is kept as the record of what the
-branch contained and why the rest was left.
+**Status:** triaged 2026-07-18, over three passes. Five things were adopted; see
+the register revision log. This file is the record of what the branch contained
+and why the rest was left.
+
+**A note on method.** The first two passes were done by reading commit messages
+and grepping, and both concluded prematurely that the branch was exhausted. Both
+were wrong: the second pass found redaction, which the first had reported as
+absent, and the third found warning grouping and configurable normalizers. Only
+the third pass actually read the files. If another branch ever needs salvaging,
+read it.
 
 ## Context
 
@@ -85,9 +92,12 @@ worked implementation to start from when `PR-SEC-002` is scheduled.
   extension protocol must be designed against a neutral dummy producer before
   any SMonitor-specific code exists, or the protocol will encode SMonitor's
   assumptions. The branch implemented the bridge before the protocol.
-- **Configurable project-specific normalizers.** Wanted eventually
-  (`PR-FID-009` territory); no reason to take it before there is evidence from a
-  real suite about which values need normalizing.
+- ~~**Configurable project-specific normalizers.**~~ **Adopted** on the third
+  pass, and the reasoning that deferred it was backwards. Waiting for evidence
+  about which values need normalizing, while withholding the mechanism that
+  would produce that evidence, cannot terminate. Shipping `receptor_normalizers`
+  turns the pilot into the experiment: what MolSysMT has to declare is the
+  list that decides the built-in defaults.
 - **CI error annotations and completeness reporting.** Plausible, but 0.6
   deliberately deferred CI-specific syntax "until someone runs it in anger". The
   MolSysMT pilot is what should decide this.
@@ -104,9 +114,33 @@ worked implementation to start from when `PR-SEC-002` is scheduled.
   register does not, so there is nothing to merge — but it should not be
   reintroduced alongside the register.
 
+## Also adopted, on later passes
+
+- **Credential redaction** (second pass). Two keyword-anchored patterns. The
+  first pass reported this as absent, which was simply wrong.
+- **Warning grouping** (third pass). By category and normalized message, with
+  count and origin — closing `PR-FID-003`, which 0.6 had left at a bare count.
+  Ours reads `pytest_warning_recorded`, which hands over the real
+  `WarningMessage`, so unlike the branch it does not parse category and origin
+  back out of a formatted string.
+- **Project normalizers** (third pass), as above.
+
+## Confirmed as having nothing to take
+
+On a proper read rather than a grep:
+
+- **Exception extraction.** Theirs is *worse* than ours: it scans for `E   `
+  line prefixes and misses a bare `assert 0`, which ours handles. No cause
+  chains, despite the audit asking for them — so that part of `PR-FID-006`
+  remains genuinely unbuilt on both sides.
+- **Normalization.** The same two built-in patterns we already had.
+- **The subtests and reruns test.** Asserts against `MagicMock` objects and
+  their own collector API, so it never exercises `pytest-subtests` or
+  `pytest-rerunfailures`. Not evidence of coexistence; those remain untested.
+
 ## What was done
 
-All three were taken, in 0.6.
+The first three were taken in 0.6.
 
 Item 1 was adapted rather than copied. The branch kept only the first and last
 local frames; this keeps *every* local frame, because those are the code a

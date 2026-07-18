@@ -185,6 +185,19 @@ Scientific stacks are exactly where we expect this to break, because failures
 carry array shapes, dtypes, file paths, and device names that our normalization
 does not know about.
 
+You can fix it yourself while you wait, and doing so is itself the evidence we
+need:
+
+```ini
+[pytest]
+receptor_normalizers =
+    shape \(\d+, \d+\) -> shape (N, M)
+```
+
+Each rule is `regex -> replacement`, applied before grouping. **Please tell us
+which rules you had to write.** That list is what decides which normalizers
+become built-in defaults, and we have no way to guess it from here.
+
 ### 4. Real token numbers
 
 `--receptor-stats` on your real suite, green and red. Our published figures come
@@ -220,7 +233,7 @@ Stated plainly so you are not surprised:
 | :--- | :--- |
 | Worker identity under xdist | You get the tests, not which worker ran them. |
 | Thorough secret redaction | Obvious shapes are redacted (`api_key=`, `token:`, `Bearer ...`) before anything is rendered or written, and the report is owner-only. It is a conservative net, not a boundary: it cannot catch a secret that does not look like one. |
-| Warning detail | Green runs report a warning *count*, not which warnings. Grouping them is planned. |
+| Warning baselines | Warnings are grouped by category and message with counts and origin, but there is no accepted-baseline comparison, so you cannot yet ask "what is *new* since last week". |
 | Skip/xfail grouping | Counted, not grouped by reason. Unexpected passes *are* named. |
 | A machine-readable artifact | The full report is plain text, not JSON. A structured artifact is post-0.6. |
 | Reruns, subtests, coverage coexistence | Untested. If you use them, that is worth knowing early. |

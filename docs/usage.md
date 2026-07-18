@@ -51,6 +51,8 @@ FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
 ```
 
 * One line on success, with the exit status and counts.
+* Warnings grouped by category and message, with counts and origin, so a green
+  run with a new deprecation does not look like a clean one.
 * Failures grouped by root cause, keeping every affected test ID.
 * No source echo. The agent already has your files; the assertion diff, which it
   cannot reconstruct, is kept.
@@ -260,6 +262,20 @@ site.
   frames are pruned to the boundary and the terminal frame, marked `(ext)`, with
   `...` where frames were elided. Dropping external frames entirely would hide
   the answer whenever a failure originates inside a dependency.
+* **Projects can declare their own normalizers.** Scientific failures carry
+  array shapes, dtypes, and device names that split one root cause into dozens
+  of groups. We cannot guess which are non-semantic, so declare them:
+
+  ```ini
+  [pytest]
+  receptor_normalizers =
+      shape \(\d+, \d+\) -> shape (N, M)
+      device='cuda:\d+' -> device='cuda:N'
+  ```
+
+  Each rule is `regex -> replacement`, applied before grouping only. The raw
+  message is still what you read. A rule that fails to compile is skipped rather
+  than costing you the run.
 * **Long messages are fingerprinted whole.** Grouping happens before any
   truncation, so two long diffs differing only in the middle cannot be merged by
   accident. When a message is shortened, the output states how much was omitted

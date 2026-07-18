@@ -86,6 +86,63 @@ def test_warnings_are_visible_on_a_green_run(pytester):
     result.stdout.fnmatch_lines(["PASS exit=0*1 warnings*"])
 
 
+def test_warnings_are_grouped_not_just_counted(pytester):
+    """PR-FID-003: a green run with new warnings differs from a clean one."""
+    pytester.makepyfile(
+        "import warnings, pytest\n"
+        "@pytest.mark.parametrize('i', range(6))\n"
+        "def test_dep(i):\n"
+        "    warnings.warn('np.float is deprecated', DeprecationWarning)\n"
+        "@pytest.mark.parametrize('i', range(2))\n"
+        "def test_user(i):\n"
+        "    warnings.warn('falling back to CPU', UserWarning)\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "warnings: 8 in 2 groups" in output
+    assert "DeprecationWarning x6" in output
+    assert "np.float is deprecated" in output
+    assert "UserWarning x2" in output
+
+
+def test_project_normalizers_merge_a_split_cause(pytester):
+    """PR-FID-009: we cannot guess which values are non-semantic; projects can.
+
+    Scientific failures carry array shapes and dtypes that fragment one root
+    cause into dozens of groups.
+    """
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('n', [10, 20, 30])\n"
+        "def test_shape(n):\n"
+        "    raise ValueError(f'could not broadcast: shape ({n}, 3) vs (5, 3)')\n"
+    )
+    without = pytester.runpytest("--receptor=llm")
+    without.stdout.fnmatch_lines(["*3 root causes*"])
+
+    pytester.makefile(
+        ".ini",
+        pytest=(
+            "[pytest]\nreceptor_normalizers =\n"
+            "    shape \\(\\d+, \\d+\\) -> shape (N, M)\n"
+        ),
+    )
+    with_rule = pytester.runpytest("--receptor=llm")
+    assert "root causes" not in with_rule.stdout.str()
+    assert "[1] ValueError | 3 tests" in with_rule.stdout.str()
+
+
+def test_a_broken_normalizer_does_not_break_the_run(pytester):
+    """A bad rule in someone's config must not cost them the run."""
+    pytester.makefile(
+        ".ini", pytest="[pytest]\nreceptor_normalizers =\n    ([unclosed -> x\n"
+    )
+    pytester.makepyfile("def test_a(): assert 0\n")
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines(["FAIL exit=1*"])
+    assert result.ret == 1
+
+
 def test_xpass_is_identified_with_reason(pytester):
     """PR-FID-005: counts alone hid that a known bug was fixed."""
     pytester.makepyfile(
