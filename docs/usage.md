@@ -53,6 +53,17 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
 * One line on success, with the exit status and counts.
 * Warnings grouped by category and message, with counts and origin, so a green
   run with a new deprecation does not look like a clean one.
+* Skips and xfails grouped by reason. A suite with optional dependencies skips
+  heavily, and `412 skipped` does not say which capability is missing:
+
+  ```text
+  skipped: 38 in 2 groups
+    x30 | openmm not installed
+    x8 | requires a GPU
+  ```
+
+  Reasonless skips are not listed, since a line saying "no reason given" adds
+  nothing.
 * Failures grouped by root cause, keeping every affected test ID.
 * No source echo. The agent already has your files; the assertion diff, which it
   cannot reconstruct, is kept.

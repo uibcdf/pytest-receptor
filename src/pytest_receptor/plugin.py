@@ -221,8 +221,8 @@ class ReceptorPlugin:
         self._collected = 0
         self._warnings = 0
         self._warning_groups = {}
-        self._skipped = set()
-        self._xfailed = set()
+        self._skipped = {}
+        self._xfailed = {}
         self._xpassed = []
         self._project_normalizers = _compile_normalizers(config)
 
@@ -285,15 +285,15 @@ class ReceptorPlugin:
                     self._xpassed.append((nodeid, report.wasxfail or ""))
                     self._outcomes[nodeid] = "xpassed"
                 else:
-                    self._xfailed.add(nodeid)
+                    self._xfailed[nodeid] = _sanitize(report.wasxfail or "")
                     self._outcomes[nodeid] = "xfailed"
             elif report.skipped:
-                self._skipped.add(nodeid)
+                self._skipped[nodeid] = _skip_reason(report)
                 self._outcomes[nodeid] = "skipped"
             else:
                 self._outcomes.setdefault(nodeid, "passed")
         elif report.skipped and report.when == "setup":
-            self._skipped.add(nodeid)
+            self._skipped[nodeid] = _skip_reason(report)
             self._outcomes.setdefault(nodeid, "skipped")
 
     @pytest.hookimpl(trylast=True)
@@ -589,6 +589,28 @@ class ReceptorPlugin:
             if remaining:
                 lines.append(f"  +{remaining} more groups")
 
+        # A scientific suite skips heavily for missing optional dependencies,
+        # and "412 skipped" does not tell you which capability is absent. The
+        # reasons are bounded by their variety, not by the number of tests.
+        for label, reasons in (("skipped", self._skipped), ("xfailed", self._xfailed)):
+            grouped = {}
+            for reason in reasons.values():
+                grouped[reason] = grouped.get(reason, 0) + 1
+            if not grouped or (len(grouped) == 1 and not next(iter(grouped))):
+                continue
+            ordered = sorted(grouped.items(), key=lambda item: -item[1])
+            limit = None if list_all else _SHOWN_TESTS
+            lines.append("")
+            lines.append(
+                f"{label}: {len(reasons)} in {len(ordered)} "
+                f"group{'s' if len(ordered) != 1 else ''}"
+            )
+            for reason, count in ordered[:limit]:
+                lines.append(f"  x{count} | {reason or 'no reason given'}")
+            remaining = len(ordered) - len(ordered[:limit])
+            if remaining:
+                lines.append(f"  +{remaining} more")
+
         if self._xpassed:
             lines.append("")
             lines.append("unexpected passes:")
@@ -855,6 +877,19 @@ def _natural(text):
     anyone reading a cascade.
     """
     return [int(part) if part.isdigit() else part for part in _DIGITS.split(text)]
+
+
+def _skip_reason(report):
+    """The reason a test was skipped, from pytest's (path, lineno, text) tuple."""
+    longrepr = getattr(report, "longrepr", None)
+    if not isinstance(longrepr, tuple) or len(longrepr) != 3:
+        return ""
+    text = _sanitize(str(longrepr[2])).strip()
+    if text.startswith("Skipped: "):
+        text = text.split(":", 1)[1].strip()
+    # pytest writes a bare "Skipped" when no reason was given; grouping on that
+    # produces a line that says nothing.
+    return "" if text == "Skipped" else text
 
 
 def _short_path(path):

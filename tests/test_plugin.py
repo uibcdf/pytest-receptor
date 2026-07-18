@@ -189,6 +189,47 @@ def test_a_broken_normalizer_does_not_break_the_run(pytester):
     assert result.ret == 1
 
 
+def test_skips_are_grouped_by_reason(pytester):
+    """PR-FID-010: "412 skipped" does not say which capability is missing.
+
+    A suite with optional scientific dependencies skips heavily, and the reason
+    is the useful part. The list is bounded by the variety of reasons, not by
+    the number of tests.
+    """
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(30))\n"
+        "@pytest.mark.skipif(True, reason='openmm not installed')\n"
+        "def test_omm(i): pass\n"
+        "@pytest.mark.parametrize('i', range(8))\n"
+        "@pytest.mark.skipif(True, reason='requires a GPU')\n"
+        "def test_gpu(i): pass\n"
+        "@pytest.mark.xfail(reason='known upstream bug')\n"
+        "def test_x(): assert 0\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "skipped: 38 in 2 groups" in output
+    assert "x30 | openmm not installed" in output
+    assert "x8 | requires a GPU" in output
+    assert "xfailed: 1 in 1 group" in output
+    assert "known upstream bug" in output
+
+
+def test_reasonless_skips_add_no_noise(pytester):
+    """Nothing is gained by printing "no reason given" forty times."""
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(5))\n"
+        "@pytest.mark.skipif(True, reason='')\n"
+        "def test_a(i): pass\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "5 skipped" in output
+    assert "skipped: 5 in" not in output
+
+
 def test_xpass_is_identified_with_reason(pytester):
     """PR-FID-005: counts alone hid that a known bug was fixed."""
     pytester.makepyfile(

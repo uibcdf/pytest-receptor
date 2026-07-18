@@ -74,7 +74,7 @@ limitation`.
 | PR-FID-011 | High | Omitted detail is only recoverable by re-running pytest | Write the complete agent-format report to `.pytest_cache/receptor/last-run.txt` and reference it | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-006 | Medium | External traceback origins are removed | Keep every local frame, each local-to-external boundary, and the terminal frame, marking elisions. Cause chains remain post-0.6 | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-009 | High | Fixed character truncation is not an auditable information budget | 0.6: project-declared normalizers so non-semantic values stop splitting a cause. Post: semantic budgets reporting original size, retained size, hash, and omissions | post | 2 | in progress |
-| PR-FID-010 | Medium | Skip and xfail reasons are not grouped or trackable | Group skip/xfail by reason; support an optional baseline to expose drift | post | 2 | open |
+| PR-FID-010 | Medium | Skip and xfail reasons are not grouped or trackable | Grouped by reason with counts. Post: an optional baseline to expose drift | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-001 | Medium | Adaptive hints can prescribe the wrong dependency mutation | Delete installation hints; replace with the exact rerun command | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-002 | High | Every failure is rendered in full regardless of root-cause count | Truncate occurrence lists; render every root cause in full; summarize only a pathological spread, and only when the on-disk report is reachable | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-003 | Medium | Output provides no rerun target | Emit a literal rerun command per failure group that actually selects it | 0.6 | 0 | **done 2026-07-18** |
@@ -359,6 +359,24 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18o** — Two of the remaining gaps reconsidered before the pilot.
+
+Skip and xfail grouping by reason is implemented, closing `PR-FID-010`. It was
+deferred as a nice-to-have, which underrated it for the suite it is aimed at: a
+project with optional scientific dependencies skips in the hundreds, and `412
+skipped` does not say whether OpenMM is missing or a GPU is absent. The list is
+bounded by the variety of reasons rather than the number of tests, so it stays
+cheap. Reasonless skips are suppressed.
+
+Worker identity under xdist was investigated and **rejected**, and the reasoning
+is recorded so it is not reopened by default. `report.worker_id` is available and
+the intended signal was "a group whose failures all landed on one worker
+suggests worker-local state". That signal is confounded by the distribution
+mode: under `--dist loadfile` or `loadscope`, failures from one file land on one
+worker by construction, so the finding would be an artifact. The bare ID without
+execution order also does not help reproduce anything -- `-n0` does. It stays a
+documented gap with the reasoning attached.
 
 **2026-07-18n** — A critical pass before the pilot, on the principle that
 shipping *known* defects is a choice, unlike shipping unknown ones.

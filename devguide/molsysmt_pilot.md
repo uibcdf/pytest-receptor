@@ -286,9 +286,8 @@ Stated plainly so you are not surprised:
 
 | Not yet | Notes |
 | :--- | :--- |
-| Worker identity under xdist | You get the tests, not which worker ran them. |
+| Worker identity under xdist | You get the tests, not which worker ran them. We looked at adding it and decided against: with `--dist loadfile` or `loadscope` a group of failures lands on one worker by construction, so "all on gw3" would be an artifact rather than a finding, and the bare ID without execution order does not help you reproduce anything. If you suspect worker-local state, `-n0` is the check. |
 | Thorough secret redaction | Obvious shapes are redacted (`api_key=`, `token:`, `Bearer ...`) before anything is rendered or written, and the report is owner-only. It is a conservative net, not a boundary: it cannot catch a secret that does not look like one. |
-| Skip/xfail grouping | Counted, not grouped by reason. Unexpected passes *are* named. |
 | A machine-readable artifact | The full report is plain text, not JSON. A structured artifact is post-0.6. |
 | Warning baselines | Warnings are grouped, but there is no accepted-baseline comparison, so you cannot yet ask "what is *new* since last week". |
 
