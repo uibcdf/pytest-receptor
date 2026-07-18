@@ -170,17 +170,21 @@ The redaction is a conservative net for obvious shapes — `api_key=`, `Bearer .
 ### It shows the run is alive
 
 pytest streams a progress character per test; suppressing those leaves a long
-suite completely silent. After the first minute, one line a minute goes to
-**stderr** — never stdout, so the report stays as parseable as before:
+suite completely silent. Progress now goes to **stderr** — never stdout, so the
+report stays as parseable as before — once per ten percent of the suite:
 
 ```text
-receptor: 4200/9332 240s
+receptor: 10% 933/9332 52s
+receptor: 20% 1866/9332 108s
 ```
+
+Reporting by decile rather than by clock bounds this at nine lines whether the
+run takes five minutes or three hours, and the elapsed time exposes pace: a
+decile that suddenly takes four times longer is visible before the run ends.
 
 It is a liveness signal, not a hang detector: the line is emitted when a test
 finishes, so a stuck test produces no further output. What survives is how far
-the run got, which is what you want when something kills it. Nine lines on a
-520-second suite.
+the run got, which is what you want when something kills it.
 
 ### It works under `pytest-xdist`
 

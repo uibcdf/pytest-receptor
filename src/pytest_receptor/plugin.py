@@ -74,9 +74,14 @@ _MANY_CAUSES = 10
 # timeout, a human, a CI job with an idle limit -- cannot tell a working suite
 # from a stalled one, and learns nothing at all if the process is killed.
 #
-# One line a minute: enough that nobody wonders whether it died, cheap enough
-# not to matter. A 520-second suite costs nine lines.
-_PROGRESS_AFTER = 60.0
+# Reported by decile, not by clock, so the cost is bounded by nothing at all:
+# nine lines whether the suite takes five minutes or three hours. The elapsed
+# time on each line also exposes pace -- if 10% took thirty seconds and the next
+# 10% took five minutes, that is worth seeing.
+#
+# A minimum elapsed time still applies, so ordinary runs stay silent.
+_PROGRESS_AFTER = 20.0
+_PROGRESS_STEP = 10  # percent
 
 # O_NOFOLLOW is POSIX-only; on Windows the symlink check above is what we get.
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
@@ -241,6 +246,7 @@ class ReceptorPlugin:
         )
         self._collected = 0
         self._finished = 0
+        self._next_decile = _PROGRESS_STEP
         self._last_progress = self._start
         self._warnings = 0
         self._warning_groups = {}
@@ -276,17 +282,28 @@ class ReceptorPlugin:
         It goes to stderr so the report on stdout stays exactly as parseable as
         it was.
         """
-        now = time.monotonic()
-        if now - self._start < _PROGRESS_AFTER:
+        elapsed = time.monotonic() - self._start
+        if elapsed < _PROGRESS_AFTER:
             return
-        if now - self._last_progress < _PROGRESS_AFTER:
-            return
-        self._last_progress = now
-        total = f"/{self._collected}" if self._collected else ""
+
+        if self._collected:
+            percent = self._finished * 100 // self._collected
+            if percent < self._next_decile or percent >= 100:
+                return
+            # Skip past any deciles crossed while we were still under the
+            # minimum elapsed time, so the first line is not stale.
+            self._next_decile = (percent // _PROGRESS_STEP + 1) * _PROGRESS_STEP
+            marker = f"{percent}% {self._finished}/{self._collected}"
+        else:
+            # Nothing was collected up front -- fall back to a clock, since some
+            # liveness beats none.
+            if elapsed - (self._last_progress - self._start) < _PROGRESS_AFTER:
+                return
+            self._last_progress = time.monotonic()
+            marker = str(self._finished)
+
         try:
-            sys.stderr.write(
-                f"receptor: {self._finished}{total} {now - self._start:.0f}s\n"
-            )
+            sys.stderr.write(f"receptor: {marker} {elapsed:.0f}s\n")
             sys.stderr.flush()
         except Exception:
             pass

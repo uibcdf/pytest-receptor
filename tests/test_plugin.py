@@ -890,9 +890,34 @@ def test_a_long_run_shows_it_is_alive(pytester, monkeypatch):
         "def test_a(i): assert True\n"
     )
     result = pytester.runpytest_subprocess("--receptor=llm")
-    assert "receptor: " in result.stderr.str()
+    stderr = result.stderr.str()
+    assert "receptor: " in stderr
     # It reports how far the run got, which is what survives a kill.
-    assert "/4" in result.stderr.str()
+    assert "/4" in stderr
+    assert "%" in stderr
+
+
+def test_progress_is_bounded_by_deciles_not_by_clock(pytester):
+    """A three-hour run must not print three hundred lines.
+
+    Reporting by percentage bounds the output at nine lines regardless of how
+    long the suite takes, and the elapsed time on each line still exposes pace.
+    """
+    pytester.makeconftest(
+        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.0\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(200))\n"
+        "def test_a(i): assert True\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    lines = [
+        ln for ln in result.stderr.str().splitlines() if ln.startswith("receptor:")
+    ]
+    assert 0 < len(lines) <= 9, f"expected at most nine lines, got {len(lines)}"
+    # 100% is not announced: the report itself arrives at that moment.
+    assert not any("100%" in ln for ln in lines)
 
 
 def test_progress_never_touches_stdout(pytester):

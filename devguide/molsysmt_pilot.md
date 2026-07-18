@@ -175,8 +175,17 @@ third-party plugins write into. There is a regression test for it now.
 at all until it finished, which makes a working suite indistinguishable from a
 hung one — and yields nothing whatsoever if a timeout kills it, where `pytest -q`
 would at least have left its dots. After the first minute, one line a minute goes
-to stderr (`receptor: 4200/9332 240s`), never to stdout. Nine lines on your run,
-104 tokens. It is a liveness signal, not a hang detector: it fires when a test
+to stderr, never to stdout, once per ten percent of the suite:
+
+```text
+receptor: 10% 933/9332 52s
+receptor: 20% 1866/9332 108s
+```
+
+Reporting by decile rather than by clock keeps this at nine lines however long
+the suite runs, and the elapsed time shows pace — a decile that suddenly takes
+four times longer than the last is worth knowing about while the run is still
+going. It is a liveness signal, not a hang detector: it fires when a test
 finishes, so a stuck test produces no further lines — but the last one printed
 tells you where it got to.
 
