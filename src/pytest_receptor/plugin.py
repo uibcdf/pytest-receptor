@@ -248,6 +248,13 @@ class ReceptorPlugin:
         self._finished = 0
         self._next_decile = _PROGRESS_STEP
         self._last_progress = self._start
+        # Under xdist the plugin is instantiated in every worker as well as the
+        # controller. Each worker sees the whole collected list but only its own
+        # share of finished tests, so every one of them announced 10% at its own
+        # pace -- twelve interleaved streams, milestones repeating and appearing
+        # to go backwards. Only the controller has the global view, so only the
+        # controller speaks.
+        self._is_worker = hasattr(config, "workerinput")
         self._warnings = 0
         self._warning_groups = {}
         self._skipped = {}
@@ -270,6 +277,16 @@ class ReceptorPlugin:
         category, _letter, _word = outcome
         return (category, "", "")
 
+    @pytest.hookimpl(optionalhook=True)
+    def pytest_xdist_node_collection_finished(self, node, ids):
+        """The controller's only route to the collected total.
+
+        `pytest_collection_modifyitems` fires in the workers, never here, so
+        without this the controller has no denominator and falls back to a bare
+        count. Declared optional so the plugin still loads when xdist is absent.
+        """
+        self._collected = max(self._collected, len(ids))
+
     def _emit_progress(self):
         """A sign of life on stdout's quieter sibling.
 
@@ -282,6 +299,8 @@ class ReceptorPlugin:
         It goes to stderr so the report on stdout stays exactly as parseable as
         it was.
         """
+        if self._is_worker:
+            return
         elapsed = time.monotonic() - self._start
         if elapsed < _PROGRESS_AFTER:
             return

@@ -104,6 +104,7 @@ limitation`.
 | PR-PILOT-001 | Critical | Setup and teardown failures were counted as `failed`, disagreeing with pytest's `errors` | Track phase states separately, as pytest does; report both counts | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-002 | High | Printed paths and rerun commands did not resolve from the invocation directory | Render every path relative to `invocation_params.dir` | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-003 | High | Warning groups were truncated by frequency, hiding 57 of 60 | List every distinct warning group | 0.6 | 0 | **done 2026-07-18** |
+| PR-PILOT-004 | High | Under xdist every worker emitted its own progress deciles | Emit only from the controller; take the total from `pytest_xdist_node_collection_finished` | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-012 | Medium | Bare assertions were typed as `Failure` | Recognize an assertion crash that carries no exception name | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
@@ -160,6 +161,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-001 | MolSysMT pilot: pytest reported `20 errors`, the receptor `20 failed`, on a fixture cascade; reproduced serially and with twelve workers | PILOT |
 | PR-PILOT-002 | MolSysMT pilot: `rerun: pytest test_fixture_cascade.py -q` exited with `file or directory not found`, and a location rendered as `molsysmt/molsysmt/__init__.py` | PILOT |
 | PR-PILOT-003 | MolSysMT pilot: a green 9,332-test run showed 3 of 60 warning groups, ranked by frequency | PILOT |
+| PR-PILOT-004 | MolSysMT pilot, second pass: `-n 12` produced repeated and denominator-less progress lines, far more than the nine advertised | PILOT |
 | PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
 | PR-FID-012 | `assert 0` crashes with the message `assert 0` and no exception name, so the type heuristic fell through to `Failure` | SCOPE |
 | PR-REL-002 | The published table compares against default pytest; against `-q --no-header` the green case is roughly 12 tokens versus 9, not an 87.88% saving | AUD, SCOPE |
@@ -367,6 +369,33 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18r** — Second pilot pass. Result integrity confirmed; one new defect.
+
+The pilot verified the phase model against pytest on a mixed-phase run
+(`1 failed, 2 passed, 6 errors` in both), on the real 9,378-item suite, and
+confirmed all 60 warning groups render with no truncation. No success
+disagreement was observed.
+
+`PR-PILOT-004`: under `-n 12`, every worker emitted its own progress deciles.
+The plugin is instantiated per worker; each collects the whole suite, so the
+denominator is right, but each finishes only its own share -- twelve streams all
+announcing 10% at different times, interleaved with a controller that had no
+denominator at all, because `pytest_collection_modifyitems` does not fire on the
+xdist controller. Fixed by emitting only from the controller and taking the
+total from `pytest_xdist_node_collection_finished`.
+
+The pilot's sharpest observation was not the defect but why we missed it: the
+liveness regressions used serial subprocess runs and structurally could not
+detect multi-process emission. That is the third time a defect has survived
+because the test exercised the wrong axis -- volume instead of variety for
+warnings, formatting instead of cost for the cascade, and now serial instead of
+distributed.
+
+Also corrected from the same report: the documentation promised paths would be
+*relative*, while `_display_path` deliberately prints an absolute path rather
+than a chain of parent traversals. The contract is that a path resolves, not
+that it is relative.
 
 **2026-07-18q** — First field reports from the MolSysMT pilot. Three defects,
 all fixed, and the first one is the kind the whole project exists to prevent.

@@ -148,7 +148,9 @@ showed nothing at all until it finished. A consumer cannot tell a working suite
 from a stalled one, and if the process is killed on a timeout it learns nothing
 whatsoever, where plain pytest would at least have left a trail of dots.
 
-Progress goes to **stderr**, once per ten percent of the suite:
+Progress goes to **stderr**, once per ten percent of the suite. Under xdist it
+comes from the controller only, so the milestones are global rather than one
+stream per worker:
 
 ```text
 receptor: 10% 933/9332 52s
@@ -336,6 +338,11 @@ site.
 * **Dynamic values do not split a group.** Memory addresses and timestamps are
   normalized before grouping, so `0x7f8b...` differences do not fragment one
   cause into many.
+* **Every path resolves from where you invoked pytest.** Usually that means a
+  relative path. A test far outside the project — more than a few directories
+  up — is printed absolute instead, because a chain of `../../..` is worse than
+  the full path. The contract is that what is printed can be used, not that it
+  is always relative.
 * **Tracebacks keep the decisive frame.** Every local frame survives; external
   frames are pruned to the boundary and the terminal frame, marked `(ext)`, with
   `...` where frames were elided. Dropping external frames entirely would hide

@@ -24,3 +24,4 @@ stays an inbox. Nothing is closed by deletion.
 | `setup_errors_counted_as_failed.md` | PR-PILOT-001 | 2026-07-18 |
 | `external_test_paths_produce_invalid_rerun_and_location.md` | PR-PILOT-002 | 2026-07-18 |
 | `warning_group_truncation_is_not_diagnostically_sufficient.md` | PR-PILOT-003 | 2026-07-18 |
+| `xdist_progress_is_not_bounded_by_deciles.md` | PR-PILOT-004 | 2026-07-18 |

@@ -707,6 +707,49 @@ def test_a_retried_test_is_one_test(pytester):
     assert "3 tests" not in output
 
 
+PROGRESS_LINE = re.compile(r"^receptor: (\d+)% (\d+)/(\d+) \d+s$")
+
+
+@xdist
+@pytest.mark.parametrize("extra", [[], ["--receptor-stats"]])
+def test_xdist_progress_comes_only_from_the_controller(pytester, extra):
+    """Reported by the pilot: twelve workers each announced their own deciles.
+
+    The plugin is instantiated in every worker as well as the controller. Each
+    worker sees the whole collected list but only its own share of finished
+    tests, so all twelve announced 10% at different moments, interleaved with
+    the controller's denominator-less fallback. Milestones repeated and appeared
+    to move backwards.
+    """
+    pytester.makeconftest(
+        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.0\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(60))\n"
+        "def test_a(i): assert True\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm", "-n", "4", *extra)
+
+    lines = [
+        ln for ln in result.stderr.str().splitlines() if ln.startswith("receptor:")
+    ]
+    assert lines, "a long run must show it is alive"
+
+    percents = []
+    for line in lines:
+        match = PROGRESS_LINE.match(line)
+        assert match, f"malformed progress line: {line!r}"
+        percent, finished, collected = (int(g) for g in match.groups())
+        assert collected == 60, f"denominator should be the whole suite: {line!r}"
+        assert finished <= collected
+        percents.append(percent)
+
+    assert len(lines) <= 9, f"bounded at nine milestones, got {len(lines)}"
+    assert percents == sorted(set(percents)), f"not strictly increasing: {percents}"
+    assert 100 not in percents
+
+
 @xdist
 def test_xdist_output_matches_serial(pytester):
     """Distributing the run must not change what the run means.
