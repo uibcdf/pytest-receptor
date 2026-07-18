@@ -64,6 +64,10 @@ FAIL exit=1 | 38 errors, 90 passed | 12.40s | 1 root cause
     x8 | requires a GPU
   ```
 
+  Warning messages are shortened to about a hundred characters on stdout, since
+  the line exists to let you recognise the warning rather than reproduce it; the
+  full text is in the report on disk. Every group is listed regardless.
+
   A skip with no declared reason is reported as its own group,
   `x5 | (no reason declared)`, because that is a finding in its own right: tests
   are switched off and nobody recorded why.

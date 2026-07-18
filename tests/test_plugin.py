@@ -127,6 +127,34 @@ def test_every_warning_group_is_listed(pytester):
         assert f"condition {index} detected" in output
 
 
+def test_long_warning_messages_are_bounded(pytester):
+    """A warning line exists to identify the warning, not to reproduce it.
+
+    Scientific messages run to several hundred characters, which made one group
+    cost 68 tokens and the whole section unbounded. Every group is still listed;
+    only the message is shortened, and the full text stays in the report on disk.
+    """
+    long_text = "conversion cannot preserve bond order information " * 6
+    pytester.makepyfile(
+        "import warnings, pytest\n"
+        "class W(UserWarning): pass\n"
+        f"LONG = {long_text!r}\n"
+        "@pytest.mark.parametrize('i', range(3))\n"
+        "def test_w(i): warnings.warn(f'{LONG} case {i}', W)\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "warnings: 3 in 3 groups" in output
+    for line in output.splitlines():
+        if line.strip().startswith("W x"):
+            assert len(line) < 200, f"unbounded warning line: {len(line)} chars"
+            assert line.rstrip().endswith("...")
+
+    # The on-disk report keeps the whole thing.
+    reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
+    assert long_text.strip() in reports[0].read_text(encoding="utf-8")
+
+
 def test_project_normalizers_collapse_message_variants(pytester):
     """PR-FID-009: we cannot guess which values are non-semantic; projects can.
 

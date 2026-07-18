@@ -83,6 +83,12 @@ _MANY_CAUSES = 10
 _PROGRESS_AFTER = 20.0
 _PROGRESS_STEP = 10  # percent
 
+# A warning line exists to let you recognize the warning and decide whether it
+# is new. Scientific messages run to several hundred characters, which made a
+# single group cost 68 tokens and the section unbounded. This bounds it without
+# hiding any group: every distinct warning is still listed.
+_WARNING_MESSAGE = 110
+
 # O_NOFOLLOW is POSIX-only; on Windows the symlink check above is what we get.
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 
@@ -719,6 +725,8 @@ class ReceptorPlugin:
                 # overhead on an otherwise clean run and the whole point is that
                 # it stays cheap enough to leave on.
                 head = group["message"].splitlines()[0] if group["message"] else ""
+                if not list_all and len(head) > _WARNING_MESSAGE:
+                    head = head[:_WARNING_MESSAGE].rstrip() + "..."
                 parts_ = [f"  {group['category']} x{group['count']}"]
                 if group["origin"]:
                     parts_.append(group["origin"])
