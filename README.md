@@ -214,13 +214,13 @@ Measured with `tiktoken` (`cl100k_base`):
 
 | Scenario | `pytest` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3304 | **106** | **-96.8%** |
+| Cascade (38 failures, one cause) | 3305 | **106** | **-96.8%** |
 | Green suite (128 tests) | 125 | **16** | -87.2% |
-| Green with warnings | 191 | **46** | -75.9% |
-| Mixed states (skip, xfail, xpass) | 131 | **44** | -66.4% |
-| Five distinct causes | 410 | **212** | -48.3% |
-| Single assertion failure | 354 | **167** | -52.8% |
-| Collection error | 293 | **217** | -25.9% |
+| Green with warnings | 195 | **46** | -76.2% |
+| Mixed states (skip, xfail, xpass) | 130 | **78** | -40.0% |
+| Five distinct causes | 410 | **212** | -48.5% |
+| Single assertion failure | 356 | **167** | -53.1% |
+| Collection error | 299 | **220** | -26.1% |
 
 Every scenario is cheaper, most of them by half or better. In a TDD loop that
 runs the suite twenty times, the cascade row alone is sixty thousand tokens.
@@ -246,18 +246,20 @@ If you are the kind of person who already runs `pytest -q --no-header
 | Scenario | tuned pytest | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | 2863 | **106** | -96.3% |
-| Green with warnings | 92 | **46** | -50.0% |
+| Green with warnings | 94 | **46** | -51.1% |
 | Five distinct causes | 316 | **212** | -32.9% |
 | Green suite (128 tests) | 23 | **16** | -30.4% |
 | Single assertion failure | 197 | **167** | -15.2% |
-| Collection error | 195 | **217** | +11.3% |
-| Mixed states (skip, xfail, xpass) | 31 | **44** | +41.9% |
+| Collection error | 198 | **220** | +11.1% |
+| Mixed states (skip, xfail, xpass) | 31 | **78** | +151.6% |
 
-The two positive rows are real, and they are thirteen and twenty-two tokens. They
-buy the difference between `1 xpassed` and knowing *which* test passed
-unexpectedly and why — which is the thing you would otherwise have re-run pytest
-to discover. The warnings row moved for the same reason: it now names the
-warning groups rather than counting them.
+Both positive rows are scenarios of a handful of tests, where any fixed overhead
+looks enormous as a percentage: +151.6% is forty-seven tokens. They buy the
+reason behind every skip and xfail and the name of the test that passed
+unexpectedly, where `pytest -q` says `1 skipped, 1 xfailed, 1 xpassed` and
+leaves you to re-run with `-rs` to find out which. Those sections are bounded by
+the variety of reasons, not the number of tests, so four hundred skips across
+three reasons still cost three lines.
 
 The cascade row does not move: grouping forty failures into one root cause is
 something no combination of pytest flags does.

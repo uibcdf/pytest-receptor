@@ -33,13 +33,13 @@ Headline comparison, `cl100k_base`:
 
 | Scenario | `pytest` | tuned pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3304 | 2863 | 1989 | **106** | -96.3% |
-| Green with warnings | 191 | 92 | 92 | **46** | -50.0% |
+| Cascade (38 failures, one cause) | 3305 | 2863 | 1989 | **106** | -96.3% |
+| Green with warnings | 195 | 94 | 94 | **46** | -51.1% |
 | Five distinct causes | 410 | 316 | 238 | **212** | -32.9% |
 | Green suite (128 tests) | 125 | 23 | 23 | **16** | -30.4% |
-| Single assertion failure | 354 | 197 | 227 | **167** | -15.2% |
-| Collection error | 293 | 195 | 195 | **217** | +11.3% |
-| Mixed states (skip, xfail, xpass) | 131 | 31 | 31 | **44** | +41.9% |
+| Single assertion failure | 356 | 197 | 229 | **167** | -15.2% |
+| Collection error | 299 | 198 | 198 | **220** | +11.1% |
+| Mixed states (skip, xfail, xpass) | 130 | 31 | 31 | **78** | +151.6% |
 
 The `Change` column compares against tuned pytest, the strict baseline.
 
@@ -52,9 +52,9 @@ workers, against a pytest that has *already* been quietened:
 
 | Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: | ---: |
-| Whole suite green | 911 | 812 | **24** | 97.0% |
-| One fixture breaks 200 tests | 25,573 | 25,474 | **114** | 99.6% |
-| Six unrelated bugs | 1,594 | 1,497 | **285** | 81.0% |
+| Whole suite green | 909 | 812 | **24** | 97.0% |
+| One fixture breaks 200 tests | 25,574 | 25,481 | **114** | 99.6% |
+| Six unrelated bugs | 1,596 | 1,497 | **285** | 81.0% |
 
 Reproduce with `python devtools/benchmarks/run_benchmarks.py --scale`.
 
@@ -85,11 +85,11 @@ between them, so the comparison against plain `pytest` is repeated across four:
 | :--- | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | -96.8% | -96.9% | -96.9% | -96.7% |
 | Green suite (128 tests) | -87.2% | -87.4% | -89.6% | -89.7% |
-| Green with warnings | -75.9% | -76.0% | -79.6% | -81.1% |
-| Mixed states (skip, xfail, xpass) | -66.4% | -66.9% | -66.7% | -75.5% |
+| Green with warnings | -76.2% | -76.3% | -79.6% | -81.1% |
+| Mixed states (skip, xfail, xpass) | -40.0% | -40.9% | -44.4% | -59.1% |
 | Five distinct causes | -48.3% | -46.8% | -50.7% | -56.5% |
-| Single assertion failure | -52.8% | -53.1% | -54.2% | -58.9% |
-| Collection error | -25.9% | -26.2% | -23.7% | -15.2% |
+| Single assertion failure | -53.1% | -53.5% | -54.2% | -58.9% |
+| Collection error | -26.1% | -26.2% | -23.8% | -15.4% |
 
 The headline holds. The cascade sits between -96.7% and -96.9% across all four,
 so it is a property of the output rather than of GPT-4's tokenizer. The older
@@ -117,10 +117,16 @@ conclusion. They are negative against *quiet* pytest, not against the default
 output you would otherwise be reading. On the mixed-state run: 148 tokens for
 default pytest, 26 for quiet pytest, 39 for the receptor.
 
-**Percentages mislead at the bottom of the table.** Read the positive rows in
-absolute terms: +41.9% on a mixed-state run is *thirteen tokens*, and +11.3% on
-a collection error is twenty-two. Those are rounding errors in any real context
-window.
+**Percentages mislead at the bottom of the table.** The mixed-state scenario is
+four tests, a size at which any fixed overhead looks enormous as a percentage:
++151.6% is forty-seven tokens, and +11.1% on a collection error is twenty-two.
+
+Those forty-seven buy the reason behind every skip and every xfail, and the name
+of the test that passed unexpectedly. `pytest -q` reports `1 skipped, 1 xfailed,
+1 xpassed` and leaves you to re-run with `-rs` to learn which — the expensive
+thing. Both sections are bounded by the *variety* of reasons rather than the
+number of tests, so four hundred skips across three reasons still cost three
+lines.
 
 Those thirteen tokens are also the whole difference between
 

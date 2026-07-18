@@ -12,8 +12,8 @@
       "pytest (default)": {
         "cl100k_base": 125,
         "o200k_base": 127,
-        "p50k_base": 134,
-        "r50k_base": 135
+        "p50k_base": 135,
+        "r50k_base": 136
       },
       "pytest -q --no-header --tb=short": {
         "cl100k_base": 23,
@@ -64,8 +64,8 @@
       "pytest (default)": {
         "cl100k_base": 3305,
         "o200k_base": 3498,
-        "p50k_base": 4102,
-        "r50k_base": 4635
+        "p50k_base": 4103,
+        "r50k_base": 4636
       },
       "pytest -q --no-header --tb=short": {
         "cl100k_base": 2863,
@@ -80,18 +80,18 @@
         "r50k_base": 2413
       },
       "--receptor=llm": {
-        "cl100k_base": 451,
-        "o200k_base": 454,
-        "p50k_base": 684,
-        "r50k_base": 844
+        "cl100k_base": 106,
+        "o200k_base": 109,
+        "p50k_base": 129,
+        "r50k_base": 153
       }
     },
     "Single assertion failure": {
       "pytest (default)": {
-        "cl100k_base": 354,
-        "o200k_base": 357,
-        "p50k_base": 399,
-        "r50k_base": 520
+        "cl100k_base": 356,
+        "o200k_base": 359,
+        "p50k_base": 400,
+        "r50k_base": 521
       },
       "pytest -q --no-header --tb=short": {
         "cl100k_base": 197,
@@ -100,10 +100,10 @@
         "r50k_base": 316
       },
       "pytest -q --tb=line": {
-        "cl100k_base": 227,
-        "o200k_base": 229,
-        "p50k_base": 261,
-        "r50k_base": 354
+        "cl100k_base": 229,
+        "o200k_base": 231,
+        "p50k_base": 262,
+        "r50k_base": 355
       },
       "--receptor=llm": {
         "cl100k_base": 167,
@@ -114,10 +114,10 @@
     },
     "Five distinct causes": {
       "pytest (default)": {
-        "cl100k_base": 410,
-        "o200k_base": 417,
-        "p50k_base": 529,
-        "r50k_base": 669
+        "cl100k_base": 412,
+        "o200k_base": 419,
+        "p50k_base": 530,
+        "r50k_base": 670
       },
       "pytest -q --no-header --tb=short": {
         "cl100k_base": 316,
@@ -126,10 +126,10 @@
         "r50k_base": 573
       },
       "pytest -q --tb=line": {
-        "cl100k_base": 238,
-        "o200k_base": 255,
-        "p50k_base": 328,
-        "r50k_base": 396
+        "cl100k_base": 248,
+        "o200k_base": 265,
+        "p50k_base": 333,
+        "r50k_base": 401
       },
       "--receptor=llm": {
         "cl100k_base": 212,
@@ -141,35 +141,35 @@
     "Collection error": {
       "pytest (default)": {
         "cl100k_base": 295,
-        "o200k_base": 292,
+        "o200k_base": 290,
         "p50k_base": 357,
         "r50k_base": 371
       },
       "pytest -q --no-header --tb=short": {
         "cl100k_base": 196,
-        "o200k_base": 192,
+        "o200k_base": 191,
         "p50k_base": 252,
         "r50k_base": 266
       },
       "pytest -q --tb=line": {
         "cl100k_base": 196,
-        "o200k_base": 192,
+        "o200k_base": 191,
         "p50k_base": 252,
         "r50k_base": 266
       },
       "--receptor=llm": {
         "cl100k_base": 218,
-        "o200k_base": 215,
+        "o200k_base": 214,
         "p50k_base": 272,
         "r50k_base": 314
       }
     },
     "Mixed states (skip, xfail, xpass)": {
       "pytest (default)": {
-        "cl100k_base": 129,
-        "o200k_base": 131,
-        "p50k_base": 141,
-        "r50k_base": 192
+        "cl100k_base": 130,
+        "o200k_base": 132,
+        "p50k_base": 142,
+        "r50k_base": 193
       },
       "pytest -q --no-header --tb=short": {
         "cl100k_base": 31,
@@ -184,10 +184,10 @@
         "r50k_base": 96
       },
       "--receptor=llm": {
-        "cl100k_base": 44,
-        "o200k_base": 44,
-        "p50k_base": 47,
-        "r50k_base": 47
+        "cl100k_base": 78,
+        "o200k_base": 78,
+        "p50k_base": 79,
+        "r50k_base": 79
       }
     }
   }
