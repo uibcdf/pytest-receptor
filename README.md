@@ -225,6 +225,19 @@ Measured with `tiktoken` (`cl100k_base`):
 Every scenario is cheaper, most of them by half or better. In a TDD loop that
 runs the suite twenty times, the cascade row alone is sixty thousand tokens.
 
+And the saving grows with the suite. Measured on eight thousand tests under
+twelve xdist workers, against `pytest -q -n 12` — a pytest that has *already*
+been quietened:
+
+| Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
+| :--- | ---: | ---: | ---: |
+| Whole suite green | 812 | **24** | 97.0% |
+| One fixture breaks 200 tests | 25,481 | **114** | 99.6% |
+| Six unrelated bugs | 1,479 | **279** | 81.1% |
+
+`-q` prints one progress character per test, so a *successful* eight-thousand
+test run costs 812 tokens of dots before anything has gone wrong.
+
 ### And if you already tuned pytest
 
 If you are the kind of person who already runs `pytest -q --no-header

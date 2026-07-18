@@ -64,7 +64,30 @@ re-run them.
 should never have to open a file to act on a failure, and you must never have to
 run the suite a second time to get information the first run already had.
 
-On that scenario: 3,304 tokens for plain `pytest`, 106 for the receptor.
+### At your scale, with your command
+
+You run `python -m pytest -q -n 12`. That matters: `-q` is already a tuned
+pytest, so the figures published in our benchmarks — measured on suites of at
+most 128 tests — understate what you would see.
+
+Measured on eight thousand tests, twelve workers, `cl100k_base`:
+
+| Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
+| :--- | ---: | ---: | ---: |
+| Whole suite green | 812 | **24** | 97.0% |
+| One fixture breaks 200 tests | 25,481 | **114** | 99.6% |
+| Six unrelated bugs | 1,479 | **279** | 81.1% |
+
+Two things worth noticing.
+
+**`-q` does not protect you.** It still prints one progress character per test,
+which at eight thousand tests is 812 tokens of dots on a *successful* run. Every
+run, including the ones where nothing is wrong.
+
+**The cascade number is not a typo.** When one fixture breaks two hundred tests,
+`-q` prints two hundred tracebacks: 25,481 tokens, most of them the same text
+repeated. The receptor prints the cause once, names every affected test, and
+gives you the command to re-run them: 114.
 
 ---
 
@@ -183,12 +206,20 @@ immediately. Everything else can wait.
 
 ### 2. Diagnostic-sufficiency incidents
 
-The important one. **Any time you or your agent had to re-run pytest with
-different output because the receptor's report was not enough.**
+The important one, and the one we most want.
 
-Please record what you needed that was missing. A second full run of an
-eight-thousand-test suite costs far more than any formatting saving, so every one
-of these is a design failure on our side, not user error.
+**Any case where the output was not enough to work from.** Not just where you
+had to re-run pytest — where you had to open the report file, or go and read a
+source file, or squint at something ambiguous. The rule we hold ourselves to is
+that the information given to a consumer must be what it needs to work, compact
+but complete. There is no "it was in the file" defence: if something you needed
+was not in front of you, that is a design failure on our side, not user error.
+
+This standard is why root-cause detail is no longer withheld at all. An earlier
+version showed three causes and pointed at a file for the rest; measurement
+showed that saved forty tokens and cost two hundred the moment anyone read the
+file back. Tell us wherever the same mistake survives somewhere we have not
+noticed.
 
 ### 3. Anything another plugin stopped doing
 

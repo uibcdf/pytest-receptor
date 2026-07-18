@@ -192,8 +192,12 @@ class Group:
     phase: str
     message: str
     location: str
+    cause: str = ""
     frames: list = field(default_factory=list)
     occurrences: list = field(default_factory=list)
+    #: Distinct normalized messages seen at this call site. A parametrized test
+    #: failing on twenty inputs is one bug with twenty messages, not twenty bugs.
+    variants: dict = field(default_factory=dict)
 
 
 class ReceptorPlugin:
@@ -326,11 +330,15 @@ class ReceptorPlugin:
         groups = {}
         for report in self._failures:
             exc_type, message, location, phase = self._describe(report)
-            # Fingerprint the complete message, before any truncation, so two
-            # failures differing only inside a cut region cannot merge
-            # (PR-FID-004). Grouping is call-site aware on purpose: equal
-            # messages from unrelated places are different causes.
-            key = (exc_type, phase, self._normalize(message), location)
+            cause = self._cause(report)
+            # One exception type raised from one line in one phase is one bug.
+            # The message is deliberately *not* part of the key: a parametrized
+            # test failing on twenty inputs produces twenty messages, and keying
+            # on them fragments a single cause into twenty groups. Differing
+            # messages are kept as variants instead. The cause chain is part of
+            # the key, because the same outer error wrapping two different
+            # underlying failures really is two bugs.
+            key = (exc_type, phase, location, cause)
             group = groups.get(key)
             if group is None:
                 group = Group(
@@ -338,9 +346,14 @@ class ReceptorPlugin:
                     phase=phase,
                     message=_truncate(message),
                     location=location,
+                    cause=cause,
                     frames=self._frames(report),
                 )
                 groups[key] = group
+            # Normalized so non-semantic values do not inflate the variant
+            # count, and computed on the complete message, before truncation
+            # (PR-FID-004).
+            group.variants.setdefault(self._normalize(message), message)
             group.occurrences.append(
                 Occurrence(
                     nodeid=report.nodeid,
@@ -360,6 +373,20 @@ class ReceptorPlugin:
             groups.values(),
             key=lambda g: (-len(g.occurrences), g.location, g.exc_type, g.message),
         )
+
+    def _cause(self, report):
+        """The exception that actually started it, for `raise X from Y`.
+
+        Scientific code wraps low-level errors constantly, and the outer message
+        is frequently the least informative part of the failure.
+        """
+        chain = getattr(report.longrepr, "chain", None)
+        if not chain or len(chain) < 2:
+            return ""
+        crash = chain[0][1]
+        if crash is None or not crash.message:
+            return ""
+        return _sanitize(crash.message).splitlines()[0]
 
     def _describe(self, report):
         phase = getattr(report, "when", None) or "collection"
@@ -565,6 +592,16 @@ class ReceptorPlugin:
         ]
         for line in group.message.splitlines():
             lines.append(f"    {line}")
+        if group.cause:
+            lines.append(f"    caused by: {group.cause}")
+        extra = len(group.variants) - 1
+        if extra > 0:
+            shown = [v for v in group.variants.values()][1 : 1 + _SHOWN_TESTS]
+            lines.append(f"    {extra} other message{'s' if extra > 1 else ''}:")
+            for variant in shown:
+                lines.append(f"      {variant.splitlines()[0]}")
+            if extra > len(shown):
+                lines.append(f"      +{extra - len(shown)} more")
         if len(group.frames) > 1:
             lines.append("    frames: " + " -> ".join(group.frames))
 

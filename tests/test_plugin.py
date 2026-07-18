@@ -105,11 +105,12 @@ def test_warnings_are_grouped_not_just_counted(pytester):
     assert "UserWarning x2" in output
 
 
-def test_project_normalizers_merge_a_split_cause(pytester):
+def test_project_normalizers_collapse_message_variants(pytester):
     """PR-FID-009: we cannot guess which values are non-semantic; projects can.
 
-    Scientific failures carry array shapes and dtypes that fragment one root
-    cause into dozens of groups.
+    Call-site grouping already merges failures that crash in the same place, so
+    what normalizers still buy is a quiet group: twenty inputs that differ only
+    in an array shape become one message rather than twenty.
     """
     pytester.makepyfile(
         "import pytest\n"
@@ -118,18 +119,63 @@ def test_project_normalizers_merge_a_split_cause(pytester):
         "    raise ValueError(f'could not broadcast: shape ({n}, 3) vs (5, 3)')\n"
     )
     without = pytester.runpytest("--receptor=llm")
-    without.stdout.fnmatch_lines(["*3 root causes*"])
+    assert "2 other messages:" in without.stdout.str()
 
     pytester.makefile(
         ".ini",
-        pytest=(
-            "[pytest]\nreceptor_normalizers =\n"
-            "    shape \\(\\d+, \\d+\\) -> shape (N, M)\n"
-        ),
+        pytest="[pytest]\nreceptor_normalizers =\n    shape \\(\\d+, -> shape (N,\n",
     )
     with_rule = pytester.runpytest("--receptor=llm")
-    assert "root causes" not in with_rule.stdout.str()
-    assert "[1] ValueError | 3 tests" in with_rule.stdout.str()
+    output = with_rule.stdout.str()
+    assert "other messages" not in output
+    assert "[1] ValueError | 3 tests" in output
+
+
+def test_parametrized_failures_are_one_cause(pytester):
+    """One exception from one line is one bug, whatever the parameter was.
+
+    Keying groups on the message fragmented a parametrized test into one group
+    per input, which defeats grouping exactly where suites are most repetitive.
+    """
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('n', range(20))\n"
+        "def test_a(n): assert n == 999\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "[1] AssertionError | 20 tests | call" in output
+    assert "root causes" not in output
+    assert "19 other messages:" in output
+
+
+def test_cause_chain_is_reported(pytester):
+    """`raise X from Y` hid Y entirely, which is usually the informative half."""
+    pytester.makepyfile(
+        "def _low(): raise KeyError('missing atoms key')\n"
+        "def test_a():\n"
+        "    try: _low()\n"
+        "    except KeyError as e: raise ValueError('could not build') from e\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "ValueError: could not build" in output
+    assert "caused by: KeyError" in output
+    assert "missing atoms key" in output
+
+
+def test_same_message_different_causes_stay_separate(pytester):
+    """The cause chain is part of the key: same wrapper, different bug."""
+    pytester.makepyfile(
+        "def test_a():\n"
+        "    try: raise KeyError('atoms')\n"
+        "    except KeyError as e: raise ValueError('build failed') from e\n"
+        "def test_b():\n"
+        "    try: raise IndexError('bonds')\n"
+        "    except IndexError as e: raise ValueError('build failed') from e\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines(["*2 root causes*"])
 
 
 def test_a_broken_normalizer_does_not_break_the_run(pytester):
