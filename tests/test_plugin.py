@@ -1182,21 +1182,34 @@ def test_redaction_leaves_ordinary_test_data_alone(pytester):
     assert "1234" in output and "5678" in output
 
 
-def test_forced_colour_cannot_reach_the_report(pytester, monkeypatch):
-    """`FORCE_COLOR` makes pytest emit ANSI into a pipe.
+@pytest.mark.parametrize("profile", ["llm", "ci"])
+@pytest.mark.parametrize(
+    "env, args",
+    [
+        ({"FORCE_COLOR": "3"}, []),
+        ({"PY_COLORS": "1"}, []),
+        ({}, ["--color=yes"]),
+        ({"FORCE_COLOR": "3", "PY_COLORS": "1"}, ["--color=yes"]),
+    ],
+)
+def test_colour_cannot_reach_the_report(pytester, monkeypatch, profile, env, args):
+    """Every route by which colour can be forced, on both compact profiles.
 
-    With one escape pair per progress character that took an 8,000-test green
-    run from 9 kB to 82 kB. Our own text is plain by construction; this asserts
-    it stays that way, and that the option is set rather than relied upon.
+    `FORCE_COLOR` makes pytest emit ANSI even into a pipe, and with one escape
+    pair per progress character that took an 8,000-test green run from 9 kB to
+    82 kB. It was found in a benchmark, not here, because our own text happened
+    to be plain already -- by construction rather than by guarantee. The
+    guarantee is what this asserts.
     """
-    monkeypatch.setenv("FORCE_COLOR", "3")
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
     pytester.makepyfile(
         "import pytest\n"
         "@pytest.mark.parametrize('i', range(20))\n"
         "def test_ok(i): assert True\n"
         "def test_bad(): assert {'a': 1} == {'a': 2}\n"
     )
-    result = pytester.runpytest_subprocess("--receptor=llm")
+    result = pytester.runpytest_subprocess(f"--receptor={profile}", *args)
     assert "\x1b[" not in result.stdout.str()
     result.stdout.fnmatch_lines(["FAIL exit=1*"])
 
