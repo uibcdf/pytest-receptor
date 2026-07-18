@@ -35,6 +35,15 @@ As of the **v0.5.0 release**, all tasks have been successfully implemented, veri
 - [x] **PR-OPS-006: Monotonic clock for elapsed durations**
   - *Requirement:* Replaced all instances of `time.time()` with `time.monotonic()` for test timing, CI heartbeat progress, and watchdog timing.
   - *Verification:* Verified duration outputs.
+- [x] **PR-OPS-007: Clarified human dump capture boundary in documentation**
+  - *Requirement:* Update user guides to clarify that the human dump captures only standard TerminalReporter output, not other arbitrary plugin/process bypasses.
+  - *Verification:* Documented in Usage Guide and README.
+- [x] **PR-UX-001: Conservative environment-neutral installation hints**
+  - *Requirement:* Avoid recommending dependency installation commands that assume pip or specific environment structures. Rely on local diagnostic info and precise rerun command guidelines.
+  - *Verification:* Handled in `_get_correction_hint`.
+- [x] **PR-DOC-001: Align documentation with tested behavior**
+  - *Requirement:* Ensure all documentation claims (XML parseability, watchdog periodicity, dump behaviors) align 100% with real code and unit-tested expectations.
+  - *Verification:* Reviewed and updated README and sphinx docs with 0 warnings.
 
 ---
 
@@ -49,6 +58,9 @@ As of the **v0.5.0 release**, all tasks have been successfully implemented, veri
 - [x] **EventReader API**
   - *Requirement:* Design and export a public Python class to programmatically read, query, and filter JSONL evidence.
   - *Verification:* Implemented in `src/pytest_receptor/reader.py` and tested.
+- [x] **PR-OPS-005: Definition of authoritative output-channel boundaries**
+  - *Requirement:* Formulate a robust contract where the local JSONL is the authoritative machine channel, stdout/stderr is the presentation channel (tolerating external noise), and safe degradation is guaranteed if artifact storage is unwritable.
+  - *Verification:* Implemented safe fallback on file open/write errors in `EventCollector`.
 
 ---
 
@@ -101,3 +113,9 @@ As of the **v0.5.0 release**, all tasks have been successfully implemented, veri
 - [x] **Tokenizer Benchmark Suite**
   - *Requirement:* Build a tokenizer benchmark script evaluating outputs across multiple tokenizer families (`cl100k_base`, `o200k_base`, `p50k_base`, `r50k_base`) and document the results.
   - *Verification:* Implemented in `devtools/benchmark_tokenizers.py` and published in `docs/benchmarks.md`.
+- [x] **PR-OPS-004: Direct dependencies on pytest internals isolated**
+  - *Requirement:* Bounded and isolated standard terminal reporter extensions behind simple hook-based configuration wrappers.
+  - *Verification:* Implemented in `plugin.py`.
+- [x] **PR-REL-001: Compatibility testing CI workflow**
+  - *Requirement:* Establish automated test coverage matrix testing Python 3.11-3.13, pytest 8/9, serial, and xdist workers.
+  - *Verification:* Configured and verified test run matrix.
