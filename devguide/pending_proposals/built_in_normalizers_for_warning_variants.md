@@ -2,7 +2,9 @@
 
 **Recorded:** 2026-07-18
 
-**Status:** blocked on evidence. Requested from the MolSysMT pilot.
+**Status:** resolved 2026-07-18. Option 2 adopted, options 1 and 3 rejected on
+the pilot's evidence, which is preserved in
+[`../molsysmt_warning_group_evidence_2026-07-18.md`](../molsysmt_warning_group_evidence_2026-07-18.md).
 
 ## Observation
 
@@ -57,3 +59,31 @@ them before seeing the data.
   this for itself today; the question is whether a default should exist.
 - `resolved_bugs/warning_group_truncation_is_not_diagnostically_sufficient.md` —
   the report that established every group must be listed.
+
+---
+
+## Outcome
+
+The pilot supplied all sixty untruncated groups. They resolve to roughly
+fourteen structural families, and their recommendation was explicit: do **not**
+reduce sixty to fourteen automatically, because atom names and attribute names
+carry scientific meaning. Sizes, shapes, counters, bytes and percentages are
+safe to normalize.
+
+Measured against their data: numeric normalization alone takes 60 groups to 47.
+Every merge is of the shape `Size mismatch for 'atom_index': (1441,) vs (605,)`
+with the same message at `(1289,)` -- one warning, two sizes.
+
+**Option 2 adopted.** Numbers and shapes are normalized for warnings. Names are
+not. Merged groups display `(N variants)` so nothing is silently replaced by
+whichever message happened to arrive first, which is the condition the pilot
+attached to any normalization.
+
+**Option 3 rejected**, as suspected and now confirmed by their data:
+`UnknownAtomNameWarning` and `GpuNotAvailableWarning` share
+`argdigest/core/decorator.py:376`. Grouping warnings by origin would have merged
+two unrelated warnings in a decorator-based stack.
+
+Deliberately scoped to warnings. Applying the same normalization to failure
+messages collapsed `assert 3.0 == 3.5` with `assert 3.0 == 4.5`, hiding which
+value was wrong; four tests caught it. Failures keep their numbers.

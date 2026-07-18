@@ -265,11 +265,18 @@ What remains held back:
 In both cases the complete report exists on disk before the summary is printed:
 
 ```text
-full report: .pytest_cache/receptor/last-run.txt
+full report: .pytest_cache/d/receptor/last-run.txt
 ```
 
 It is written **during** the run and contains every group, every occurrence, and
-every captured section. Detail is only ever withheld when that file is actually
+every captured section.
+
+```{note}
+The `d/` component comes from pytest's own cache layout, not from us — we ask
+`config.cache.mkdir("receptor")` and pytest decides where that lives. It is the
+same on pytest 8 and 9, but the path the receptor prints is always the resolved
+one, so prefer copying that over reconstructing it.
+``` Detail is only ever withheld when that file is actually
 reachable — with `-p no:cacheprovider`, nothing is withheld at all, because
 there would be nowhere to recover it from.
 

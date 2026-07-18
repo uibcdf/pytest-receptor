@@ -134,7 +134,7 @@ Supported and tested in CI: Python 3.11, 3.12, 3.13 against pytest 8 and 9,
 serial and distributed.
 
 To remove it, uninstall it. There is nothing to clean up beyond
-`.pytest_cache/receptor/`.
+`.pytest_cache/d/receptor/`.
 
 ---
 

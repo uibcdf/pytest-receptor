@@ -112,19 +112,21 @@ def test_every_warning_group_is_listed(pytester):
     new, and a reader cannot tell whether a hidden group matters without going
     to read another artefact -- which the sufficiency rule forbids.
     """
+    names = "abcdefghijkl"
     pytester.makepyfile(
         "import warnings, pytest\n"
         "class W(UserWarning): pass\n"
+        f"NAMES = {list(names)!r}\n"
         "@pytest.mark.parametrize('i', range(12))\n"
         "def test_w(i):\n"
-        "    warnings.warn(f'condition {i} detected', W)\n"
+        "    warnings.warn(f'condition {NAMES[i]} detected', W)\n"
     )
     result = pytester.runpytest("--receptor=llm")
     output = result.stdout.str()
     assert "warnings: 12 in 12 groups" in output
     assert "more groups" not in output
-    for index in range(12):
-        assert f"condition {index} detected" in output
+    for name in names:
+        assert f"condition {name} detected" in output
 
 
 def test_long_warning_messages_are_bounded(pytester):
@@ -139,8 +141,8 @@ def test_long_warning_messages_are_bounded(pytester):
         "import warnings, pytest\n"
         "class W(UserWarning): pass\n"
         f"LONG = {long_text!r}\n"
-        "@pytest.mark.parametrize('i', range(3))\n"
-        "def test_w(i): warnings.warn(f'{LONG} case {i}', W)\n"
+        "@pytest.mark.parametrize('s', ['alpha', 'beta', 'gamma'])\n"
+        "def test_w(s): warnings.warn(f'{LONG} case {s}', W)\n"
     )
     result = pytester.runpytest("--receptor=llm")
     output = result.stdout.str()
@@ -153,6 +155,51 @@ def test_long_warning_messages_are_bounded(pytester):
     # The on-disk report keeps the whole thing.
     reports = list(pytester.path.glob(".pytest_cache/**/receptor/last-run.txt"))
     assert long_text.strip() in reports[0].read_text(encoding="utf-8")
+
+
+def test_warning_sizes_are_normalized_but_names_are_not(pytester):
+    """From the MolSysMT pilot's inspection of sixty real warning groups.
+
+    `Size mismatch for 'atom_index': (1441,) vs (605,)` and the same message
+    with `(1289,)` are one warning; keying on the numbers made them two. But a
+    different *attribute* is different information the pilot asked us to keep,
+    so names are deliberately not normalized. Their evidence: 60 groups became
+    47 under numeric normalization alone.
+    """
+    pytester.makepyfile(
+        "import warnings, pytest\n"
+        "@pytest.mark.parametrize('pair', [((1441,), (605,)), ((1441,), (1289,))])\n"
+        "def test_size(pair):\n"
+        "    warnings.warn(f\"Size mismatch for 'atom_index': {pair[0]} vs {pair[1]}\")\n"
+        "@pytest.mark.parametrize('attr', ['chain_id', 'chain_type'])\n"
+        "def test_attr(attr):\n"
+        "    warnings.warn(f\"Size mismatch for '{attr}': (6,) vs (1,)\")\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    # Two shapes of one warning merge; two attribute names stay apart.
+    assert "warnings: 4 in 3 groups" in output
+    assert "chain_id" in output and "chain_type" in output
+    # Merging must not silently swallow the numbers that differed.
+    assert "(2 variants)" in output
+
+
+def test_failure_messages_keep_their_numbers(pytester):
+    """Numeric normalization is for warnings only.
+
+    A size mismatch is the same warning whatever the sizes; `assert 3.0 == 3.5`
+    and `assert 3.0 == 4.5` are different failures, and merging them would hide
+    which value was wrong.
+    """
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('expected', [3.5, 4.5])\n"
+        "def test_a(expected): assert 3.0 == expected\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert "1 other message" in output
+    assert "4.5" in output and "3.5" in output
 
 
 def test_project_normalizers_collapse_message_variants(pytester):

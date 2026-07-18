@@ -72,7 +72,7 @@ the receptor **114**.
   fail-fast run can never render as a success.
 * Grouping never discards which tests were affected.
 * Nothing is ever recoverable only by running the suite again. The complete
-  report is written to `.pytest_cache/receptor/last-run.txt` during the run, and
+  report is written to `.pytest_cache/d/receptor/last-run.txt` during the run, and
   detail is withheld only when that file exists to hold it.
 * If the receptor raises, you get `RECEPTOR_ERROR`, the raw evidence, and
   pytest's original exit status.

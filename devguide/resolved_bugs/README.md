@@ -26,3 +26,4 @@ stays an inbox. Nothing is closed by deletion.
 | `warning_group_truncation_is_not_diagnostically_sufficient.md` | PR-PILOT-003 | 2026-07-18 |
 | `xdist_progress_is_not_bounded_by_deciles.md` | PR-PILOT-004 | 2026-07-18 |
 | `xdist_startup_noise_leaks_into_compact_stdout.md` | PR-PILOT-005 | 2026-07-18 |
+| `documented_full_report_path_misses_pytest_cache_d.md` | PR-PILOT-006 | 2026-07-18 |

@@ -246,7 +246,7 @@ originates inside NumPy or a serializer, the external frame *is* the answer.
 
 **Nothing is thrown away, and nothing is deferred.** Grouping is a presentation
 decision; every occurrence keeps its node ID, phase, and location. The complete
-report is written to `.pytest_cache/receptor/last-run.txt` while the run is
+report is written to `.pytest_cache/d/receptor/last-run.txt` while the run is
 still going, owner-only and refusing symlinks. Detail is only ever held back
 when that file exists to hold it, so a consumer can never be left with
 information reachable solely by running the suite again.

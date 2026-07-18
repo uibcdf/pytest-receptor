@@ -58,6 +58,14 @@ _SECRETS = [
 
 # Non-semantic values that would otherwise split one root cause into many.
 _HEX_ADDR = re.compile(r"0x[0-9a-fA-F]+")
+# Sizes, shapes, counters, byte totals and percentages. Endorsed as safe to
+# normalize by the MolSysMT pilot after inspecting sixty real warning groups:
+# `Size mismatch for 'atom_index': (1441,) vs (605,)` and the same message with
+# (1289,) are one warning, and keying on the numbers made them two. Names are
+# deliberately *not* normalized -- an atom name or attribute carries meaning the
+# pilot asked us to preserve.
+_SHAPE = re.compile(r"\(\s*\d+(?:\s*,\s*\d*)*\s*\)")
+_NUMBER = re.compile(r"(?<![\w.])\d+(?![\w.])")
 _TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?")
 
 _MAX_MESSAGE = 1500
@@ -373,12 +381,23 @@ class ReceptorPlugin:
         lineno = getattr(warning_message, "lineno", 0)
         origin = f"{self._display_path(filename)}:{lineno}" if filename else ""
 
-        key = (name, self._normalize(text))
+        key = (name, _normalize_warning(self._normalize(text)))
         group = self._warning_groups.get(key)
         if group is None:
-            group = {"category": name, "message": text, "origin": origin, "count": 0}
+            group = {
+                "category": name,
+                "message": text,
+                "origin": origin,
+                "count": 0,
+                "variants": set(),
+            }
             self._warning_groups[key] = group
         group["count"] += 1
+        # Normalizing numbers merges `(1441,) vs (605,)` with `(1441,) vs
+        # (1289,)`. That is right -- one warning -- but the reader should know
+        # the numbers differed rather than have them silently replaced by
+        # whichever arrived first.
+        group["variants"].add(text)
 
     def pytest_collectreport(self, report):
         if report.failed:
@@ -727,7 +746,9 @@ class ReceptorPlugin:
                 head = group["message"].splitlines()[0] if group["message"] else ""
                 if not list_all and len(head) > _WARNING_MESSAGE:
                     head = head[:_WARNING_MESSAGE].rstrip() + "..."
-                parts_ = [f"  {group['category']} x{group['count']}"]
+                variants = len(group.get("variants", ()))
+                spread = f" ({variants} variants)" if variants > 1 else ""
+                parts_ = [f"  {group['category']} x{group['count']}{spread}"]
                 if group["origin"]:
                     parts_.append(group["origin"])
                 if head:
@@ -1187,6 +1208,18 @@ def _sanitize(text):
 def _normalize(message):
     message = _HEX_ADDR.sub("[ADDR]", message)
     return _TIMESTAMP.sub("[TIME]", message)
+
+
+def _normalize_warning(message):
+    """Warnings additionally lose their numbers.
+
+    Deliberately not applied to failures. A warning saying a size mismatched is
+    the same warning whatever the sizes were, but `assert 3.0 == 3.5` and
+    `assert 3.0 == 4.5` are different failures, and collapsing them would hide
+    which value was wrong.
+    """
+    message = _SHAPE.sub("(N)", _normalize(message))
+    return _NUMBER.sub("N", message)
 
 
 def _truncate(message, limit=_MAX_MESSAGE):
