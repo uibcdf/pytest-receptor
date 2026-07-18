@@ -138,6 +138,18 @@ The following integration and dogfooding steps are planned for execution across 
 - [ ] **Cross-Source Relationship & Deduplication Model**
   - *Task:* Formulate a model to relate warnings, SMonitor events, captured logs, and test exceptions using explicit semantic links (`representation_of`, `caused_by`, `emitted_during`, `duplicate_of`, `derived_from`) instead of naive message-text deduplication.
   - *Collaboration:* `smonitor` / `pytest-receptor`
+- [ ] **Define Finalization Ordering & Incomplete-Extension Marker**
+  - *Task:* Design session teardown ordering to prevent data loss when third-party producers finalize after pytest reporting, and add an explicit `incomplete-extension` marker to the JSONL if a producer fails or crashes.
+  - *Collaboration:* `smonitor` / `pytest-receptor`
+- [ ] **Adversarial Security & Failure-Injection Suite**
+  - *Task:* Build an adversarial test suite to continuously verify robustness against prompt-injection strings, ANSI escape injections, malformed input payloads, and unwritable destination storage.
+  - *Repository:* `pytest-receptor` (Testing)
+- [ ] **Performance Profiling & Memory Bounds Verification**
+  - *Task:* Measure and profile CPU runtime and peak resident memory overhead on extremely large green and red test suites (e.g. >10,000 tests) to ensure strict bounds are maintained.
+  - *Repository:* `pytest-receptor` (Benchmarking)
+- [ ] **Plugin Coexistence & Compatibility Verification**
+  - *Task:* Execute compatibility tests verifying that `pytest-receptor` coexists cleanly with other common reporting and metrics plugins like `pytest-cov`, JUnit XML generation, and live logging.
+  - *Repository:* `pytest-receptor` (Testing)
 - [ ] **MolSysMT Dogfooding - Stage A (Shadow Comparison)**
   - *Task:* Run `pytest-receptor` in parallel with conventional pytest/JUnit in MolSysMT test runs to collect telemetry on token efficiency and parity, without using it to decide release success.
   - *Repository:* `uibcdf/molsysmt`
