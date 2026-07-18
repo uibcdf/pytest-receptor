@@ -317,6 +317,31 @@ def test_output_is_unchanged_by_asking_for_stats(pytester):
     assert _stable(plain) == _stable(body)
 
 
+def test_call_chain_survives(pytester):
+    """Regression: tbstyle was once forced to "no" to suppress tracebacks.
+
+    That impoverishes longrepr at construction time rather than at print time,
+    which silently deleted every frame the renderer exists to summarize.
+    """
+    pytester.makepyfile(
+        "def helper(): raise ValueError('deep')\n"
+        "def middle(): helper()\n"
+        "def test_a(): middle()\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines(["*frames: *:3 -> *:2 -> *:1*"])
+
+
+def test_quieting_flags_are_redundant(pytester):
+    """`--receptor=llm` already configures the reporter; -q adds nothing."""
+    pytester.makepyfile("def test_a(): assert 0\n")
+    alone = pytester.runpytest("--receptor=llm").stdout.str()
+    with_flags = pytester.runpytest(
+        "--receptor=llm", "-q", "--no-header", "--no-summary"
+    ).stdout.str()
+    assert _stable(alone) == _stable(with_flags)
+
+
 # -------------------------------------------------------------------- safety
 
 

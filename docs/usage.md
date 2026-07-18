@@ -70,6 +70,52 @@ The CI profile therefore expands **every** group rather than holding any back.
 
 ---
 
+## Interaction with pytest's own output flags
+
+**You do not need to add anything.** `--receptor=llm` already configures the
+standard reporter, and it goes further than the usual hand-tuned flags:
+
+| What the receptor sets | CLI equivalent | Why |
+| :--- | :--- | :--- |
+| `verbose = -2` | `-qq` | Removes the progress bar *and* the trailing `N passed in Xs` line, which would otherwise duplicate the receptor's own verdict. Plain `-q` leaves that line in place. |
+| `no_header = True` | `--no-header` | Removes the banner, `rootdir`, and plugin list. |
+| `no_summary = True` | `--no-summary` | Removes the `short test summary info` section. |
+
+So `pytest --receptor=llm` and `pytest --receptor=llm -q --no-header` produce
+byte-identical output. The extra flags are redundant.
+
+### Do not restrict `--tb`
+
+`--tb` is deliberately left alone, and you should leave it alone too.
+
+```{warning}
+`--tb=line` and `--tb=no` **degrade** the receptor's output. They save a
+handful of tokens and cost you the call chain.
+```
+
+| Command | Tokens | Call chain |
+| :--- | ---: | :--- |
+| `--receptor=llm` | 74 | present |
+| `--receptor=llm --tb=short` | 74 | present |
+| `--receptor=llm --tb=line` | 53 | **lost** |
+| `--receptor=llm --tb=no` | 53 | **lost** |
+
+The reason is that `--tb` does not control how a traceback is *printed*. It
+controls how `longrepr` is *built*. Under `--tb=no` pytest never generates the
+frame information in the first place, so there is nothing for the receptor to
+summarize, and this line disappears:
+
+```text
+frames: tests/test_merge.py:6 -> molsysmt/merge.py:41 -> molsysmt/topology.py:117
+```
+
+Twenty-one tokens saved in exchange for no longer knowing where to look.
+
+If your `addopts` in `pyproject.toml` or `pytest.ini` sets a restrictive `--tb`,
+remove it when using the receptor.
+
+---
+
 ## Session outcomes
 
 The verdict is derived from pytest's exit status, never from the absence of

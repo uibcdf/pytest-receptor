@@ -74,6 +74,13 @@ pytest --receptor=llm --receptor-stats  # what did this actually save?
 `human` is a true passthrough: the plugin registers nothing and the output is
 byte-identical to pytest without it installed.
 
+You do not need to combine these with pytest's own quieting flags —
+`--receptor=llm` already sets the equivalent of `-qq --no-header --no-summary`,
+so adding them changes nothing. One caveat: do **not** pass `--tb=line` or
+`--tb=no`. Those control how pytest *builds* the traceback, not how it prints it,
+so they save a handful of tokens and silently cost the receptor the call chain.
+See the [usage guide](https://uibcdf.github.io/pytest-receptor/usage.html).
+
 ---
 
 ## Behavior
