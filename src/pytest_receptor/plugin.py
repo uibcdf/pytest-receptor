@@ -182,6 +182,9 @@ class Occurrence:
     phase: str
     location: str
     sections: dict = field(default_factory=dict)
+    #: How many times this test ran before its final outcome. Above one means a
+    #: rerun plugin retried it.
+    attempts: int = 1
 
 
 @dataclass
@@ -194,10 +197,12 @@ class Group:
     location: str
     cause: str = ""
     frames: list = field(default_factory=list)
-    occurrences: list = field(default_factory=list)
+    #: Keyed by node ID so a retried test stays one occurrence.
+    by_nodeid: dict = field(default_factory=dict)
     #: Distinct normalized messages seen at this call site. A parametrized test
     #: failing on twenty inputs is one bug with twenty messages, not twenty bugs.
     variants: dict = field(default_factory=dict)
+    occurrences: list = field(default_factory=list)
 
 
 class ReceptorPlugin:
@@ -354,19 +359,28 @@ class ReceptorPlugin:
             # count, and computed on the complete message, before truncation
             # (PR-FID-004).
             group.variants.setdefault(self._normalize(message), message)
-            group.occurrences.append(
-                Occurrence(
+            # One logical test, however many times it was retried. Appending
+            # per report made a test rerun three times read as three tests,
+            # which is simply false, and false counts are the one thing this
+            # project exists to prevent.
+            existing = group.by_nodeid.get(report.nodeid)
+            if existing is None:
+                group.by_nodeid[report.nodeid] = Occurrence(
                     nodeid=report.nodeid,
                     phase=phase,
                     location=location,
                     sections=self._sections(report),
                 )
-            )
+            else:
+                existing.attempts += 1
+                existing.sections = self._sections(report) or existing.sections
         # Under xdist, reports arrive in whatever order the workers finish, so
         # both levels need an explicit total order or the same failure renders
         # differently between runs.
         for group in groups.values():
-            group.occurrences.sort(key=lambda occurrence: _natural(occurrence.nodeid))
+            group.occurrences = sorted(
+                group.by_nodeid.values(), key=lambda o: _natural(o.nodeid)
+            )
         # Largest blast radius first -- that is the one worth fixing -- then a
         # stable tiebreak.
         return sorted(
@@ -394,16 +408,30 @@ class ReceptorPlugin:
         message = ""
         location = ""
 
+        declared = ""
         crash = getattr(longrepr, "reprcrash", None)
+        located = getattr(longrepr, "reprlocation_lines", None)
         if crash is not None:
             message = crash.message or ""
             location = f"{self._display_path(crash.path)}:{crash.lineno}"
+        elif located:
+            # Doctests carry a ReprFailDoctest, which has no reprcrash but does
+            # name its own location and failure type. Falling through to
+            # str(longrepr) lost both: the line number, and the fact that this
+            # was a DocTestFailure rather than an unnamed "Failure".
+            where, lines = located[-1]
+            location = f"{self._display_path(where.path)}:{where.lineno}"
+            message = "\n".join(str(line) for line in lines).strip()
+            declared = str(where.message or "")
         elif longrepr is not None:
             message = str(longrepr)
-            location = self._relative(getattr(report, "fspath", "") or "")
+            location = self._display_path(getattr(report, "fspath", "") or "")
 
         message = _sanitize(message)
-        return _exception_type(message), message, location, phase
+        exc_type = _exception_type(message)
+        if exc_type == "Failure" and declared:
+            exc_type = declared.split(":", 1)[0].strip() or exc_type
+        return exc_type, message, location, phase
 
     def _frames(self, report):
         """Local frames only, labelled honestly.
@@ -614,7 +642,12 @@ class ReceptorPlugin:
             lines.append("    tests:")
             shown = group.occurrences if list_all else group.occurrences[:_SHOWN_TESTS]
             for occurrence in shown:
-                lines.append(f"      {occurrence.nodeid}")
+                retried = (
+                    f" (after {occurrence.attempts} attempts)"
+                    if occurrence.attempts > 1
+                    else ""
+                )
+                lines.append(f"      {occurrence.nodeid}{retried}")
             remaining = len(group.occurrences) - len(shown)
             if remaining:
                 lines.append(f"      +{remaining} more")

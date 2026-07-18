@@ -303,6 +303,32 @@ def test_exception_type_is_identified(pytester, source, expected):
     result.stdout.fnmatch_lines([f"[[]1[]] {expected} | *"])
 
 
+def test_doctest_failures_are_located_and_named(pytester):
+    """Doctests carry a ReprFailDoctest, which has no reprcrash.
+
+    Falling through to the formatted text lost the line number and the failure
+    type, and dragged an absolute path into the message. MolSysMT runs doctests.
+    """
+    pytester.makepyfile(
+        "def add(a, b):\n"
+        '    """Adds.\n'
+        "\n"
+        "    >>> add(1, 2)\n"
+        "    4\n"
+        '    """\n'
+        "    return a + b\n"
+    )
+    result = pytester.runpytest("--receptor=llm", "--doctest-modules")
+    output = result.stdout.str()
+    assert "DocTestFailure" in output
+    assert "] Failure |" not in output  # not the unnamed fallback type
+    # Located at the failing example, not at the file.
+    assert ":4" in output
+    # The comparison survives, the absolute path does not.
+    assert "Expected:" in output and "Got:" in output
+    assert str(pytester.path) not in output
+
+
 def test_each_group_carries_a_rerun_command(pytester):
     """PR-UX-003: the agent should not have to build the selector."""
     pytester.makepyfile("def test_a(): assert 0\n")
@@ -588,6 +614,27 @@ CASCADE_SUITE = (
     "def test_ok(i): assert True\n"
     "def test_solo(): assert 0\n"
 )
+
+
+reruns = pytest.mark.skipif(
+    importlib.util.find_spec("pytest_rerunfailures") is None,
+    reason="pytest-rerunfailures is not installed",
+)
+
+
+@reruns
+def test_a_retried_test_is_one_test(pytester):
+    """A rerun plugin retries one test; it does not create new ones.
+
+    Appending an occurrence per report made a test retried three times read as
+    three tests. A false count is the one thing this project exists to prevent,
+    so this is a correctness bug rather than a cosmetic one.
+    """
+    pytester.makepyfile("def test_a(): assert 0\n")
+    result = pytester.runpytest("--receptor=llm", "--reruns", "2")
+    output = result.stdout.str()
+    assert "[1] AssertionError | 1 test | call" in output
+    assert "3 tests" not in output
 
 
 @xdist

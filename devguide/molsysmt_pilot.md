@@ -171,8 +171,8 @@ fixing: the first cut of the silencing swallowed pytest-cov's table completely,
 because the option that suppresses pytest's own summary also gates the hook
 third-party plugins write into. There is a regression test for it now.
 
-**Subtests work.** `pytest-rerunfailures` also runs without error, but see the
-table at the end: retried tests are miscounted.
+**Subtests and reruns work.** With `pytest-rerunfailures`, a test retried three
+times is reported as one test that took three attempts, not as three tests.
 
 ### Seeing what it costs you
 
@@ -288,11 +288,9 @@ Stated plainly so you are not surprised:
 | :--- | :--- |
 | Worker identity under xdist | You get the tests, not which worker ran them. |
 | Thorough secret redaction | Obvious shapes are redacted (`api_key=`, `token:`, `Bearer ...`) before anything is rendered or written, and the report is owner-only. It is a conservative net, not a boundary: it cannot catch a secret that does not look like one. |
-| Warning baselines | Warnings are grouped by category and message with counts and origin, but there is no accepted-baseline comparison, so you cannot yet ask "what is *new* since last week". |
 | Skip/xfail grouping | Counted, not grouped by reason. Unexpected passes *are* named. |
 | A machine-readable artifact | The full report is plain text, not JSON. A structured artifact is post-0.6. |
-| Rerun attempts counted correctly | With `pytest-rerunfailures`, a test retried three times is reported as *three tests* in its group rather than one test with three attempts. The count is wrong; the diagnosis is not. |
-| Cause chains | `raise X from Y` shows the outer exception only. |
+| Warning baselines | Warnings are grouped, but there is no accepted-baseline comparison, so you cannot yet ask "what is *new* since last week". |
 
 ---
 

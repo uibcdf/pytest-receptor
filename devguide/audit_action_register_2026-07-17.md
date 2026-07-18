@@ -360,6 +360,37 @@ The audit program is complete only when:
 
 ## Revision log
 
+**2026-07-18n** — A critical pass before the pilot, on the principle that
+shipping *known* defects is a choice, unlike shipping unknown ones.
+
+Probing real edge cases rather than reading code found five defects, all fixed.
+
+Parametrized failures fragmented into one root cause per input, because the
+group key included the message. Grouping now keys on exception, phase, crash
+location, and cause chain, with differing messages kept as variants. Crash
+location rather than test line is what makes this correct: a bug in
+`merge.py:117` already groups every caller.
+
+`raise X from Y` discarded Y. Wrapped errors are the norm in scientific code and
+the outer message is usually the least informative half.
+
+Reversing progressive disclosure had conflated "render every cause" with "list
+every occurrence", pushing a 200-test cascade from 114 tokens to 2,079 with
+every test still passing. Only measurement caught it, so there is now a budget
+test.
+
+`pytest-rerunfailures` made a test retried three times read as three tests. That
+is a false count, which is the one thing this project exists to prevent, so it
+was a correctness bug rather than a missing feature.
+
+Doctests rendered as an unnamed `Failure` with no line number and an absolute
+path in the message, because `ReprFailDoctest` carries no `reprcrash`. MolSysMT
+runs doctests.
+
+Remaining known gaps are now genuinely missing features rather than wrong
+output: worker identity, warning baselines, skip/xfail grouping, a structured
+artifact, and redaction beyond conservative patterns.
+
 **2026-07-18m** — Progressive disclosure reversed at the root-cause level.
 
 The rule was "show three causes, point at a file for the rest". Two objections,
