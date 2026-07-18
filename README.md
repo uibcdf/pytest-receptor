@@ -50,7 +50,7 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
-That is 106 tokens. Plain `pytest` spends 3,304 on the same run.
+That is 106 tokens. Plain `pytest` spends 3,305 on the same run.
 
 ---
 
@@ -112,20 +112,48 @@ when nothing failed, so a partial run cannot be mistaken for a clean one.
 
 ### It groups by root cause, not by test
 
-Failures are grouped by exception, phase, message, and call site. Forty tests
-broken by one fixture become one group that keeps all forty test IDs. Equal
-messages raised from unrelated places stay separate, because they are different
-bugs.
+Failures are grouped by exception type, phase, crash location, and cause chain.
+Forty tests broken by one fixture become one group that keeps all forty test
+IDs, and a parametrized test failing on twenty inputs is one bug with twenty
+messages rather than twenty bugs. Failures crashing in unrelated places stay
+separate, and so do two failures wrapping different underlying errors.
 
-### It holds back what you do not need yet
+`raise X from Y` reports both, because the wrapper is usually the less
+informative half:
 
-An agent fixes one cause at a time, so `llm` expands the first three root causes
-in full and gives the rest one line each. Nothing is lost: the complete report is
-written to `.pytest_cache/receptor/last-run.txt` during the run, so recovering it
-is a file read rather than another full test run.
+```text
+ValueError: could not build topology
+caused by: KeyError: 'atoms'
+```
 
-The `ci` profile expands everything instead, because a CI runner is destroyed
-when the job ends and that file will not be there when someone reads the log.
+### It gives you everything on stdout
+
+Every root cause is rendered in full. Grouping has already collapsed the volume,
+so withholding on top of it saves almost nothing and costs double if you then
+have to read the file back: measured at five distinct causes, holding back saved
+forty tokens and cost two hundred. Only a pathological spread — more than ten
+distinct causes — is summarized, and only when the on-disk report exists to hold
+what was left out.
+
+Occurrence lists are the exception, and for the opposite reason: a group of
+thirty-eight failing tests names three and counts the rest, because the rerun
+command already selects all of them.
+
+### It says why tests were skipped
+
+A suite built on optional dependencies skips in the hundreds, and `412 skipped`
+does not say which capability is missing:
+
+```text
+skipped: 412 in 3 groups
+  x380 | openmm not installed
+  x30 | requires a GPU
+  x2 | (no reason declared)
+```
+
+The last group is deliberate: a skip nobody documented is worth knowing about.
+Warnings and xfails are grouped the same way. Each section is bounded by the
+variety of reasons rather than the number of tests.
 
 ### It degrades safely
 
@@ -146,9 +174,12 @@ finish in arbitrary order, so occurrences and groups are given a total order
 before rendering; otherwise the same failure would render differently on every
 run. Counts, grouping, and exit status are unaffected by `-n`.
 
-Worker identity is not yet reported — you are told a group has 38 occurrences
-and which tests they are, but not which worker ran each one. That is planned,
-not present.
+Worker identity is not reported, and that is a decision rather than a gap. The
+signal it would provide — a group of failures landing entirely on one worker —
+is confounded by the distribution mode: under `--dist loadfile` or `loadscope`,
+failures from one file land on one worker by construction. The bare identifier
+without execution order also does not help reproduce anything, which is what
+`-n0` is for.
 
 ---
 
@@ -159,9 +190,14 @@ Worth knowing before you trust it with your suite.
 **It does not replace pytest's reporter.** Earlier versions unregistered
 pytest's `TerminalReporter` and substituted a subclass of it. This one leaves it
 in place — so any plugin that looks it up still finds it — and quietens it
-through its documented options: `verbose = -2`, `no_header`, `no_summary`, plus
-a wrapper around `pytest_report_teststatus` that drops the progress characters
-while preserving pytest's own categorization.
+through its documented options: `verbose = -2` and `no_header`, an emptied
+`reportchars`, and a wrapper around `pytest_report_teststatus` that drops the
+progress characters while preserving pytest's own categorization.
+
+`no_summary` is deliberately *not* used, although it looks like the obvious
+switch. It gates the whole `pytest_terminal_summary` hook, which is where
+third-party plugins write, and setting it swallowed pytest-cov's report
+entirely.
 
 **It collects from public hooks.** `pytest_runtest_logreport` for phase results,
 `pytest_collectreport` for collection failures, `pytest_warning_recorded` for
@@ -170,11 +206,12 @@ warnings, and `pytest_sessionfinish` to render. Rendering happens in
 latter for internal errors, and an internal error is exactly when you most need
 to be told the truth.
 
-**Grouping is call-site aware.** The key is exception type, phase, normalized
-message, and crash location. Memory addresses and timestamps are normalized
-first, so dynamic values do not fragment one cause into forty. The key is
-computed on the *complete* message, before any truncation, so two long diffs
-that differ only inside a region that later gets cut cannot be merged.
+**Grouping is call-site aware.** The key is exception type, phase, crash
+location, and cause chain. The message is deliberately excluded: keying on it
+fragmented a parametrized test into one group per input, which defeats grouping
+exactly where suites are most repetitive. Differing messages are kept as
+variants inside the group and shown. Crash location rather than test line is
+what makes this right — a bug in `merge.py:117` groups every caller.
 
 **Tracebacks keep the decisive frame.** Every local frame is kept, because that
 is the code you can change. External frames are pruned to the boundary you
@@ -233,7 +270,7 @@ been quietened:
 | :--- | ---: | ---: | ---: |
 | Whole suite green | 812 | **24** | 97.0% |
 | One fixture breaks 200 tests | 25,481 | **114** | 99.6% |
-| Six unrelated bugs | 1,479 | **279** | 81.1% |
+| Six unrelated bugs | 1,497 | **285** | 81.0% |
 
 `-q` prints one progress character per test, so a *successful* eight-thousand
 test run costs 812 tokens of dots before anything has gone wrong.

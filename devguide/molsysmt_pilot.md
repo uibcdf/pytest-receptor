@@ -152,10 +152,10 @@ and `human` registers nothing at all, so anyone who does not pass `--receptor`
 gets output byte-identical to not having the plugin installed. Nobody else on
 the team is affected by your evaluation, and a regression test asserts it.
 
-Three more things worth knowing before you start.
+A few more things worth knowing before you start.
 
-**You do not need to add quieting flags.** `--receptor=llm` already sets the
-equivalent of `-qq --no-header --no-summary`. Adding `-q` changes nothing.
+**You do not need to add quieting flags.** `--receptor=llm` already quietens
+pytest further than `-q` does. Adding `-q` changes nothing.
 
 **Do not pass `--tb=line` or `--tb=no`.** They control how pytest *builds* the
 traceback, not how it prints it, so they save about twenty tokens and silently
@@ -163,8 +163,8 @@ delete the `frames:` line that tells you where to look. If MolSysMT's `addopts`
 carries a restrictive `--tb`, drop it for these runs.
 
 **xdist is supported.** A run with `-n 12` produces byte-identical output to a
-serial run. Worker identity is not yet reported, which is the one xdist gap we
-already know about.
+serial run. Worker identity is not reported; see the table at the end for why we
+decided against it rather than simply not having got to it.
 
 **Coverage works alongside it.** `--cov` reports print normally. This needed
 fixing: the first cut of the silencing swallowed pytest-cov's table completely,
