@@ -19,6 +19,8 @@ Design notes that are easy to undo by accident:
 from __future__ import annotations
 
 import re
+import sys
+import tempfile
 import time
 import traceback
 from dataclasses import dataclass, field
@@ -78,6 +80,12 @@ def pytest_addoption(parser):
         action="store_true",
         help="Expand every failure group instead of the first few.",
     )
+    group.addoption(
+        "--receptor-stats",
+        action="store_true",
+        help="Append what this run cost against a quiet pytest baseline, so you "
+        "can judge on your own suite whether the plugin is worth it.",
+    )
 
 
 @pytest.hookimpl(trylast=True)
@@ -87,11 +95,16 @@ def pytest_configure(config):
         # PR-OPS-009: register nothing at all, so output is byte-identical to
         # pytest without the plugin.
         return
-    _silence_standard_reporter(config)
+    plugin = ReceptorPlugin(config, PROFILES[receptor])
+    if plugin.stats:
+        # Let pytest render a real baseline into a temp file instead of the
+        # terminal, so the comparison is measured rather than estimated.
+        _configure_baseline(config)
+        plugin.start_baseline_capture()
+    else:
+        _silence_standard_reporter(config)
     # "receptor" is taken by this module's own pytest11 entry point.
-    config.pluginmanager.register(
-        ReceptorPlugin(config, PROFILES[receptor]), "receptor-renderer"
-    )
+    config.pluginmanager.register(plugin, "receptor-renderer")
 
 
 def _silence_standard_reporter(config):
@@ -99,12 +112,30 @@ def _silence_standard_reporter(config):
 
     ``verbose = -2`` is what ``-qq`` sets, and it is the switch that suppresses
     the trailing ``N passed in Xs`` line, which would otherwise duplicate our
-    own verdict.
+    own verdict. ``no_summary`` is what stops the failure sections from being
+    printed.
+
+    Deliberately **not** set: ``tbstyle``. Setting it to ``"no"`` looks like the
+    obvious way to suppress tracebacks, but it impoverishes ``longrepr`` at
+    construction time -- the same failure renders to 145 characters under
+    ``short`` and 21 under ``no`` -- which destroys the frame information this
+    plugin exists to summarize. Suppression belongs to the reporter, not to the
+    evidence.
     """
     config.option.verbose = -2
-    config.option.tbstyle = "no"
     config.option.no_header = True
     config.option.no_summary = True
+
+
+def _configure_baseline(config):
+    """Configure the reporter as the baseline we claim to beat.
+
+    ``-q --no-header`` with the traceback style the user already chose. The
+    reporter still renders in full; it just renders somewhere else.
+    """
+    config.option.verbose = -1
+    config.option.no_header = True
+    config.option.no_summary = False
 
 
 @dataclass
@@ -134,6 +165,10 @@ class ReceptorPlugin:
         self.config = config
         self.profile = profile
         self.full = config.getoption("receptor_full")
+        self.stats = config.getoption("receptor_stats")
+        self._baseline = None
+        self._terminal = None
+        self._shown = ""
         self._start = time.monotonic()  # PR-OPS-006
         self._failures = []
         self._durations = {}
@@ -148,8 +183,15 @@ class ReceptorPlugin:
 
     @pytest.hookimpl(wrapper=True)
     def pytest_report_teststatus(self, report, config):
-        """Keep pytest's categorization, drop the progress characters."""
-        category, _letter, _word = yield
+        """Keep pytest's categorization, drop the progress characters.
+
+        Left alone while measuring a baseline: those characters are part of
+        what pytest would have printed, and they are going to a file anyway.
+        """
+        outcome = yield
+        if self.stats:
+            return outcome
+        category, _letter, _word = outcome
         return (category, "", "")
 
     def pytest_collection_modifyitems(self, items):
@@ -190,18 +232,19 @@ class ReceptorPlugin:
 
     @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self, session, exitstatus):
-        tw = self.config.get_terminal_writer()
+        tw = self._terminal or self.config.get_terminal_writer()
         try:
             groups = self._build_groups()
             summary = self._summary_line(session, exitstatus, groups)
             full_report = self._render(summary, groups, expand_all=True)
             path = self._write_full_report(full_report)
             if self.full or self.profile.detailed_groups is None:
-                tw.line("")
-                tw.write(full_report)
+                shown = full_report
             else:
-                tw.line("")
-                tw.write(self._render(summary, groups, expand_all=False, path=path))
+                shown = self._render(summary, groups, expand_all=False, path=path)
+            tw.line("")
+            tw.write(shown)
+            self._shown = shown
         except Exception as exc:  # pragma: no cover - exercised via tests
             self._emergency(tw, exitstatus, exc)
 
@@ -457,6 +500,100 @@ class ReceptorPlugin:
         except ValueError:
             return path
 
+    def pytest_unconfigure(self, config):
+        """Emit statistics only once pytest has finished writing the baseline.
+
+        The reporter's ``pytest_sessionfinish`` is a hook *wrapper*, so its
+        summary is written after every plain implementation, including ours.
+        Reading the baseline from ``pytest_sessionfinish`` would capture only
+        the progress line.
+        """
+        if not self.stats:
+            return
+        try:
+            line = self._stats_line(self._shown)
+        except Exception:
+            return
+        if line and self._terminal is not None:
+            self._terminal.write(line)
+
+    # ----------------------------------------------------------------- stats
+
+    def start_baseline_capture(self):
+        """Point the standard reporter at a temp file instead of the terminal.
+
+        This is how ``--receptor-stats`` gets a *measured* comparison rather
+        than an estimate: pytest genuinely renders its quiet output, in this
+        same run, and we count the bytes it produced. The reporter is otherwise
+        untouched, and our own report goes to the real terminal.
+
+        Any failure here degrades to no statistics at all. It must never affect
+        the run.
+        """
+        try:
+            from _pytest.config import create_terminal_writer
+
+            reporter = self.config.pluginmanager.getplugin("terminalreporter")
+            if reporter is None:
+                return
+            handle = tempfile.NamedTemporaryFile(
+                "w+",
+                encoding="utf-8",
+                prefix="pytest-receptor-baseline-",
+                suffix=".log",
+                delete=False,
+            )
+            self._baseline = handle
+            self._terminal = create_terminal_writer(self.config, sys.stdout)
+            reporter._tw = create_terminal_writer(self.config, handle)
+        except Exception:
+            self._baseline = None
+            self._terminal = None
+
+    def _read_baseline(self):
+        if self._baseline is None:
+            return None
+        try:
+            self._baseline.flush()
+            text = Path(self._baseline.name).read_text(encoding="utf-8")
+        except Exception:
+            return None
+        finally:
+            try:
+                self._baseline.close()
+                Path(self._baseline.name).unlink()
+            except Exception:
+                pass
+            self._baseline = None
+        return text
+
+    def _stats_line(self, shown):
+        """Compare our output against the baseline pytest actually rendered.
+
+        The baseline is a *quiet* pytest, not pytest's chatty default:
+        comparing against the default would roughly double the apparent saving
+        without telling anyone anything useful.
+        """
+        baseline = self._read_baseline()
+        if not baseline:
+            return ""
+        try:
+            mine, unit = _count_tokens(shown)
+            theirs, _ = _count_tokens(baseline)
+        except Exception:
+            return ""
+        if not theirs:
+            return ""
+        delta = theirs - mine
+        percent = delta / theirs * 100
+        verb = "saved" if delta >= 0 else "cost"
+        tbstyle = getattr(self.config.option, "tbstyle", "auto")
+        return (
+            f"\nreceptor stats: {mine} tokens vs {theirs} for "
+            f"`pytest -q --no-header --tb={tbstyle}` | "
+            f"{verb} {abs(delta)} ({percent:+.1f}%) | {unit}\n"
+        )
+
     # ------------------------------------------------------------- fallback
 
     def _emergency(self, tw, exitstatus, exc):
@@ -471,6 +608,15 @@ class ReceptorPlugin:
             tw.line("")
             tw.line(str(getattr(report, "nodeid", "?")))
             tw.line(str(getattr(report, "longrepr", "")))
+
+
+def _count_tokens(text):
+    """Token count, with a clearly labelled fallback when tiktoken is absent."""
+    try:
+        import tiktoken
+    except ImportError:
+        return len(text) // 4, "approx (4 chars/token)"
+    return len(tiktoken.get_encoding("cl100k_base").encode(text)), "cl100k_base"
 
 
 def _verdict(exitstatus):

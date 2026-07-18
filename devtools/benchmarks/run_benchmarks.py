@@ -1,0 +1,177 @@
+"""Measure receptor output cost against a fairly configured pytest.
+
+The baseline matters more than the numbers. Comparing against pytest's *default*
+output inflates every figure, because nobody driving pytest from an agent leaves
+the header, the progress bar, and the source echo switched on. The honest
+comparison is against a pytest that has already been told to be quiet, so this
+script reports three baselines and lets the reader judge.
+
+Run:  python devtools/benchmarks/run_benchmarks.py
+"""
+
+from __future__ import annotations
+
+import json
+import platform
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+BASELINES = {
+    "pytest (default)": [],
+    "pytest -q --no-header --tb=short": ["-q", "--no-header", "--tb=short"],
+    "pytest -q --tb=line": ["-q", "--tb=line"],
+}
+RECEPTOR = ["--receptor=llm"]
+
+# The baseline the published figures quote. Fair, and still readable by a human.
+HONEST = "pytest -q --no-header --tb=short"
+
+SCENARIOS = {
+    "Green suite (128 tests)": {
+        "test_suite.py": (
+            "import pytest\n"
+            "@pytest.mark.parametrize('i', range(128))\n"
+            "def test_ok(i): assert True\n"
+        )
+    },
+    "Green with warnings": {
+        "test_suite.py": (
+            "import warnings, pytest\n"
+            "@pytest.mark.parametrize('i', range(40))\n"
+            "def test_ok(i):\n"
+            "    warnings.warn('deprecated api', DeprecationWarning)\n"
+            "    assert True\n"
+        )
+    },
+    "Cascade (38 failures, one cause)": {
+        "conftest.py": (
+            "import pytest\n"
+            "@pytest.fixture\n"
+            "def topology():\n"
+            "    raise TypeError(\"'NoneType' object is not subscriptable\")\n"
+        ),
+        "test_suite.py": (
+            "import pytest\n"
+            "@pytest.mark.parametrize('i', range(38))\n"
+            "def test_merge(topology, i): assert True\n"
+            "@pytest.mark.parametrize('i', range(90))\n"
+            "def test_fine(i): assert True\n"
+        ),
+    },
+    "Single assertion failure": {
+        "test_suite.py": (
+            "def test_diff():\n"
+            "    expected = {'a': 1, 'b': [1, 2, 3], 'c': 'x'}\n"
+            "    actual = {'a': 1, 'b': [1, 2, 4], 'c': 'y'}\n"
+            "    assert actual == expected\n"
+        )
+    },
+    "Five distinct causes": {
+        "test_suite.py": (
+            "def test_a(): raise ValueError('cause a')\n"
+            "def test_b(): raise TypeError('cause b')\n"
+            "def test_c(): raise KeyError('cause c')\n"
+            "def test_d(): raise IndexError('cause d')\n"
+            "def test_e(): raise RuntimeError('cause e')\n"
+        )
+    },
+    "Collection error": {
+        "test_suite.py": "import module_that_does_not_exist\ndef test_a(): pass\n"
+    },
+    "Mixed states (skip, xfail, xpass)": {
+        "test_suite.py": (
+            "import pytest\n"
+            "@pytest.mark.skip(reason='not ready')\n"
+            "def test_s(): pass\n"
+            "@pytest.mark.xfail(reason='known bug')\n"
+            "def test_x(): assert 0\n"
+            "@pytest.mark.xfail(reason='fixed?')\n"
+            "def test_xp(): assert 1\n"
+            "def test_ok(): assert 1\n"
+        )
+    },
+}
+
+
+def _count_tokens(text):
+    try:
+        import tiktoken
+    except ImportError:
+        # Rough but stable, and it keeps the harness usable without the extra.
+        return len(text) // 4, "approx (4 chars/token)"
+    encoding = tiktoken.get_encoding("cl100k_base")
+    return len(encoding.encode(text)), "tiktoken cl100k_base"
+
+
+def _run(directory, args):
+    process = subprocess.run(
+        [sys.executable, "-m", "pytest", *args, "-p", "no:cacheprovider"],
+        capture_output=True,
+        text=True,
+        cwd=directory,
+    )
+    return process.stdout
+
+
+def measure():
+    results = {}
+    encoding_name = None
+    for scenario, files in SCENARIOS.items():
+        directory = Path(tempfile.mkdtemp(prefix="receptor-bench-"))
+        try:
+            for name, content in files.items():
+                (directory / name).write_text(content, encoding="utf-8")
+            row = {}
+            for label, args in BASELINES.items():
+                tokens, encoding_name = _count_tokens(_run(directory, args))
+                row[label] = tokens
+            tokens, encoding_name = _count_tokens(_run(directory, RECEPTOR))
+            row["--receptor=llm"] = tokens
+            results[scenario] = row
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
+    return results, encoding_name
+
+
+def main():
+    import pytest
+
+    import pytest_receptor
+
+    results, encoding_name = measure()
+    metadata = {
+        "python": platform.python_version(),
+        "pytest": pytest.__version__,
+        "pytest_receptor": pytest_receptor.__version__,
+        "tokenizer": encoding_name,
+        "platform": platform.platform(),
+        "baseline": HONEST,
+    }
+
+    print("<!-- generated by devtools/benchmarks/run_benchmarks.py -->")
+    print()
+    print("| Scenario | " + " | ".join(BASELINES) + " | `--receptor=llm` | Saving |")
+    print("| :--- | " + " | ".join("---:" for _ in BASELINES) + " | ---: | ---: |")
+    for scenario, row in results.items():
+        receptor = row["--receptor=llm"]
+        honest = row[HONEST]
+        saving = (1 - receptor / honest) * 100 if honest else 0.0
+        cells = " | ".join(str(row[label]) for label in BASELINES)
+        print(f"| {scenario} | {cells} | **{receptor}** | {saving:.1f}% |")
+    print()
+    print("Environment:")
+    print()
+    for key, value in metadata.items():
+        print(f"- {key}: {value}")
+
+    Path(__file__).with_name("last-run.json").write_text(
+        json.dumps({"metadata": metadata, "results": results}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+if __name__ == "__main__":
+    main()

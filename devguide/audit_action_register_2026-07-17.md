@@ -93,13 +93,13 @@ limitation`.
 | PR-OPS-005 | Medium | Output-channel authority is undefined | Define stdout/stderr/artifact contract and degradation behavior | post | 1 | open |
 | PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-SEC-002 | High | Artifacts may persist secrets without policy | Permissions, redaction, retention, size, path, and no-upload contracts | post | 1 | open |
-| PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | open |
-| PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | open |
+| PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | **done 2026-07-18** |
+| PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
-| PR-DOC-004 | Medium | The term "lossless" overstates achievable durability | Narrow the claim to evidence-preserving during normal pytest lifecycle operation | 0.6 | 0 | open |
+| PR-DOC-004 | Medium | The term "lossless" overstates achievable durability | Narrow the claim to evidence-preserving during normal pytest lifecycle operation | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11 and 3.13 against pytest 8 and 9. Post: full matrix with xdist | 0.6 | 0 | open |
-| PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | open |
-| PR-REL-003 | Low | Benchmark module fails collection without the optional tokenizer | Skip explicitly when `tiktoken` is absent | 0.6 | 0 | open |
+| PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
+| PR-REL-003 | Low | Benchmark module fails collection without the optional tokenizer | Resolved: benchmarking moved out of the test suite into `devtools/benchmarks/`, which degrades to a labelled approximation without `tiktoken` | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-004 | Low | Package metadata is incomplete and the version is duplicated | Version centralized in `__init__.py` via `[tool.hatch.version]`, with a recipe-drift regression. Remaining: license expression, authors, URLs, classifiers | post | 3 | in progress |
 | PR-REL-005 | Medium | No differential parity harness against pytest and JUnit | Compare semantic models automatically across the supported matrix | post | 3 | open |
 | PR-REL-006 | Medium | No dogfooding program is scheduled | Execute the MolSysMT shadow, agent-facing, and CI stages | post | 4 | open |
@@ -354,6 +354,24 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18f** — Public documentation rewritten; `--receptor-stats` restored.
+
+README and `docs/` described XML, installation hints, the heartbeat, and
+`--receptor-dump-dir`, none of which still exist. Rewritten against measured
+behaviour, including the two scenarios where the receptor costs slightly more
+than a quiet pytest. The remaining Spanish in public documents is gone
+(PR-DOC-002).
+
+`--receptor-stats` returns with the defect that motivated deleting it removed.
+It no longer accumulates the human report in memory: the standard reporter is
+pointed at a temporary file, renders its quiet baseline there during the same
+run, and the file is tokenized and deleted. The measurement agrees exactly with
+the independent subprocess benchmark harness (2863 tokens under `--tb=short`).
+
+Also fixed while implementing it: `tbstyle="no"` was being forced to suppress
+tracebacks, which impoverishes `longrepr` at construction time and had silently
+destroyed all frame information. `no_summary` alone does the suppression.
 
 **2026-07-18e** — Implemented the 0.6 renderer.
 

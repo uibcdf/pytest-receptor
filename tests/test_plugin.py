@@ -4,6 +4,8 @@ Organized by the acceptance criteria in devguide/scope_0.6.md: truth, fidelity,
 safety, and compatibility. Each test names the register identifier it protects.
 """
 
+import re
+
 import pytest
 
 # --------------------------------------------------------------------- truth
@@ -244,6 +246,55 @@ def test_captured_output_is_kept_per_occurrence(pytester):
     assert "marker-alpha" in result.stdout.str()
 
 
+# --------------------------------------------------------------------- stats
+
+
+def test_stats_reports_a_measured_comparison(pytester):
+    """The baseline is rendered by pytest in this same run, not estimated."""
+    pytester.makeconftest(
+        "import pytest\n@pytest.fixture\ndef broken():\n    raise TypeError('boom')\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.parametrize('i', range(20))\n"
+        "def test_a(broken, i): assert 1\n"
+    )
+    result = pytester.runpytest("--receptor=llm", "--receptor-stats")
+    result.stdout.fnmatch_lines(["receptor stats: * tokens vs * saved * | *"])
+
+
+def test_stats_admits_when_the_receptor_costs_more(pytester):
+    """The point of the flag is deciding, so it must be able to say 'no'."""
+    pytester.makepyfile(
+        "import pytest\n"
+        "@pytest.mark.xfail(reason='known bug')\n"
+        "def test_x(): assert 1\n"
+        "def test_ok(): assert 1\n"
+    )
+    result = pytester.runpytest("--receptor=llm", "--receptor-stats")
+    result.stdout.fnmatch_lines(["receptor stats: * cost * (-*%) | *"])
+
+
+def test_stats_does_not_leak_the_baseline_into_the_terminal(pytester):
+    pytester.makepyfile("def test_a(): assert 0\n")
+    result = pytester.runpytest("--receptor=llm", "--receptor-stats")
+    output = result.stdout.str()
+    assert output.lstrip().startswith("FAIL exit=1")
+    # The baseline goes to a temp file; its failure section must not appear.
+    assert "short test summary info" not in output
+    assert "= FAILURES =" not in output
+
+
+def test_output_is_unchanged_by_asking_for_stats(pytester):
+    pytester.makepyfile(
+        "def test_a(): raise ValueError('a')\ndef test_b(): raise TypeError('b')\n"
+    )
+    plain = pytester.runpytest("--receptor=llm").stdout.str()
+    withstats = pytester.runpytest("--receptor=llm", "--receptor-stats").stdout.str()
+    body = withstats.split("receptor stats:")[0]
+    assert _stable(plain) == _stable(body)
+
+
 # -------------------------------------------------------------------- safety
 
 
@@ -310,10 +361,13 @@ def test_receptor_option_is_registered(pytester):
 
 
 def _stable(text):
-    """Drop lines that legitimately differ between two runs."""
+    """Normalize what legitimately differs between two runs."""
     skip = ("rootdir:", "plugins:", "platform ", "cachedir:")
-    return [
-        line
-        for line in text.splitlines()
+    lines = [
+        re.sub(r"\d+\.\d+s", "<duration>", line)
+        for line in text.strip().splitlines()
         if not line.startswith(skip) and " in " not in line
     ]
+    while lines and not lines[-1]:
+        lines.pop()
+    return lines
