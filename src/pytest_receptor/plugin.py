@@ -808,7 +808,11 @@ class ReceptorPlugin:
             f"    {group.location}",
         ]
         for line in group.message.splitlines():
-            lines.append(f"    {line}")
+            # rstrip only: pytest pads its assertion explanations with
+            # whitespace-only lines, which cost a token and read as corruption.
+            # Genuinely empty lines are kept, since a diff of multi-line strings
+            # can contain them as content.
+            lines.append(f"    {line}".rstrip())
         if group.cause:
             lines.append(f"    caused by: {group.cause}")
         extra = len(group.variants) - 1
