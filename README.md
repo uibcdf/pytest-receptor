@@ -37,10 +37,10 @@ agent reads the same traceback forty times.
 ```console
 $ pytest --receptor=llm
 
-FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
+FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
 
 [1] TypeError | 38 tests | setup
-    conftest.py:4
+    conftest.py:31
     TypeError: 'NoneType' object is not subscriptable
     tests:
       tests/test_merge.py::test_merge[0]
@@ -50,7 +50,7 @@ FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
-That is 101 tokens. Plain `pytest` spends 3,279 on the same run.
+That is 106 tokens. Plain `pytest` spends 3,304 on the same run.
 
 ---
 
@@ -214,13 +214,13 @@ Measured with `tiktoken` (`cl100k_base`):
 
 | Scenario | `pytest` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3279 | **101** | **-96.9%** |
-| Green with warnings | 167 | **20** | -88.0% |
-| Green suite (128 tests) | 97 | **16** | -83.5% |
-| Mixed states (skip, xfail, xpass) | 103 | **44** | -57.3% |
-| Five distinct causes | 385 | **181** | -53.0% |
-| Single assertion failure | 331 | **162** | -51.1% |
-| Collection error | 273 | **215** | -21.2% |
+| Cascade (38 failures, one cause) | 3304 | **106** | **-96.8%** |
+| Green suite (128 tests) | 125 | **16** | -87.2% |
+| Green with warnings | 193 | **47** | -75.6% |
+| Mixed states (skip, xfail, xpass) | 131 | **44** | -66.4% |
+| Five distinct causes | 411 | **181** | -56.0% |
+| Single assertion failure | 354 | **167** | -52.8% |
+| Collection error | 293 | **217** | -25.9% |
 
 Every scenario is cheaper, most of them by half or better. In a TDD loop that
 runs the suite twenty times, the cascade row alone is sixty thousand tokens.
@@ -232,18 +232,19 @@ If you are the kind of person who already runs `pytest -q --no-header
 
 | Scenario | tuned pytest | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 2863 | **101** | -96.5% |
-| Green with warnings | 93 | **20** | -78.5% |
+| Cascade (38 failures, one cause) | 2863 | **106** | -96.3% |
+| Green with warnings | 93 | **47** | -49.5% |
 | Five distinct causes | 316 | **181** | -42.7% |
 | Green suite (128 tests) | 23 | **16** | -30.4% |
-| Single assertion failure | 197 | **162** | -17.8% |
-| Collection error | 198 | **215** | +8.6% |
+| Single assertion failure | 197 | **167** | -15.2% |
+| Collection error | 195 | **217** | +11.3% |
 | Mixed states (skip, xfail, xpass) | 31 | **44** | +41.9% |
 
-The two positive rows are real, and they are thirteen and seventeen tokens. They
+The two positive rows are real, and they are thirteen and twenty-two tokens. They
 buy the difference between `1 xpassed` and knowing *which* test passed
 unexpectedly and why — which is the thing you would otherwise have re-run pytest
-to discover.
+to discover. The warnings row moved for the same reason: it now names the
+warning groups rather than counting them.
 
 The cascade row does not move: grouping forty failures into one root cause is
 something no combination of pytest flags does.

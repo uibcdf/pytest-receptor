@@ -32,10 +32,10 @@ benchmarks
 ```console
 $ pytest --receptor=llm
 
-FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
+FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
 
 [1] TypeError | 38 tests | setup
-    conftest.py:4
+    conftest.py:31
     TypeError: 'NoneType' object is not subscriptable
     tests:
       tests/test_merge.py::test_merge[0]
@@ -46,7 +46,7 @@ FAIL exit=1 | 38 failed, 90 passed | 2.41s | 1 root cause
 ```
 
 One broken fixture, thirty-eight failing tests, one root cause. Plain `pytest`
-spends 3,279 tokens on that run. This is 101.
+spends 3,304 tokens on that run. This is 106.
 
 ---
 

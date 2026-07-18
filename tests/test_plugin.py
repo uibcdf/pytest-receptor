@@ -461,6 +461,29 @@ def test_full_report_is_owner_only(pytester):
     assert reports[0].stat().st_mode & 0o777 == 0o600
 
 
+cov = pytest.mark.skipif(
+    importlib.util.find_spec("pytest_cov") is None,
+    reason="pytest-cov is not installed",
+)
+
+
+@cov
+def test_other_plugins_can_still_report(pytester):
+    """Silencing pytest must not silence everyone else.
+
+    Setting `no_summary` looked like the way to suppress the short summary, but
+    that option gates the whole `pytest_terminal_summary` hook, which is where
+    third-party plugins write. It swallowed pytest-cov's table entirely.
+    """
+    pytester.makepyfile("def test_a(): assert 1\n")
+    result = pytester.runpytest("--receptor=llm", "--cov=.", "--cov-report=term")
+    output = result.stdout.str()
+    assert "PASS exit=0" in output
+    assert "coverage" in output
+    # ...and pytest's own failure sections stay suppressed.
+    assert "short test summary info" not in output
+
+
 def test_quieting_flags_are_redundant(pytester):
     """`--receptor=llm` already configures the reporter; -q adds nothing."""
     pytester.makepyfile("def test_a(): assert 0\n")

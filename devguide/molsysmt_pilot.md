@@ -51,11 +51,16 @@ FAIL exit=1 | 38 failed, 90 passed | 12.40s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
+The `frames:` line appears when a failure crosses more than one frame. It keeps
+every frame in *your* code and prunes runs of library frames down to the point
+you entered them and the point it broke, marked `(ext)`. When the bug is inside
+NumPy or OpenMM, that external frame is the answer, so it is not discarded.
+
 The important part is not that it is shorter. It is that one broken fixture
 appears **once**, with every affected test still named, and with the command to
 re-run them.
 
-On that scenario: 3,279 tokens for plain `pytest`, 101 for the receptor.
+On that scenario: 3,304 tokens for plain `pytest`, 106 for the receptor.
 
 ---
 
@@ -134,6 +139,14 @@ carries a restrictive `--tb`, drop it for these runs.
 serial run. Worker identity is not yet reported, which is the one xdist gap we
 already know about.
 
+**Coverage works alongside it.** `--cov` reports print normally. This needed
+fixing: the first cut of the silencing swallowed pytest-cov's table completely,
+because the option that suppresses pytest's own summary also gates the hook
+third-party plugins write into. There is a regression test for it now.
+
+**Subtests work.** `pytest-rerunfailures` also runs without error, but see the
+table at the end: retried tests are miscounted.
+
 ### Seeing what it costs you
 
 ```bash
@@ -141,7 +154,7 @@ pytest --receptor=llm --receptor-stats
 ```
 
 ```text
-receptor stats: 100 tokens vs 3205 for pytest as you configured it | 3105 fewer (-96.9%)
+receptor stats: 109 tokens vs 3360 for pytest as you configured it | 3251 fewer (-96.8%)
 ```
 
 The baseline is *your* configuration, untouched — whatever `addopts` you already
@@ -173,7 +186,14 @@ Please record what you needed that was missing. A second full run of an
 eight-thousand-test suite costs far more than any formatting saving, so every one
 of these is a design failure on our side, not user error.
 
-### 3. Grouping that got it wrong
+### 3. Anything another plugin stopped doing
+
+We suppress a lot of pytest's output, and doing that once swallowed pytest-cov's
+report by accident. If a plugin you rely on goes quiet under `--receptor=llm`,
+that is a bug on our side. `--cov` and `-n` are covered by tests; the rest of
+your stack is not.
+
+### 4. Grouping that got it wrong
 
 Two shapes, both useful:
 
@@ -198,13 +218,13 @@ Each rule is `regex -> replacement`, applied before grouping. **Please tell us
 which rules you had to write.** That list is what decides which normalizers
 become built-in defaults, and we have no way to guess it from here.
 
-### 4. Real token numbers
+### 5. Real token numbers
 
 `--receptor-stats` on your real suite, green and red. Our published figures come
 from synthetic scenarios of at most 128 tests. Yours would be the first evidence
 from a suite where it matters.
 
-### 5. Anything that crashed
+### 6. Anything that crashed
 
 `RECEPTOR_ERROR` in your output means we have a bug. The run is safe — that is
 what the fallback is for — but we want the traceback.
@@ -213,7 +233,7 @@ what the fallback is for — but we want the traceback.
 
 ## What you can expect from us
 
-- **Bugs in the first three categories above get priority over new features.**
+- **Bugs in the first four categories above get priority over new features.**
 - **The reliability floor is not negotiable.** If we ever have to choose between
   a prettier report and telling you the truth about a run, we tell you the truth.
 - **No surprise behaviour changes in 0.6.x.** Format changes will land in 0.7
@@ -236,7 +256,8 @@ Stated plainly so you are not surprised:
 | Warning baselines | Warnings are grouped by category and message with counts and origin, but there is no accepted-baseline comparison, so you cannot yet ask "what is *new* since last week". |
 | Skip/xfail grouping | Counted, not grouped by reason. Unexpected passes *are* named. |
 | A machine-readable artifact | The full report is plain text, not JSON. A structured artifact is post-0.6. |
-| Reruns, subtests, coverage coexistence | Untested. If you use them, that is worth knowing early. |
+| Rerun attempts counted correctly | With `pytest-rerunfailures`, a test retried three times is reported as *three tests* in its group rather than one test with three attempts. The count is wrong; the diagnosis is not. |
+| Cause chains | `raise X from Y` shows the outer exception only. |
 
 ---
 

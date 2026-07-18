@@ -157,7 +157,13 @@ def _silence_standard_reporter(config):
     """
     config.option.verbose = -2
     config.option.no_header = True
-    config.option.no_summary = True
+    # Deliberately *not* no_summary: that option gates the whole
+    # pytest_terminal_summary hook, and third-party plugins write their reports
+    # there. Setting it swallowed pytest-cov's coverage table entirely. Emptying
+    # reportchars stops pytest's own short summary without silencing anyone else.
+    reporter = config.pluginmanager.getplugin("terminalreporter")
+    if reporter is not None:
+        reporter.reportchars = ""
 
 
 @dataclass
@@ -275,6 +281,12 @@ class ReceptorPlugin:
 
     @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self, session, exitstatus):
+        # Every longrepr has been built by now, so switching the traceback style
+        # off here suppresses the reporter's failure sections without having
+        # impoverished the evidence while it was being collected. Doing it at
+        # configure time is what destroyed the frame data.
+        if not self.stats:
+            self.config.option.tbstyle = "no"
         tw = self._terminal or self.config.get_terminal_writer()
         try:
             groups = self._build_groups()
@@ -324,7 +336,7 @@ class ReceptorPlugin:
         # both levels need an explicit total order or the same failure renders
         # differently between runs.
         for group in groups.values():
-            group.occurrences.sort(key=lambda occurrence: occurrence.nodeid)
+            group.occurrences.sort(key=lambda occurrence: _natural(occurrence.nodeid))
         # Largest blast radius first -- that is the one worth fixing -- then a
         # stable tiebreak.
         return sorted(
@@ -445,8 +457,12 @@ class ReceptorPlugin:
         parts.append(f"{duration:.2f}s")
         if self._warnings:
             parts.append(f"{self._warnings} warnings")
-        if len(groups) > 1:
-            parts.append(f"{len(groups)} root causes")
+        if groups:
+            # Stated even when there is only one: "38 failed | 1 root cause" is
+            # the whole point, and suppressing it hides the best news in the
+            # report.
+            noun = "root cause" if len(groups) == 1 else "root causes"
+            parts.append(f"{len(groups)} {noun}")
         if note:
             parts.append(note)
         return " | ".join(parts)
@@ -740,6 +756,19 @@ def _compile_normalizers(config):
             # A broken rule in someone's config must not break their run.
             continue
     return rules
+
+
+_DIGITS = re.compile(r"(\d+)")
+
+
+def _natural(text):
+    """Sort key that reads runs of digits as numbers.
+
+    Parametrized node IDs are the common case here, and plain string order puts
+    ``test[10]`` between ``test[0]`` and ``test[2]``, which looks like a bug to
+    anyone reading a cascade.
+    """
+    return [int(part) if part.isdigit() else part for part in _DIGITS.split(text)]
 
 
 def _short_path(path):

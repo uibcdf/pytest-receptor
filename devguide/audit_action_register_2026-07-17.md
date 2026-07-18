@@ -91,7 +91,7 @@ limitation`.
 | PR-OPS-009 | Medium | `--receptor=human` is not a true passthrough | Register nothing in human mode; output must be byte-identical to pytest without the plugin | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-010 | Medium | `CiTerminalReporter` duplicates the LLM renderer | Delete the duplicated class; keep `--receptor=ci` as a profile of the single renderer with CI-appropriate defaults | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-004 | Medium | Reporter depends on private pytest internals | Residual private usage isolated in one version-tested adapter | post | 3 | open |
-| PR-OPS-005 | Medium | Output-channel authority is undefined | Define stdout/stderr/artifact contract and degradation behavior | post | 1 | open |
+| PR-OPS-005 | Medium | Output-channel authority is undefined | 0.6: silencing no longer suppresses other plugins' terminal summaries, with a coverage regression. Post: full stdout/stderr/artifact contract | post | 1 | in progress |
 | PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-SEC-002 | High | Artifacts may persist secrets without policy | 0.6: owner-only report, symlink refusal, and conservative credential redaction before anything is rendered or written. Post: configurable patterns, retention, size, audit metadata | post | 1 | in progress |
 | PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | **done 2026-07-18** |
@@ -139,7 +139,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-OPS-002 | A single six-second test emitted no heartbeat | AUD |
 | PR-OPS-003 | `captured_lines` receives every terminal write | AUD, ARCH |
 | PR-OPS-004 | Replaces `_pytest.terminal.TerminalReporter` | AUD |
-| PR-OPS-005 | Other plugins and early errors can bypass the replacement reporter | AUD |
+| PR-OPS-005 | Other plugins and early errors can bypass the replacement reporter; the inverse also bit us -- `no_summary` swallowed pytest-cov's report entirely | AUD |
 | PR-OPS-006 | `time.time()` used for durations and heartbeat | AUD |
 | PR-OPS-007 | Only dummy terminal-writer traffic is captured | AUD |
 | PR-OPS-008 | No defined behavior when the renderer or artifact writer raises | ARCH, TRUST, SCOPE |
@@ -359,6 +359,30 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-18l** — Verifying the MolSysMT brief against real behaviour, rather
+than assuming it was accurate, found four things.
+
+`no_summary = True` was swallowing **pytest-cov's report**. That option gates the
+whole `pytest_terminal_summary` hook, which is where third-party plugins write,
+so silencing pytest silenced everyone. Replaced by emptying `reportchars` and
+switching `tbstyle` off at session finish -- after every `longrepr` has been
+built, so the evidence survives, which is the trap that caught us once already
+at configure time. Coexistence now has a regression test. `PR-OPS-005` moves to
+in progress.
+
+Parametrized node IDs sorted lexicographically, so a cascade listed `[0]`,
+`[10]`, `[11]`. Fixed with a natural sort. This only showed up because the brief
+quoted an example and the example did not match reality.
+
+`1 root cause` was suppressed when there was exactly one, on the reasoning that
+a count of one is not worth stating. It is the opposite: "38 failed | 1 root
+cause" is the entire claim of the project, and hiding it hid the best news in
+the report.
+
+`pytest-rerunfailures` miscounts: a test retried three times renders as three
+tests in its group. Real, unfixed, and now listed in the brief rather than left
+for them to discover.
 
 **2026-07-18k** — Third salvage pass, after being asked twice more whether the
 branch was exhausted. It was not, and the two previous answers were given
