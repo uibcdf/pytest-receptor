@@ -189,6 +189,16 @@ going. It is a liveness signal, not a hang detector: it fires when a test
 finishes, so a stuck test produces no further lines — but the last one printed
 tells you where it got to.
 
+**Colour is forced off, and this may change numbers you have already taken.**
+`FORCE_COLOR` or `PY_COLORS` in an environment makes pytest emit ANSI even into
+a pipe, and at one escape pair per progress character an 8,000-test green run
+goes from 9 kB to 82 kB. The receptor now overrides it in compact profiles, and
+the benchmark harness disables it for its subprocesses so its figures reproduce
+anywhere. If you ran `run_benchmarks.py` before this and your shell forces
+colour, your baselines were inflated — worth re-running if you kept the numbers.
+The `--receptor-stats` baseline deliberately still reflects your environment,
+forced colour included, since that is what your agent would really ingest.
+
 **Skips are grouped by reason.** Your suite skips heavily for optional
 dependencies, and `412 skipped` does not say which capability is missing:
 

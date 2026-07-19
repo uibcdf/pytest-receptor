@@ -108,6 +108,8 @@ limitation`.
 | PR-PILOT-005 | Low | xdist startup chatter preceded the verdict on compact stdout | Neuter only `ensure_show_status`; keep worker-crash reporting | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-006 | Low | Documented full-report path omitted pytest's cache `d` directory | Use the real path; prefer the one the receptor prints | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-007 | Medium | Warning groups split on sizes and shapes that carry no meaning | Normalize numbers for warnings only, showing a variant count; leave names alone | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
+| PR-REL-007 | High | Benchmark figures depended on the caller's environment | Run harness subprocesses with colour disabled, so published numbers reproduce on any machine | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-012 | Medium | Bare assertions were typed as `Failure` | Recognize an assertion crash that carries no exception name | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
@@ -168,6 +170,8 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-005 | MolSysMT pilot, reverification: two `bringing up nodes...` lines appeared on stdout before the verdict | PILOT |
 | PR-PILOT-006 | MolSysMT pilot: the documented path did not exist; pytest's cache API writes to `.pytest_cache/d/receptor/` on both 8.4.2 and 9.1.1 | PILOT |
 | PR-PILOT-007 | MolSysMT pilot: sixty untruncated groups resolve to ~14 families; numeric normalization alone takes 60 to 47 | PILOT |
+| PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
+| PR-REL-007 | `FORCE_COLOR` in the session environment took an 8,000-test green run from 9 kB to 82 kB, inflating every baseline sevenfold | SCOPE |
 | PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
 | PR-FID-012 | `assert 0` crashes with the message `assert 0` and no exception name, so the type heuristic fell through to `Failure` | SCOPE |
 | PR-REL-002 | The published table compares against default pytest; against `-q --no-header` the green case is roughly 12 tokens versus 9, not an 87.88% saving | AUD, SCOPE |

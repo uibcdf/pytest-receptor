@@ -12,6 +12,19 @@ Everything you might need to look up, in tables.
 | `--receptor-full` | off | Expand everything: every occurrence, every message in full. |
 | `--receptor-stats` | off | Append what this run cost against pytest as *you* configured it. Measured in the same run, not estimated. |
 
+## What the compact profiles set on pytest
+
+Applied on your behalf; you do not need to pass any of them.
+
+| Setting | Equivalent | Why |
+| :--- | :--- | :--- |
+| `verbose = -2` | `-qq` | Suppresses the progress bar and the trailing counts line. |
+| `no_header = True` | `--no-header` | Suppresses the banner, `rootdir`, and plugin list. |
+| `reportchars = ""` | *(no flag)* | Suppresses `short test summary info` without silencing other plugins. |
+| `color = "no"` | `--color=no` | Overrides `FORCE_COLOR`, `PY_COLORS`, and an explicit `--color=yes`. Not applied while `--receptor-stats` measures a baseline, where the point is to record what pytest would really have emitted. |
+
+`--tb` is deliberately **not** set — see [Usage](usage.md#do-not-restrict-tb).
+
 ## Configuration file
 
 | Setting | Type | Purpose |
