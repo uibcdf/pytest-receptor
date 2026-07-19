@@ -1,12 +1,10 @@
-# Usage Guide
+# Usage
 
-`pytest-receptor` adds one option to your normal pytest workflow.
+How to run the receptor and read what it gives you.
 
-```bash
-pytest --receptor=[human|llm|ci]
-```
-
----
+For a table of every option and output field, see [Reference](reference.md).
+For what it does to pytest underneath, see [How it works](how-it-works.md).
+For what it deliberately does not do, see [Limitations](limitations.md).
 
 ## Profiles
 
@@ -107,10 +105,12 @@ standard reporter, and it goes further than the usual hand-tuned flags:
 | :--- | :--- | :--- |
 | `verbose = -2` | `-qq` | Removes the progress bar *and* the trailing `N passed in Xs` line, which would otherwise duplicate the receptor's own verdict. Plain `-q` leaves that line in place. |
 | `no_header = True` | `--no-header` | Removes the banner, `rootdir`, and plugin list. |
-| `no_summary = True` | `--no-summary` | Removes the `short test summary info` section. |
+| `reportchars = ""` | *(no flag)* | Removes the `short test summary info` section. `--no-summary` would also have done it, and would also have silenced every other plugin — see [How it works](how-it-works.md). |
+| `color = "no"` | `--color=no` | Colour is decoration for a terminal. Forced colour makes pytest emit ANSI into a pipe, which on an 8,000-test run is 73 kB of escape codes. |
 
 So `pytest --receptor=llm` and `pytest --receptor=llm -q --no-header` produce
-byte-identical output. The extra flags are redundant.
+byte-identical output. The extra flags are redundant, and `--color=yes` is
+overridden.
 
 ### Do not restrict `--tb`
 
@@ -219,83 +219,6 @@ swallowing output belonging to another plugin.
 
 ---
 
-## Session outcomes
-
-The verdict is derived from pytest's exit status, never from the absence of
-failure reports. Every run produces exactly one of:
-
-| Output | Meaning |
-| :--- | :--- |
-| `PASS exit=0` | The suite ran and passed. |
-| `FAIL exit=1` | Tests failed. |
-| `INTERRUPTED exit=2` | The run was interrupted; the counts state how much ran. |
-| `COLLECTION_ERROR exit=2` | Collection failed before the suite could run. |
-| `ERROR exit=3` | An internal pytest error. |
-| `USAGE_ERROR exit=4` | pytest was invoked incorrectly. |
-| `NO_TESTS exit=5` | Nothing was collected. |
-| `RECEPTOR_ERROR` | The receptor itself failed; pytest's status and evidence follow. |
-
-A run stopped early by `-x` or `--maxfail` is marked `incomplete` with the
-executed and collected counts, even when nothing has failed yet.
-
----
-
-## What is on stdout, and what is not
-
-**Everything you need is on stdout.** All root causes are rendered in full, with
-their message, frames, and rerun command. You should never have to open a file
-to act on a failure, and you must never have to run the suite again.
-
-That was not the original design. `llm` used to show the first three causes and
-point at a file for the rest, on the theory that an agent fixes one thing at a
-time. Measurement killed it: at five distinct causes, holding back saves forty
-tokens and costs two hundred more the moment the consumer reads the file, since
-the file repeats what was already shown. Grouping had already solved the volume
-problem, and withholding on top of it was solving a problem that no longer
-existed.
-
-What remains held back:
-
-* **Occurrence lists.** A group of thirty-eight failing tests names three and
-  counts the rest. The rerun command already selects all of them, so the
-  remaining node IDs are recoverable without being read.
-* **A pathological spread of causes.** Above ten *distinct* root causes,
-  expanding all of them stops being cheaper than naming the file.
-
-In both cases the complete report exists on disk before the summary is printed:
-
-```text
-full report: .pytest_cache/d/receptor/last-run.txt
-```
-
-It is written **during** the run and contains every group, every occurrence, and
-every captured section.
-
-```{note}
-The `d/` component comes from pytest's own cache layout, not from us — we ask
-`config.cache.mkdir("receptor")` and pytest decides where that lives. It is the
-same on pytest 8 and 9, but the path the receptor prints is always the resolved
-one, so prefer copying that over reconstructing it.
-``` Detail is only ever withheld when that file is actually
-reachable — with `-p no:cacheprovider`, nothing is withheld at all, because
-there would be nowhere to recover it from.
-
-If you know in advance that you want everything on stdout:
-
-```bash
-pytest --receptor=llm --receptor-full
-```
-
-`--receptor-full` is not the same as `--receptor=human`. Human output is complete
-but redundant: source echo, headers, colour, and a duplicated summary section.
-`--receptor-full` is complete in agent format and still grouped by root cause.
-
-When the cache provider is disabled (`-p no:cacheprovider`) no file is written,
-and the output expands everything rather than pointing at something that does
-not exist.
-
----
-
 ## Measuring what it costs you (`--receptor-stats`)
 
 ```bash
@@ -337,78 +260,65 @@ itself costs tokens.
 
 ---
 
-## Grouping
+## What is on stdout, and what is not
 
-Failures are grouped by exception type, phase, normalized message, and call
-site.
+**Everything you need is on stdout.** All root causes are rendered in full, with
+their message, frames, and rerun command. You should never have to open a file
+to act on a failure, and you must never have to run the suite again.
 
-* **Cascades collapse.** Forty tests broken by one fixture become one group that
-  still lists all forty test IDs.
-* **Unrelated failures stay apart.** Two `ValueError('boom')` raised from
-  different places are two bugs, so they are two groups.
-* **Dynamic values do not split a group.** Memory addresses and timestamps are
-  normalized before grouping, so `0x7f8b...` differences do not fragment one
-  cause into many.
-* **Every path resolves from where you invoked pytest.** Usually that means a
-  relative path. A test far outside the project — more than a few directories
-  up — is printed absolute instead, because a chain of `../../..` is worse than
-  the full path. The contract is that what is printed can be used, not that it
-  is always relative.
-* **Tracebacks keep the decisive frame.** Every local frame survives; external
-  frames are pruned to the boundary and the terminal frame, marked `(ext)`, with
-  `...` where frames were elided. Dropping external frames entirely would hide
-  the answer whenever a failure originates inside a dependency.
-* **Projects can declare their own normalizers.** Scientific failures carry
-  array shapes, dtypes, and device names that split one root cause into dozens
-  of groups. We cannot guess which are non-semantic, so declare them:
+That was not the original design. `llm` used to show the first three causes and
+point at a file for the rest, on the theory that an agent fixes one thing at a
+time. Measurement killed it: at five distinct causes, holding back saves forty
+tokens and costs two hundred more the moment the consumer reads the file, since
+the file repeats what was already shown. Grouping had already solved the volume
+problem, and withholding on top of it was solving a problem that no longer
+existed.
 
-  ```ini
-  [pytest]
-  receptor_normalizers =
-      shape \(\d+, \d+\) -> shape (N, M)
-      device='cuda:\d+' -> device='cuda:N'
-  ```
+What remains held back:
 
-  Each rule is `regex -> replacement`, applied before grouping only. The raw
-  message is still what you read. A rule that fails to compile is skipped rather
-  than costing you the run.
-* **Long messages are fingerprinted whole.** Grouping happens before any
-  truncation, so two long diffs differing only in the middle cannot be merged by
-  accident. When a message is shortened, the output states how much was omitted
-  and where the complete text is.
+* **Occurrence lists.** A group of thirty-eight failing tests names three and
+  counts the rest. The rerun command already selects all of them, so the
+  remaining node IDs are recoverable without being read.
+* **A pathological spread of causes.** Above ten *distinct* root causes,
+  expanding all of them stops being cheaper than naming the file.
+
+In both cases the complete report exists on disk before the summary is printed:
+
+```text
+full report: .pytest_cache/d/receptor/last-run.txt
+```
+
+It is written **during** the run and contains every group, every occurrence, and
+every captured section.
+
+```{note}
+The `d/` component comes from pytest's own cache layout, not from us — we ask
+`config.cache.mkdir("receptor")` and pytest decides where that lives. It is the
+same on pytest 8 and 9, but the path the receptor prints is always the resolved
+one, so prefer copying that over reconstructing it.
+```
+
+Detail is only ever withheld when that file is actually reachable. With
+`-p no:cacheprovider` no report is written, so nothing is withheld at all rather
+than being made unrecoverable.
+
+If you know in advance that you want everything on stdout:
+
+```bash
+pytest --receptor=llm --receptor-full
+```
+
+`--receptor-full` is not the same as `--receptor=human`. Human output is complete
+but redundant: source echo, headers, colour, and a duplicated summary section.
+`--receptor-full` is complete in agent format and still grouped by root cause.
 
 ---
 
-## Safety
+## Where to go next
 
-Test output is untrusted input. Exception messages, captured streams, parameter
-IDs, and paths come from your tests and their dependencies.
-
-* ANSI escapes and control characters are stripped.
-* No text produced by a test can forge a verdict line or otherwise alter the
-  structure of the report.
-* The receptor never suggests a command that mutates your environment. Guidance
-  is limited to the exact rerun selector for a failure.
-* Values that look like credentials are redacted before anything is rendered or
-  written:
-
-  ```text
-  ValueError: connect failed: api_key=[REDACTED] rejected
-  ```
-
-  This happens early enough that a secret reaches neither the terminal, nor the
-  on-disk report, nor a fingerprint.
-
-  ```{warning}
-  This is a conservative net, not a security boundary. It matches keyword-anchored
-  shapes -- `api_key=`, `token:`, `Bearer ...` -- with a minimum length. It cannot
-  catch a secret that does not look like one. Do not rely on it to make a log
-  safe to publish.
-  ```
-
-* The on-disk report is created owner-only (`0600`) and will not follow a
-  symlink.
-
-If rendering raises for any reason, the receptor emits `RECEPTOR_ERROR` followed
-by the underlying exception and the raw pytest evidence, and preserves pytest's
-original exit status. Enabling the plugin cannot lose a run.
+- Every option, outcome label and output field, in tables — [Reference](reference.md)
+- Why grouping keys on the crash location, and what `no_summary` broke —
+  [How it works](how-it-works.md)
+- Worker identity, warning baselines, and the bounds of credential redaction —
+  [Limitations](limitations.md)
+- What the compression actually measures — [Benchmarks](benchmarks.md)

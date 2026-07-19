@@ -1,57 +1,63 @@
 # Installation
 
-This page guides you through installing and configuring `pytest-receptor` for your project.
+## Requirements
 
----
+| | |
+| :--- | :--- |
+| Python | 3.11, 3.12, or 3.13 |
+| pytest | 8.0 or later |
+| Anything else | Nothing. The plugin has no dependency beyond pytest. |
 
-## Prerequisites
+Every combination of those Python and pytest versions is exercised in CI,
+serially and under `pytest-xdist`, so the support claim is evidence rather than
+intent.
 
-`pytest-receptor` requires:
-* **Python:** Version `>= 3.11` (with full support up to Python `3.13`).
-* **Pytest:** Version `>= 8.0.0`.
-
----
-
-## Installing Stable Releases (PyPI)
-
-To install the latest stable version of the plugin from the Python Package Index (PyPI):
+## From PyPI
 
 ```bash
 pip install pytest-receptor
 ```
 
-Alternatively, add the package to your development dependencies using your preferred package manager:
+Or with your dependency manager of choice:
 
-* **Poetry:**
-  ```bash
-  poetry add --group dev pytest-receptor
-  ```
-* **Pipenv:**
-  ```bash
-  pipenv install --dev pytest-receptor
-  ```
-* **PDM:**
-  ```bash
-  pdm add -d pytest-receptor
-  ```
-* **UV:**
-  ```bash
-  uv pip install pytest-receptor
-  ```
+```bash
+poetry add --group dev pytest-receptor
+pdm add -d pytest-receptor
+uv pip install pytest-receptor
+pipenv install --dev pytest-receptor
+```
 
----
+## From source
 
-## Installing from Source (Development)
+```bash
+git clone https://github.com/uibcdf/pytest-receptor.git
+cd pytest-receptor
+pip install -e .[dev]
+```
 
-If you wish to clone the repository to contribute or test local changes:
+## Optional extra
 
-1. Clone the repository from GitHub:
-   ```bash
-   git clone https://github.com/uibcdf/pytest-receptor.git
-   cd pytest-receptor
-   ```
+`tiktoken` is used by `--receptor-stats` to count tokens exactly. Without it the
+flag still works and falls back to a labelled four-characters-per-token
+approximation.
 
-2. Install in editable mode along with the development dependencies (`dev`):
-   ```bash
-   pip install -e .[dev]
-   ```
+```bash
+pip install tiktoken
+```
+
+## Installing it changes nothing
+
+The default profile is `human`, and `human` registers no plugin at all — plain
+`pytest` produces output byte-identical to not having the receptor installed.
+
+This matters in a shared environment: you can install it for yourself, or for an
+agent, without altering what anyone else sees. A regression test asserts the
+byte-for-byte equivalence.
+
+## Removing it
+
+```bash
+pip uninstall pytest-receptor
+```
+
+Nothing is left behind except `.pytest_cache/d/receptor/`, which you can delete.
