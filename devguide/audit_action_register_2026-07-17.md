@@ -110,6 +110,7 @@ limitation`.
 | PR-PILOT-007 | Medium | Warning groups split on sizes and shapes that carry no meaning | Normalize numbers for warnings only, showing a variant count; leave names alone | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
+| PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | post-0.6 | 2 | proposed |
 | PR-OPS-012 | Medium | A benchmark scenario stopped exercising the axis it was written for | Vary the `Green with many distinct warnings` scenario by a non-numeric token, so warning normalization cannot collapse its forty groups into one; refresh every published figure from the corrected run | 0.6 | 0 | **done 2026-07-19** |
 | PR-REL-007 | High | Benchmark figures depended on the caller's environment | Run harness subprocesses with colour disabled, so published numbers reproduce on any machine | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
@@ -174,6 +175,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-007 | MolSysMT pilot: sixty untruncated groups resolve to ~14 families; numeric normalization alone takes 60 to 47 | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
+| PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
 | PR-OPS-012 | The scenario generated `condition {k} detected` for `k` in `range(40)`; numeric normalization, added afterwards, collapsed all forty into a single group, taking the row from -64% to -97% with every test still passing | MEASURED |
 | PR-REL-007 | `FORCE_COLOR` in the session environment took an 8,000-test green run from 9 kB to 82 kB, inflating every baseline sevenfold | SCOPE |
 | PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
@@ -383,6 +385,34 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-19c** — Prior-art survey. We were not first, and did not know it.
+
+Two plugins already publish the same thesis: `pytest-agent-digest` (0.3.2,
+2026-05-02) and `pytest-markdown-report` (0.2.0, 2026-07-15, four days before
+this entry). Neither was known while `scope_0.6.md` was written. Recorded in
+`prior_art_2026-07-19.md`, measured in isolated environments rather than read.
+
+Neither groups by root cause, and neither derives the verdict from
+`pytest.ExitCode`. `pytest-markdown-report` prints `0/0 passed` while pytest
+exits 5 -- this project's founding bug, reproduced independently. Both, however,
+avoid the two traps that cost us the most, `tbstyle` at configure time and
+`no_summary`, because their architecture never needed to silence pytest while
+keeping its data.
+
+Recorded against ourselves: on a single isolated failure we measure -16.2%,
+inside the range they claim. Our advantage is grouping, not compression, and it
+only appears in suites whose failures cluster. The documentation should say so
+rather than imply a general superiority.
+
+Added PR-UX-004 from their work: the rerun command is not configurable, so our
+most-repeated promise -- that it works pasted verbatim -- is false for any
+project not invoked as bare `pytest`.
+
+Decided: no comparative benchmark will be published, since our scenarios favour
+our architecture by construction. Their defects have not been reported to them
+yet; deferred by decision, with the evidence preserved so it can be filed
+without re-deriving it.
 
 **2026-07-19b** — Upstream tidy-up, and a reconsideration of our own conduct.
 

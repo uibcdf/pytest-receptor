@@ -34,6 +34,7 @@ Everything else is reference material for work that comes later.
 | `resolved_bugs/` | History | Field reports that have been fixed, kept with their resolution and reproducer. Moved out of the inbox rather than deleted. |
 | `pending_proposals/` | Inbox | **Active.** Untriaged design input from pilots and other projects. Everything here is either given a register identifier or moved to `superseded_proposals.md`. |
 | `superseded_proposals.md` | History | Rejected and replaced proposals, preserved with the reason each was dropped. Includes the original development guide verbatim. |
+| `prior_art_2026-07-19.md` | Survey | **Current.** The two other plugins with the same thesis, what they do and do not do, measured rather than read. Includes where we are *not* better, and the decision not to publish a comparative benchmark. |
 | `original_issue_in_pytest.md` | History | The upstream pytest feature request that started the project. See the header note for which parts no longer hold. |
 
 ## Release model
