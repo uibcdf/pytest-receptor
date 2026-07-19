@@ -109,6 +109,7 @@ limitation`.
 | PR-PILOT-006 | Low | Documented full-report path omitted pytest's cache `d` directory | Use the real path; prefer the one the receptor prints | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-007 | Medium | Warning groups split on sizes and shapes that carry no meaning | Normalize numbers for warnings only, showing a variant count; leave names alone | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
+| PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-OPS-012 | Medium | A benchmark scenario stopped exercising the axis it was written for | Vary the `Green with many distinct warnings` scenario by a non-numeric token, so warning normalization cannot collapse its forty groups into one; refresh every published figure from the corrected run | 0.6 | 0 | **done 2026-07-19** |
 | PR-REL-007 | High | Benchmark figures depended on the caller's environment | Run harness subprocesses with colour disabled, so published numbers reproduce on any machine | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
@@ -172,6 +173,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-006 | MolSysMT pilot: the documented path did not exist; pytest's cache API writes to `.pytest_cache/d/receptor/` on both 8.4.2 and 9.1.1 | PILOT |
 | PR-PILOT-007 | MolSysMT pilot: sixty untruncated groups resolve to ~14 families; numeric normalization alone takes 60 to 47 | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
+| PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-OPS-012 | The scenario generated `condition {k} detected` for `k` in `range(40)`; numeric normalization, added afterwards, collapsed all forty into a single group, taking the row from -64% to -97% with every test still passing | MEASURED |
 | PR-REL-007 | `FORCE_COLOR` in the session environment took an 8,000-test green run from 9 kB to 82 kB, inflating every baseline sevenfold | SCOPE |
 | PR-XD-001 | Under `-n 4` the same cascade rendered its occurrences in a different order on every run; MolSysMT runs twelve workers | AUD, SCOPE |
@@ -381,6 +383,26 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-19a** — A benchmark scenario stopped testing what it was written for.
+
+`Green with many distinct warnings` exists because its predecessor emitted the
+*same* warning forty times and therefore could not detect that only three of
+sixty groups were being reported on a real suite. The replacement varied its
+warnings by number -- `condition 0`, `condition 1` -- and the numeric
+normalization added later collapsed all forty back into one group.
+
+The row read -97.4% instead of -64.6%, and the defect was visible only because
+that improvement had no cause: nothing in the renderer had changed. Had the
+figure moved by a few points instead of thirty, it would have been published.
+
+Fixed by varying the scenario with a non-numeric token, as the equivalent unit
+test already did. The affected figures in the README and the documentation were
+republished from a fresh run.
+
+Third instance of the same failure mode already recorded twice: a scenario that
+exercises volume does not exercise variety. Noted in `docs/benchmarks.md` so the
+next person to touch these scenarios reads it before editing them.
 
 **2026-07-19a** — A scenario that no longer tested what it was written to test
 (PR-OPS-012), found while refreshing figures for publication.
