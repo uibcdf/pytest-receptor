@@ -25,6 +25,10 @@ source_suffix = {
     ".txt": "markdown",
     ".md": "markdown",
 }
+# Generate anchors for headings down to h3, so pages can link to each other's
+# sections instead of only to whole pages.
+myst_heading_anchors = 3
+
 myst_enable_extensions = [
     "colon_fence",
     "deflist",

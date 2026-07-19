@@ -23,7 +23,8 @@ Applied on your behalf; you do not need to pass any of them.
 | `reportchars = ""` | *(no flag)* | Suppresses `short test summary info` without silencing other plugins. |
 | `color = "no"` | `--color=no` | Overrides `FORCE_COLOR`, `PY_COLORS`, and an explicit `--color=yes`. Not applied while `--receptor-stats` measures a baseline, where the point is to record what pytest would really have emitted. |
 
-`--tb` is deliberately **not** set — see [Usage](usage.md#do-not-restrict-tb).
+`--tb` is deliberately **not** set, and restricting it yourself degrades the
+output — see *Do not restrict `--tb`* in [Usage](usage.md).
 
 ## Configuration file
 
