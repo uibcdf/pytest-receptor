@@ -35,6 +35,10 @@ RECEPTOR = ["--receptor=llm"]
 # The baseline the published figures quote. Fair, and still readable by a human.
 HONEST = "pytest -q --no-header --tb=short"
 
+_WORDS = [
+    f"{a}{b}" for a in "abcdefgh" for b in ("lpha", "eta", "amma", "elta", "psilon")
+][:40]
+
 SCENARIOS = {
     "Green suite (128 tests)": {
         "test_suite.py": (
@@ -50,8 +54,14 @@ SCENARIOS = {
         "test_suite.py": (
             "import warnings, pytest\n"
             "class W(UserWarning): pass\n"
+            # Non-numeric variation on purpose. Numeric normalization -- added
+            # after this scenario was written -- collapsed `condition 1` and
+            # `condition 2` into one group, silently turning a forty-group
+            # scenario back into the one-group scenario it was created to
+            # replace, and taking this row from -64% to -97%.
             + "".join(
-                f"def test_w{k}():\n    warnings.warn('condition {k} detected', W)\n"
+                f"def test_w{k}():\n"
+                f"    warnings.warn('condition {_WORDS[k]} detected', W)\n"
                 for k in range(40)
             )
         )

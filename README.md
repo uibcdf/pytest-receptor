@@ -270,14 +270,14 @@ Measured with `tiktoken` (`cl100k_base`):
 
 | Scenario | `pytest` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3308 | **106** | **-96.8%** |
-| Green suite (128 tests) | 126 | **16** | -87.2% |
-| Green with warnings | 189 | **46** | -75.9% |
-| Green with many distinct warnings | 1946 | **669** | -65.6% |
-| Single assertion failure | 354 | **167** | -53.1% |
-| Five distinct causes | 411 | **212** | -48.2% |
-| Collection error | 295 | **218** | -26.3% |
-| Mixed states (skip, xfail, xpass) | 131 | **78** | -39.5% |
+| Cascade (38 failures, one cause) | 3304 | **105** | **-96.8%** |
+| Green suite (128 tests) | 124 | **15** | -87.9% |
+| Green with warnings | 191 | **45** | -76.4% |
+| Green with many distinct warnings | 1979 | **664** | -66.4% |
+| Single assertion failure | 353 | **165** | -53.3% |
+| Five distinct causes | 411 | **211** | -48.7% |
+| Collection error | 295 | **217** | -26.4% |
+| Mixed states (skip, xfail, xpass) | 129 | **77** | -40.3% |
 
 Every scenario is cheaper, most of them by half or better. In a TDD loop that
 runs the suite twenty times, the cascade row alone is sixty thousand tokens.
@@ -288,9 +288,9 @@ been quietened:
 
 | Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: |
-| Whole suite green | 812 | **24** | 97.0% |
-| One fixture breaks 200 tests | 25,474 | **114** | 99.6% |
-| Six unrelated bugs | 1,497 | **285** | 81.0% |
+| Whole suite green | 812 | **17** | 97.9% |
+| One fixture breaks 200 tests | 25,478 | **107** | 99.6% |
+| Six unrelated bugs | 1,497 | **278** | 81.4% |
 
 `-q` prints one progress character per test, so a *successful* eight-thousand
 test run costs 812 tokens of dots before anything has gone wrong.
@@ -302,17 +302,17 @@ If you are the kind of person who already runs `pytest -q --no-header
 
 | Scenario | tuned pytest | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 2863 | **106** | -96.3% |
-| Green with many distinct warnings | 1846 | **669** | -63.8% |
-| Green with warnings | 91 | **46** | -49.5% |
-| Five distinct causes | 316 | **212** | -32.9% |
-| Green suite (128 tests) | 23 | **16** | -30.4% |
-| Single assertion failure | 197 | **167** | -15.2% |
-| Collection error | 196 | **218** | +11.2% |
-| Mixed states (skip, xfail, xpass) | 31 | **78** | +151.6% |
+| Cascade (38 failures, one cause) | 2863 | **105** | -96.3% |
+| Green with many distinct warnings | 1878 | **664** | -64.6% |
+| Green with warnings | 92 | **45** | -51.1% |
+| Five distinct causes | 316 | **211** | -33.2% |
+| Green suite (128 tests) | 23 | **15** | -34.8% |
+| Single assertion failure | 197 | **165** | -16.2% |
+| Collection error | 196 | **217** | +10.7% |
+| Mixed states (skip, xfail, xpass) | 31 | **77** | +148.4% |
 
 Both positive rows are scenarios of a handful of tests, where any fixed overhead
-looks enormous as a percentage: +151.6% is forty-seven tokens. They buy the
+looks enormous as a percentage: +148.4% is forty-six tokens. They buy the
 reason behind every skip and xfail and the name of the test that passed
 unexpectedly, where `pytest -q` says `1 skipped, 1 xfailed, 1 xpassed` and
 leaves you to re-run with `-rs` to find out which. Those sections are bounded by
