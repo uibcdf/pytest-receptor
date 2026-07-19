@@ -17,7 +17,8 @@ Two of those are deliberate avoidances rather than obvious choices.
 **`no_summary` is not used**, although it looks like the switch for the job. It
 gates the whole `pytest_terminal_summary` hook, which is where third-party
 plugins write, so setting it swallowed pytest-cov's coverage table entirely.
-Silencing pytest must not silence everyone else.
+Silencing pytest must not silence everyone else. Reported upstream as
+[pytest#14724](https://github.com/pytest-dev/pytest/issues/14724).
 
 **`tbstyle` is not set at configure time.** Setting it to `"no"` looks like the
 clean way to suppress tracebacks, and it is: it also impoverishes `longrepr` at

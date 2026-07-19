@@ -208,6 +208,7 @@ def _silence_standard_reporter(config):
     # pytest_terminal_summary hook, and third-party plugins write their reports
     # there. Setting it swallowed pytest-cov's coverage table entirely. Emptying
     # reportchars stops pytest's own short summary without silencing anyone else.
+    # Reported upstream as https://github.com/pytest-dev/pytest/issues/14724.
     reporter = config.pluginmanager.getplugin("terminalreporter")
     if reporter is not None:
         reporter.reportchars = ""

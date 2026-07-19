@@ -216,7 +216,8 @@ progress characters while preserving pytest's own categorization.
 `no_summary` is deliberately *not* used, although it looks like the obvious
 switch. It gates the whole `pytest_terminal_summary` hook, which is where
 third-party plugins write, and setting it swallowed pytest-cov's report
-entirely.
+entirely. Reported upstream as
+[pytest#14724](https://github.com/pytest-dev/pytest/issues/14724).
 
 **It collects from public hooks.** `pytest_runtest_logreport` for phase results,
 `pytest_collectreport` for collection failures, `pytest_warning_recorded` for
