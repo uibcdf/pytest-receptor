@@ -386,6 +386,23 @@ The audit program is complete only when:
 
 ## Revision log
 
+**2026-07-21b** — Made the benchmark harness reproducible at the token level.
+
+The published figures wobbled a couple of tokens between runs. The cause was not
+the wall-clock timing (two-decimal seconds tokenize to a fixed count) but the
+harness's own scratch directory: `tempfile.mkdtemp` gives a random suffix, and
+the default pytest baseline prints `rootdir: <path>`, so that random suffix
+landed in the measured output and tokenized differently every run. The path is
+an accident of the harness, not part of what we measure, so it is now a fixed
+name and three consecutive runs are byte-identical, `last-run.json` included.
+
+Regenerating on the current interpreter also showed that some baselines have
+shifted materially since the tables were last written — pytest 9.0.2 formats the
+warning summary more compactly, dropping the many-warnings baseline by ~280
+tokens — so the published doc and README tables now understate their own
+baselines. Realigning them to the reproducible pytest-9.0.2 numbers is a separate
+pending decision, not folded into this fix.
+
 **2026-07-21a** — Removed the `slowest:` block from the compact report.
 
 Per-test durations are profiling, not truth and not economy — the two purposes

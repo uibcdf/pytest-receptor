@@ -217,7 +217,15 @@ def measure(scenarios=None, baselines=None, receptor=None):
     results = {}
     encoding_name = None
     for scenario, files in scenarios.items():
-        directory = Path(tempfile.mkdtemp(prefix="receptor-bench-"))
+        # A *fixed* directory name, not mkdtemp's random one. pytest's default
+        # header prints `rootdir: <path>`, so a random suffix lands in the
+        # baseline output and tokenizes differently every run -- the whole
+        # source of the couple-of-token wobble between runs. The path is an
+        # accident of the harness, not part of what we are measuring, so it must
+        # be constant for the numbers to reproduce.
+        directory = Path(tempfile.gettempdir()) / "receptor-bench"
+        shutil.rmtree(directory, ignore_errors=True)
+        directory.mkdir()
         try:
             for name, content in files.items():
                 (directory / name).write_text(content, encoding="utf-8")
