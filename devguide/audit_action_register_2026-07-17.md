@@ -386,7 +386,23 @@ The audit program is complete only when:
 
 ## Revision log
 
-**2026-07-19c** — Prior-art survey. We were not first, and did not know it.
+**2026-07-21a** — Removed the `slowest:` block from the compact report.
+
+Per-test durations are profiling, not truth and not economy — the two purposes
+0.6 exists for. `pytest --durations=N` already owns that on demand, so carrying
+it in the always-on output charged every consumer for a feature most runs do not
+want, working directly against the token saving the tool is sold on. It was also
+the reason a small green run on a real suite could cost more than `pytest -q`:
+the block fires for any test over 0.5 s, which is routine in a scientific suite
+(structure loading, numba) but never happens in the synthetic green benchmarks,
+so the published numbers never showed the cost the user felt. The header's total
+run duration stays — that is one number and a truth signal (did the run finish,
+how long), not profiling.
+
+Deleted `_slow_tests`, `_durations`, and the two module constants; dropped the
+`slowest:` row from `docs/reference.md`; added a regression test asserting a slow
+test adds no per-test timing. The green benchmark rows are unchanged, as
+expected, since the block never fired on instant tests.
 
 Two plugins already publish the same thesis: `pytest-agent-digest` (0.3.2,
 2026-05-02) and `pytest-markdown-report` (0.2.0, 2026-07-15, four days before

@@ -102,7 +102,6 @@ Each appears only when it has something to say.
 | `skipped: N in M groups` | Any test was skipped. Grouped by reason; `(no reason declared)` is its own group. |
 | `xfailed: N in M groups` | Any expected failure occurred. |
 | `unexpected passes:` | An `xfail` test passed. Named individually, with its reason. |
-| `slowest:` | Any test took at least 0.5 s. Top three. |
 | `full report: <path>` | Detail was held back, and only then. |
 
 ## Progress on stderr

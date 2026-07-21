@@ -19,6 +19,18 @@ def test_green_run_reports_pass_with_exit_code(pytester):
     assert result.ret == 0
 
 
+def test_a_slow_test_adds_no_per_test_timing(pytester):
+    """Per-test durations are profiling, not truth or economy: pytest --durations
+    owns that on demand, so the compact report never spends tokens on it."""
+    pytester.makepyfile(
+        "import time\n"
+        "def test_slow(): time.sleep(0.6)\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines(["PASS exit=0 | 1 passed*"])
+    assert "slowest" not in result.stdout.str()
+
+
 def test_failing_run_reports_fail(pytester):
     pytester.makepyfile("def test_a(): assert 1\ndef test_b(): assert 0\n")
     result = pytester.runpytest("--receptor=llm")

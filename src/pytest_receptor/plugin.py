@@ -69,8 +69,6 @@ _NUMBER = re.compile(r"(?<![\w.])\d+(?![\w.])")
 _TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?")
 
 _MAX_MESSAGE = 1500
-_SLOW_TEST_SECONDS = 0.5
-_SLOW_TEST_COUNT = 3
 _SHOWN_TESTS = 3
 _MAX_LOCAL_FRAMES = 8
 # Above this many distinct root causes, expanding all of them stops being
@@ -278,7 +276,6 @@ class ReceptorPlugin:
         self._shown = ""
         self._start = time.monotonic()  # PR-OPS-006
         self._failures = []
-        self._durations = {}
         # pytest's states are per phase, not per test: a test that passes and
         # then fails its teardown counts as both `passed` and `error`. A single
         # value per node ID cannot represent that, and folding it into `failed`
@@ -417,7 +414,6 @@ class ReceptorPlugin:
 
     def pytest_runtest_logreport(self, report):
         nodeid = report.nodeid
-        self._durations[nodeid] = self._durations.get(nodeid, 0.0) + report.duration
         if report.when == "teardown":
             self._finished += 1
             self._emit_progress()
@@ -798,13 +794,6 @@ class ReceptorPlugin:
                 suffix = f" - {_sanitize(reason)}" if reason else ""
                 lines.append(f"  {self._selector(nodeid)}{suffix}")
 
-        slow = self._slow_tests()
-        if slow:
-            lines.append("")
-            lines.append("slowest:")
-            for nodeid, duration in slow:
-                lines.append(f"  {nodeid} ({duration:.2f}s)")
-
         held_back = (
             limit is not None and len(groups) > limit and self.profile.show_report_path
         )
@@ -894,15 +883,6 @@ class ReceptorPlugin:
             return f"pytest {self._selector(nodeids[0])} -q"
         files = sorted({nodeid.split("::", 1)[0] for nodeid in nodeids})
         return "pytest " + " ".join(self._display_path(f) for f in files) + " -q"
-
-    def _slow_tests(self):
-        slow = [
-            (nodeid, duration)
-            for nodeid, duration in self._durations.items()
-            if duration >= _SLOW_TEST_SECONDS
-        ]
-        slow.sort(key=lambda item: item[1], reverse=True)
-        return slow[:_SLOW_TEST_COUNT]
 
     def _write_full_report(self, text):
         cache = getattr(self.config, "cache", None)
