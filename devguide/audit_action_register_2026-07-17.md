@@ -108,6 +108,8 @@ limitation`.
 | PR-PILOT-005 | Low | xdist startup chatter preceded the verdict on compact stdout | Neuter only `ensure_show_status`; keep worker-crash reporting | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-006 | Low | Documented full-report path omitted pytest's cache `d` directory | Use the real path; prefer the one the receptor prints | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-007 | Medium | Warning groups split on sizes and shapes that carry no meaning | Normalize numbers for warnings only, showing a variant count; leave names alone | 0.6 | 0 | **done 2026-07-18** |
+| PR-PILOT-008 | Critical | A zero exit with collected tests left unexecuted printed `PASS ... \| incomplete: 39 of 526`, and the disk artifact could hold a stale prior verdict read mid-run | Compute the incomplete qualifier before the verdict token and downgrade `PASS` to `INCOMPLETE`; clear `last-run.txt` at session start so a mid-run read is "not yet" | 0.6 | 0 | **done 2026-07-21** |
+| PR-PILOT-009 | Low | xdist progress opened at a non-round `35%` and skipped the milestones crossed during the warm-up | Emit every threshold already crossed, in order; step by twenty percent and announce 100% | 0.6 | 0 | **done 2026-07-21** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | post-0.6 | 2 | proposed |
@@ -173,6 +175,8 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-005 | MolSysMT pilot, reverification: two `bringing up nodes...` lines appeared on stdout before the verdict | PILOT |
 | PR-PILOT-006 | MolSysMT pilot: the documented path did not exist; pytest's cache API writes to `.pytest_cache/d/receptor/` on both 8.4.2 and 9.1.1 | PILOT |
 | PR-PILOT-007 | MolSysMT pilot: sixty untruncated groups resolve to ~14 families; numeric normalization alone takes 60 to 47 | PILOT |
+| PR-PILOT-008 | MolSysMT pilot: a `--receptor=llm -n 12` artifact read `PASS exit=0 \| 39 passed \| incomplete: 39 of 526 executed`, its count inconsistent with a progress stream already at 263/526 | PILOT |
+| PR-PILOT-009 | MolSysMT pilot: a completed 530-test run's progress began at `35%` and never emitted the earlier milestones | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
@@ -385,6 +389,31 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-21d** — Second MolSysMT pilot: two defects fixed, the small-suite
+finding overtaken by the `slowest:` removal.
+
+PR-PILOT-008 (critical): `_summary_line` set the verdict from the exit status and
+only *appended* the incomplete note, so a zero exit with tests left unexecuted
+read `PASS ... | incomplete: 39 of 526`. The qualifier is now computed first and
+downgrades `PASS` to `INCOMPLETE` — the leading token a consumer keys on has to
+change, not merely gain a contradictory suffix. The stale-artifact half was
+separate: the disk report is written only at session finish, so the snapshot the
+pilot read mid-run was a *previous* run's file; a new run now clears it at
+session start, making a mid-run read an unambiguous "not yet". The docs' claim
+that the report is "written during the run" was false and is corrected.
+
+PR-PILOT-009 (low): xdist progress opened at `35%`, which the pilot found
+confusing. It now emits every threshold already crossed, in order, so the lines
+are round; on the maintainer's call the step went from ten to twenty percent
+(five lines instead of nine) and 100% is announced.
+
+The scenario matrix's main product implication — receptor is too expensive for
+small green suites — was driven by the `slowest:` block, removed earlier the same
+day (2026-07-21a). Those rows predate the removal and want re-measuring before the
+shadow-mode small-suite policy is treated as settled. The pilot stays in shadow
+mode. Reports moved to `resolved_bugs/`; the scenario matrix stays in
+`pending_proposals/` with an update note.
 
 **2026-07-21c** — Realigned the README and `benchmarks.md` tables to the
 reproducible figures.

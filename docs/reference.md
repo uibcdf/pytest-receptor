@@ -107,12 +107,17 @@ Each appears only when it has something to say.
 ## Progress on stderr
 
 ```text
-receptor: 10% 933/9332 52s
+receptor: 20% 190/530 20s
+receptor: 40% 212/530 22s
+receptor: 100% 530/530 67s
 ```
 
-One line per ten percent of the suite, after the first twenty seconds. Nine
-lines maximum however long the run takes. Never on stdout. Under xdist, emitted
-by the controller only.
+One line as the run crosses each twenty-percent threshold, after a silent
+twenty-second warm-up, ending at 100% — at most five lines however long the run
+takes. Thresholds already passed when the warm-up ends are emitted together, in
+order, so every percentage is a round milestone; the count beside the first can
+already be a little past it, since reporting only began at the warm-up. Never on
+stdout. Under xdist, emitted by the controller only.
 
 ## Exit status
 

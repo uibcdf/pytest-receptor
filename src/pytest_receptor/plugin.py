@@ -80,14 +80,17 @@ _MANY_CAUSES = 10
 # timeout, a human, a CI job with an idle limit -- cannot tell a working suite
 # from a stalled one, and learns nothing at all if the process is killed.
 #
-# Reported by decile, not by clock, so the cost is bounded by nothing at all:
-# nine lines whether the suite takes five minutes or three hours. The elapsed
-# time on each line also exposes pace -- if 10% took thirty seconds and the next
-# 10% took five minutes, that is worth seeing.
+# Reported by threshold, not by clock, so the cost is bounded by nothing at all:
+# five lines whether the suite takes five minutes or three hours. The elapsed
+# time on each line also exposes pace -- if 20% took thirty seconds and the next
+# 20% took five minutes, that is worth seeing.
 #
-# A minimum elapsed time still applies, so ordinary runs stay silent.
+# A silent warm-up applies, so ordinary runs stay quiet. Any thresholds already
+# crossed when it ends are emitted together, in order, so the first line is a
+# round milestone the run has genuinely passed rather than the odd percentage it
+# happens to sit at when reporting begins.
 _PROGRESS_AFTER = 20.0
-_PROGRESS_STEP = 10  # percent
+_PROGRESS_STEP = 20  # percent
 
 # A warning line exists to let you recognize the warning and decide whether it
 # is new. Scientific messages run to several hundred characters, which made a
@@ -291,7 +294,7 @@ class ReceptorPlugin:
         )
         self._collected = 0
         self._finished = 0
-        self._next_decile = _PROGRESS_STEP
+        self._next_threshold = _PROGRESS_STEP
         self._last_progress = self._start
         # Under xdist the plugin is instantiated in every worker as well as the
         # controller. Each worker sees the whole collected list but only its own
@@ -332,6 +335,27 @@ class ReceptorPlugin:
         """
         self._collected = max(self._collected, len(ids))
 
+    def pytest_sessionstart(self, session):
+        """Clear a previous run's artifact so a mid-run read never returns it.
+
+        The full report is published once, at session finish. Until then the
+        documented path must not exist rather than hold the last run's verdict:
+        the MolSysMT pilot read a stale `PASS` artifact while a new run was still
+        executing and took it for the live result. Absent means "not yet".
+        """
+        if self._is_worker:
+            return
+        cache = getattr(self.config, "cache", None)
+        if cache is None:
+            return
+        try:
+            path = cache.mkdir("receptor") / "last-run.txt"
+            if not path.is_symlink():
+                path.unlink(missing_ok=True)
+        except Exception:
+            # Losing this cleanup must never cost the run.
+            pass
+
     def _emit_progress(self):
         """A sign of life on stdout's quieter sibling.
 
@@ -352,20 +376,28 @@ class ReceptorPlugin:
 
         if self._collected:
             percent = self._finished * 100 // self._collected
-            if percent < self._next_decile or percent >= 100:
-                return
-            # Skip past any deciles crossed while we were still under the
-            # minimum elapsed time, so the first line is not stale.
-            self._next_decile = (percent // _PROGRESS_STEP + 1) * _PROGRESS_STEP
-            marker = f"{percent}% {self._finished}/{self._collected}"
-        else:
-            # Nothing was collected up front -- fall back to a clock, since some
-            # liveness beats none.
-            if elapsed - (self._last_progress - self._start) < _PROGRESS_AFTER:
-                return
-            self._last_progress = time.monotonic()
-            marker = str(self._finished)
+            # Emit every threshold crossed since the last line, in order. After
+            # the warm-up this catches up on the round milestones already passed
+            # (20%, 40%, ...) rather than the odd percentage the run happens to
+            # sit at; in steady state it is a single line as each is crossed.
+            # 100% is included -- the run reaching its end on stderr, a moment
+            # before the verdict lands on stdout.
+            while self._next_threshold <= percent and self._next_threshold <= 100:
+                self._progress_line(
+                    f"{self._next_threshold}% {self._finished}/{self._collected}",
+                    elapsed,
+                )
+                self._next_threshold += _PROGRESS_STEP
+            return
 
+        # Nothing was collected up front -- fall back to a clock, since some
+        # liveness beats none.
+        if elapsed - (self._last_progress - self._start) < _PROGRESS_AFTER:
+            return
+        self._last_progress = time.monotonic()
+        self._progress_line(str(self._finished), elapsed)
+
+    def _progress_line(self, marker, elapsed):
         try:
             sys.stderr.write(f"receptor: {marker} {elapsed:.0f}s\n")
             sys.stderr.flush()
@@ -676,6 +708,16 @@ class ReceptorPlugin:
         # cannot tell them apart from a real interrupt.
         if verdict == "INTERRUPTED" and any(g.phase == "collect" for g in groups):
             verdict = "COLLECTION_ERROR"
+
+        # PR-CRIT-003: an incomplete run must never read as a clean pass. A zero
+        # exit status with collected tests left unexecuted -- a conftest calling
+        # pytest.exit(returncode=0), an xdist worker that stopped early -- would
+        # otherwise print `PASS` beside an `incomplete:` note. The verdict token
+        # a consumer keys on has to change, not merely gain a contradictory
+        # suffix. (MolSysMT pilot: a `PASS ... | incomplete: 39 of 526` artifact.)
+        incomplete = self._stop_reason(session, exitstatus, executed)
+        if incomplete and verdict == "PASS":
+            verdict = "INCOMPLETE"
         parts = [f"{verdict} exit={int(exitstatus)}"]
 
         detail = []
@@ -687,8 +729,6 @@ class ReceptorPlugin:
         elif verdict == "PASS":
             parts.append("0 tests")
 
-        # PR-CRIT-003: an incomplete run must never read as a clean pass.
-        incomplete = self._stop_reason(session, exitstatus, executed)
         if incomplete:
             parts.append(incomplete)
 

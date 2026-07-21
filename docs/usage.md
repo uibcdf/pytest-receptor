@@ -66,18 +66,28 @@ traceback, not how it prints it, so they save about twenty tokens and delete the
 
 ## Progress
 
-One line per ten percent, on **stderr**, after the first twenty seconds:
+On **stderr**, after a silent twenty-second warm-up, one line as the run crosses
+each twenty-percent threshold, ending at 100%:
 
 ```text
-receptor: 10% 933/9332 52s
-receptor: 20% 1866/9332 108s
+receptor: 20% 190/530 20s
+receptor: 40% 212/530 22s
+receptor: 60% 318/530 29s
+receptor: 80% 424/530 35s
+receptor: 100% 530/530 67s
 ```
+
+Thresholds already passed when the warm-up ends are emitted together, in order,
+so every line is a round milestone the run has genuinely reached rather than the
+odd percentage it happens to sit at. The count beside the first line can be a
+little past its milestone, since reporting only begins once the warm-up is over.
 
 | Property | |
 | :--- | :--- |
 | Never on stdout | discard stderr and the report is unchanged |
-| Bounded | nine lines whether the run takes five minutes or three hours |
-| Shows pace | a decile suddenly taking four times longer is visible |
+| Bounded | at most five lines, whether the run takes five minutes or three hours |
+| Shows pace | a step suddenly taking four times longer is visible |
+| Silent when short | nothing under twenty seconds |
 | Not a hang detector | it fires when a test finishes; a stuck test emits nothing |
 
 ## Distributed runs
@@ -115,9 +125,12 @@ root causes, and only when the report exists to hold it:
 full report: .pytest_cache/d/receptor/last-run.txt
 ```
 
-Written **during** the run, so recovering it is a file read, never a second test
-run. With `-p no:cacheprovider` nothing is withheld at all, since there would be
-nowhere to recover it from.
+Written once, at the end of the run, so recovering it is a file read rather than
+a second test run. While a run is still going the path does **not** exist: a
+previous run's report is cleared at the start rather than left to be mistaken for
+the live one, so a mid-run read is an unambiguous "not yet". With
+`-p no:cacheprovider` nothing is withheld at all, since there would be nowhere to
+recover it from.
 
 `--receptor-full` expands everything on stdout. It is not the same as
 `--receptor=human`: still grouped by root cause, still no source echo.

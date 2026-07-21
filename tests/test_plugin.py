@@ -72,6 +72,47 @@ def test_incomplete_run_is_qualified_even_when_nothing_failed(pytester):
     assert "incomplete" in result.stdout.str()
 
 
+def test_zero_exit_with_unexecuted_tests_is_not_pass(pytester):
+    """PR-CRIT-003: a zero exit status with collected tests left unexecuted must
+    not read as PASS. The MolSysMT pilot saw an xdist artifact that said
+    `PASS exit=0 | 39 passed | incomplete: 39 of 526 executed` -- a contradiction
+    a consumer keying on the leading verdict token would miss."""
+    pytester.makepyfile(
+        "import pytest\n"
+        "def test_a(): pytest.exit('stop here', returncode=0)\n"
+        "def test_b(): assert 1\n"
+        "def test_c(): assert 1\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    assert result.ret == 0
+    out = result.stdout.str()
+    assert "incomplete" in out
+    assert out.lstrip().startswith("INCOMPLETE exit=0")
+    assert "PASS" not in out
+
+
+def test_stale_report_artifact_is_cleared_at_session_start(pytester):
+    """A new run must not leave the previous run's report readable while it is
+    still executing. (MolSysMT pilot: a stale PASS artifact was read mid-run and
+    taken for the live run's result.)"""
+    pytester.makepyfile(test_first="def test_ok(): assert 1\n")
+    pytester.runpytest("--receptor=llm", "test_first.py")
+    artifact = pytester.path / ".pytest_cache" / "d" / "receptor" / "last-run.txt"
+    assert artifact.exists()  # the first run published it
+
+    # The second run's own test checks, mid-session, that the stale artifact is
+    # already gone -- cleared at session start, not carried until finish.
+    pytester.makepyfile(
+        test_second=(
+            "from pathlib import Path\n"
+            "def test_artifact_absent_midrun():\n"
+            f"    assert not Path({str(artifact)!r}).exists()\n"
+        )
+    )
+    result = pytester.runpytest("--receptor=llm", "test_second.py")
+    assert result.ret == 0
+
+
 @pytest.mark.parametrize(
     "source, expected",
     [
@@ -832,9 +873,9 @@ def test_xdist_progress_comes_only_from_the_controller(pytester, extra):
         assert finished <= collected
         percents.append(percent)
 
-    assert len(lines) <= 9, f"bounded at nine milestones, got {len(lines)}"
+    assert len(lines) <= 5, f"bounded at five milestones, got {len(lines)}"
     assert percents == sorted(set(percents)), f"not strictly increasing: {percents}"
-    assert 100 not in percents
+    assert all(p % 20 == 0 for p in percents), f"non-round milestone: {percents}"
 
 
 @xdist
@@ -1060,11 +1101,12 @@ def test_a_long_run_shows_it_is_alive(pytester, monkeypatch):
     assert "%" in stderr
 
 
-def test_progress_is_bounded_by_deciles_not_by_clock(pytester):
+def test_progress_is_bounded_by_thresholds_not_by_clock(pytester):
     """A three-hour run must not print three hundred lines.
 
-    Reporting by percentage bounds the output at nine lines regardless of how
-    long the suite takes, and the elapsed time on each line still exposes pace.
+    Reporting by percentage in steps of twenty bounds the output at five lines
+    regardless of how long the suite takes, and the elapsed time on each line
+    still exposes pace.
     """
     pytester.makeconftest(
         "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.0\n"
@@ -1078,9 +1120,32 @@ def test_progress_is_bounded_by_deciles_not_by_clock(pytester):
     lines = [
         ln for ln in result.stderr.str().splitlines() if ln.startswith("receptor:")
     ]
-    assert 0 < len(lines) <= 9, f"expected at most nine lines, got {len(lines)}"
-    # 100% is not announced: the report itself arrives at that moment.
-    assert not any("100%" in ln for ln in lines)
+    assert 0 < len(lines) <= 5, f"expected at most five lines, got {len(lines)}"
+    # 100% is announced -- the run reaching its end, a moment before the verdict.
+    assert any("100%" in ln for ln in lines)
+
+
+def test_progress_reports_round_thresholds_only(pytester):
+    """After the warm-up the first line is a round milestone the run has already
+    passed, not the odd percentage it happens to sit at. Steps of twenty, and
+    100% is included. (MolSysMT pilot found a leading `35%` line confusing.)"""
+    pytester.makeconftest(
+        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.3\n"
+    )
+    pytester.makepyfile(
+        "import time, pytest\n"
+        "@pytest.mark.parametrize('i', range(20))\n"
+        "def test_a(i): time.sleep(0.05)\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    lines = [
+        ln for ln in result.stderr.str().splitlines() if ln.startswith("receptor:")
+    ]
+    percents = [int(PROGRESS_LINE.match(ln).group(1)) for ln in lines]
+    assert percents, "a run past the warm-up must show it is alive"
+    assert all(p % 20 == 0 for p in percents), f"non-round milestone: {percents}"
+    assert percents == sorted(set(percents)), f"not strictly increasing: {percents}"
+    assert percents[-1] == 100, f"the run reached its end: {percents}"
 
 
 def test_progress_never_touches_stdout(pytester):
