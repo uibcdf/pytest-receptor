@@ -386,6 +386,17 @@ The audit program is complete only when:
 
 ## Revision log
 
+**2026-07-21c** — Realigned the README and `benchmarks.md` tables to the
+reproducible figures.
+
+With the harness deterministic, the published tables were regenerated against
+pytest 9.0.2 so that "Reproduce everything here" is literally true. Most cells
+moved by a token or two; the exception is the many-warnings baseline, down from
+1878 to 1598 tokens because 9.0.2's warning summary is more compact, which pulls
+that row's saving from -64.6% to -58.4%. The receptor column barely moved. The
+worked example in the README now states its measured size (109 tokens, not 106).
+The cascade, the headline claim, is unchanged at -96.3% against a tuned pytest.
+
 **2026-07-21b** — Made the benchmark harness reproducible at the token level.
 
 The published figures wobbled a couple of tokens between runs. The cause was not

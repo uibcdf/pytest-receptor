@@ -25,9 +25,9 @@ it discards the assertion diff and is not really comparable in usefulness.
 
 | Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: | ---: |
-| Whole suite green | 911 | 812 | **17** | 97.9% |
-| One fixture breaks 200 tests | 25,573 | 25,478 | **107** | 99.6% |
-| Six unrelated bugs | 1,595 | 1,497 | **278** | 81.4% |
+| Whole suite green | 904 | 812 | **17** | 97.9% |
+| One fixture breaks 200 tests | 25,769 | 25,681 | **107** | 99.6% |
+| Six unrelated bugs | 1,595 | 1,503 | **278** | 81.5% |
 
 `-q` does not save you: it still prints one progress character per test, so a
 *successful* 8,000-test run costs 812 tokens of dots.
@@ -36,14 +36,14 @@ it discards the assertion diff and is not really comparable in usefulness.
 
 | Scenario | `pytest` | tuned pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3304 | 2863 | 1989 | **105** | -96.3% |
-| Green with many distinct warnings | 1979 | 1878 | 1878 | **664** | -64.6% |
-| Green with warnings | 191 | 92 | 92 | **45** | -51.1% |
-| Five distinct causes | 411 | 316 | 243 | **211** | -33.2% |
-| Green suite (128 tests) | 124 | 23 | 23 | **15** | -34.8% |
-| Single assertion failure | 353 | 197 | 226 | **165** | -16.2% |
-| Collection error | 295 | 196 | 196 | **217** | +10.7% |
-| Mixed states (skip, xfail, xpass) | 129 | 31 | 31 | **77** | +148.4% |
+| Cascade (38 failures, one cause) | 3300 | 2863 | 1989 | **105** | -96.3% |
+| Green with many distinct warnings | 1692 | 1598 | 1598 | **664** | -58.4% |
+| Green with warnings | 181 | 87 | 87 | **45** | -48.3% |
+| Five distinct causes | 405 | 316 | 213 | **211** | -33.2% |
+| Green suite (128 tests) | 118 | 23 | 23 | **15** | -34.8% |
+| Single assertion failure | 349 | 197 | 222 | **165** | -16.2% |
+| Collection error | 286 | 192 | 192 | **213** | +10.9% |
+| Mixed states (skip, xfail, xpass) | 124 | 31 | 31 | **77** | +148.4% |
 
 `Change` compares against tuned pytest, the strict baseline.
 
@@ -55,12 +55,12 @@ vocabulary:
 | Scenario | `cl100k_base` | `o200k_base` | `p50k_base` | `r50k_base` |
 | :--- | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | -96.8% | -96.9% | -96.9% | -96.7% |
-| Green suite (128 tests) | -87.7% | -87.9% | -90.2% | -90.3% |
-| Green with warnings | -76.9% | -77.3% | -80.5% | -82.0% |
-| Green with many distinct warnings | -65.0% | -65.1% | -68.3% | -69.5% |
-| Single assertion failure | -53.5% | -53.9% | -55.0% | -60.5% |
-| Five distinct causes | -48.5% | -47.0% | -50.9% | -56.7% |
-| Collection error | -26.3% | -26.6% | -24.1% | -15.6% |
+| Green suite (128 tests) | -87.3% | -87.5% | -89.8% | -89.8% |
+| Green with warnings | -75.1% | -75.3% | -78.9% | -80.6% |
+| Green with many distinct warnings | -60.8% | -60.9% | -64.2% | -65.7% |
+| Single assertion failure | -52.7% | -53.1% | -54.2% | -59.9% |
+| Five distinct causes | -47.9% | -46.4% | -50.3% | -56.3% |
+| Collection error | -25.5% | -25.9% | -23.2% | -14.5% |
 
 The cascade sits between -96.7% and -96.9% across all four. Older encodings are
 consistently more favourable, spending more tokens on the punctuation-heavy
@@ -69,7 +69,7 @@ decoration the receptor removes.
 ## Reading the tables
 
 **The two positive rows are real, and small.** +148% on a four-test mixed-state
-run is 46 tokens; +10.7% on a collection error is 21. At that size any fixed
+run is 46 tokens; +10.9% on a collection error is 21. At that size any fixed
 overhead looks enormous as a percentage.
 
 **They buy something.** The reason behind every skip and xfail, and the name of
