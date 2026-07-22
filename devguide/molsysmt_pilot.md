@@ -1,6 +1,6 @@
 # Brief for the MolSysMT Team
 
-**Recorded:** 2026-07-18
+**Recorded:** 2026-07-18 · **Updated:** 2026-07-22
 
 **For:** MolSysMT developers evaluating `pytest-receptor` on a real suite
 
@@ -10,15 +10,34 @@ small.
 
 ---
 
+## Status — 2026-07-22
+
+The pilot has run four passes on real MolSysMT surfaces, and every defect it
+found is fixed: the phase counts, paths, warning grouping, and liveness from the
+first passes; then the incomplete-run verdict, the xdist progress format, the
+native-extension stdout leak, the `--receptor-stats` exit-code crash, and the
+pathless external rerun command. `pending_bugs/` is empty.
+
+On that evidence, **you can start using the receptor systematically in your
+internal development cycles** — not only as a side-by-side experiment. Normal
+pytest stays the authority for whether a run passed while the output format
+matures toward 1.0; across every scenario measured the two agree on verdict,
+counts, and exit code, including small suites, where the earlier cost penalty is
+gone. Keep sending the one signal that matters most: any run where the compact
+report was not enough to act on without reaching for another pytest.
+
+---
+
 ## What we are asking
 
-Run your suite through the receptor **in shadow mode** for a while: normal
-pytest stays the authority for whether your tests pass, and the receptor output
-is something you read alongside it and form an opinion about.
+The pilot is past its first question. Use the receptor **systematically in your
+internal cycles** now: normal pytest stays the authority for whether your tests
+pass while the output format settles toward 1.0, but you no longer need to run it
+only as a side experiment.
 
-We are not asking you to trust it yet. We are asking whether its output is
-*sufficient* — whether an agent, or you, can act on it without going back for
-more.
+The one thing we still most want is whether its output is *sufficient* — whether
+an agent, or you, can act on it without going back for more. That is the question
+a real suite answers and ours cannot.
 
 That question cannot be answered from our synthetic test cases. MolSysMT is the
 only suite we have access to with eight thousand tests, doctests, optional
@@ -74,9 +93,9 @@ Measured on eight thousand tests, twelve workers, `cl100k_base`:
 
 | Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: |
-| Whole suite green | 812 | **24** | 97.0% |
-| One fixture breaks 200 tests | 25,474 | **114** | 99.6% |
-| Six unrelated bugs | 1,497 | **285** | 81.0% |
+| Whole suite green | 812 | **17** | 97.9% |
+| One fixture breaks 200 tests | 25,681 | **107** | 99.6% |
+| Six unrelated bugs | 1,503 | **278** | 81.5% |
 
 Two things worth noticing.
 
@@ -85,9 +104,9 @@ which at eight thousand tests is 812 tokens of dots on a *successful* run. Every
 run, including the ones where nothing is wrong.
 
 **The cascade number is not a typo.** When one fixture breaks two hundred tests,
-`-q` prints two hundred tracebacks: 25,481 tokens, most of them the same text
+`-q` prints two hundred tracebacks: 25,681 tokens, most of them the same text
 repeated. The receptor prints the cause once, names every affected test, and
-gives you the command to re-run them: 114.
+gives you the command to re-run them: 107.
 
 ---
 
@@ -162,6 +181,20 @@ traceback, not how it prints it, so they save about twenty tokens and silently
 delete the `frames:` line that tells you where to look. If MolSysMT's `addopts`
 carries a restrictive `--tb`, drop it for these runs.
 
+**Set the rerun command to match how you invoke pytest.** Each failure group
+ends with a `rerun:` line, and the promise is that it works pasted verbatim from
+where you ran pytest. Because you run `python -m pytest`, the default bare
+`pytest` would not match, so set it once:
+
+```ini
+[pytest]
+receptor_rerun_command = python -m pytest
+```
+
+You have already done this. It replaces only the leading runner — the selection
+and `-q` are still appended, so the command always reruns exactly that group. An
+empty value omits the line.
+
 **xdist is supported.** A run with `-n 12` produces byte-identical output to a
 serial run. Worker identity is not reported; see the table at the end for why we
 decided against it rather than simply not having got to it.
@@ -174,20 +207,22 @@ third-party plugins write into. There is a regression test for it now.
 **A long run now says it is alive.** Your 520-second green run printed nothing
 at all until it finished, which makes a working suite indistinguishable from a
 hung one — and yields nothing whatsoever if a timeout kills it, where `pytest -q`
-would at least have left its dots. After the first minute, one line a minute goes
-to stderr, never to stdout, once per ten percent of the suite:
+would at least have left its dots. After a silent twenty-second warm-up, a line
+goes to stderr, never to stdout, as the run crosses each twenty percent, ending
+at 100%:
 
 ```text
-receptor: 10% 933/9332 52s
 receptor: 20% 1866/9332 108s
+receptor: 40% 3733/9332 210s
 ```
 
-Reporting by decile rather than by clock keeps this at nine lines however long
-the suite runs, and the elapsed time shows pace — a decile that suddenly takes
-four times longer than the last is worth knowing about while the run is still
-going. It is a liveness signal, not a hang detector: it fires when a test
-finishes, so a stuck test produces no further lines — but the last one printed
-tells you where it got to.
+Reporting by threshold rather than by clock keeps this at five lines however long
+the suite runs, and the elapsed time shows pace — a step that suddenly takes four
+times longer than the last is worth knowing about while the run is still going.
+Any thresholds already crossed when the warm-up ends are emitted together, in
+order, so the numbers are always round. It is a liveness signal, not a hang
+detector: it fires when a test finishes, so a stuck test produces no further
+lines — but the last one printed tells you where it got to.
 
 **Colour is forced off, and this may change numbers you have already taken.**
 `FORCE_COLOR` or `PY_COLORS` in an environment makes pytest emit ANSI even into
