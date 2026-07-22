@@ -18,6 +18,7 @@ Design notes that are easy to undo by accident:
 
 from __future__ import annotations
 
+import ctypes
 import os
 import re
 import sys
@@ -28,6 +29,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+
+# A native extension that writes to stdout through C stdio (fprintf(stdout, ...))
+# is fully buffered when pytest has redirected fd 1 to a capture file, so its
+# output is not flushed until process exit -- after pytest has restored the
+# terminal and after our report. Flushing libc's buffers at each test teardown,
+# while the capture is still in place, keeps that output captured (and dropped on
+# a pass) instead of leaking past the final summary. (MolSysMT: VMD dcdplugin
+# banners trailed a passing run.)
+try:
+    _LIBC = ctypes.CDLL(None)
+except Exception:  # pragma: no cover - platform without a C library handle
+    _LIBC = None
 
 __all__ = ["Profile", "PROFILES"]
 
@@ -443,6 +456,20 @@ class ReceptorPlugin:
     def pytest_collectreport(self, report):
         if report.failed:
             self._failures.append(report)
+
+    @pytest.hookimpl(wrapper=True, trylast=True)
+    def pytest_runtest_teardown(self, item, nextitem):
+        result = yield
+        self._flush_native_streams()
+        return result
+
+    def _flush_native_streams(self):
+        if _LIBC is None:
+            return
+        try:
+            _LIBC.fflush(None)
+        except Exception:
+            pass
 
     def pytest_runtest_logreport(self, report):
         nodeid = report.nodeid

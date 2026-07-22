@@ -1148,6 +1148,31 @@ def test_progress_reports_round_thresholds_only(pytester):
     assert percents[-1] == 100, f"the run reached its end: {percents}"
 
 
+def test_native_c_stdio_output_does_not_leak_past_the_report(pytester):
+    """A native extension writing to stdout through C stdio is fully buffered
+    under pytest's fd capture and would otherwise flush to the terminal at
+    process exit, after the report. Python-level print() is already captured;
+    this needs a real libc write. (MolSysMT: VMD dcdplugin banners trailed a
+    passing run.)"""
+    import ctypes
+
+    try:
+        ctypes.CDLL(None)
+    except Exception:
+        pytest.skip("no C library handle on this platform")
+    pytester.makepyfile(
+        "import ctypes\n"
+        "libc = ctypes.CDLL(None)\n"
+        "def test_native():\n"
+        "    for _ in range(5):\n"
+        "        libc.printf(b'dcdplugin) CHARMM format DCD file\\n')\n"
+        "    assert True\n"
+    )
+    result = pytester.runpytest_subprocess("--receptor=llm")
+    result.stdout.fnmatch_lines(["PASS exit=0 | 1 passed*"])
+    assert "dcdplugin" not in result.stdout.str()
+
+
 def test_progress_never_touches_stdout(pytester):
     """stdout is the report. Liveness belongs on the other channel."""
     pytester.makeconftest(

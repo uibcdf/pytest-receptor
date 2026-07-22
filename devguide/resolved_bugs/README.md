@@ -29,3 +29,4 @@ stays an inbox. Nothing is closed by deletion.
 | `documented_full_report_path_misses_pytest_cache_d.md` | PR-PILOT-006 | 2026-07-18 |
 | `molsysmt_xdist_incomplete_run_reported_pass.md` | PR-PILOT-008 | 2026-07-21 |
 | `molsysmt_xdist_progress_skips_initial_deciles.md` | PR-PILOT-009 | 2026-07-21 |
+| `native_extension_stdout_leaks_after_final_report.md` | PR-PILOT-010 | 2026-07-21 |

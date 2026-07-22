@@ -110,6 +110,7 @@ limitation`.
 | PR-PILOT-007 | Medium | Warning groups split on sizes and shapes that carry no meaning | Normalize numbers for warnings only, showing a variant count; leave names alone | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-008 | Critical | A zero exit with collected tests left unexecuted printed `PASS ... \| incomplete: 39 of 526`, and the disk artifact could hold a stale prior verdict read mid-run | Compute the incomplete qualifier before the verdict token and downgrade `PASS` to `INCOMPLETE`; clear `last-run.txt` at session start so a mid-run read is "not yet" | 0.6 | 0 | **done 2026-07-21** |
 | PR-PILOT-009 | Low | xdist progress opened at a non-round `35%` and skipped the milestones crossed during the warm-up | Emit every threshold already crossed, in order; step by twenty percent and announce 100% | 0.6 | 0 | **done 2026-07-21** |
+| PR-PILOT-010 | Medium | A native extension's C-stdio banners flushed to the terminal at process exit, trailing the report | Flush libc buffers at each test teardown while capture is active, so the output is captured not leaked; document the fd-cached residue | 0.6 | 0 | **done 2026-07-21** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | post-0.6 | 2 | proposed |
@@ -177,6 +178,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-007 | MolSysMT pilot: sixty untruncated groups resolve to ~14 families; numeric normalization alone takes 60 to 47 | PILOT |
 | PR-PILOT-008 | MolSysMT pilot: a `--receptor=llm -n 12` artifact read `PASS exit=0 \| 39 passed \| incomplete: 39 of 526 executed`, its count inconsistent with a progress stream already at 263/526 | PILOT |
 | PR-PILOT-009 | MolSysMT pilot: a completed 530-test run's progress began at `35%` and never emitted the earlier milestones | PILOT |
+| PR-PILOT-010 | MolSysMT dev cycle: after `PASS exit=0 \| 117 passed`, stdout carried many `dcdplugin)` DCD banners and a stray `s`, written by a native extension | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
@@ -389,6 +391,26 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-21e** — Native-extension stdout leak fixed; the field bug queue is
+empty.
+
+PR-PILOT-010: a real MolSysMT development cycle ended a passing report with a run
+of `dcdplugin)` banners. They come from a native extension writing to stdout
+through C stdio, which pytest's fd capture leaves fully buffered until the C
+runtime flushes at process exit — after capture is torn down and after the
+report. The plugin now flushes libc's buffers at each test teardown, while
+capture is still in place, so the output is captured (dropped on a pass) instead
+of leaking; verified serial and under xdist with a real `libc.printf` regression.
+The residue that no Python reporter can reach — a library that cached the
+terminal fd before capture, or writes after the last teardown — is documented,
+with the bounded disk artifact as the fallback.
+
+With this, `pending_bugs/` holds no open field defects: PR-PILOT-008 through 010
+are fixed and the small-suite cost finding is overtaken by the `slowest:`
+removal. The remaining open register items are all post-0.6 architecture. The
+recommendation to leave shadow mode is the consumer's to make and should rest on
+a re-run of the pilot against these fixes, not on this note.
 
 **2026-07-21d** — Second MolSysMT pilot: two defects fixed, the small-suite
 finding overtaken by the `slowest:` removal.
