@@ -155,6 +155,13 @@ dropped.
 
 ## Layer 2: lossless artifact
 
+This artifact lives **inside `pytest-receptor`**, not in a separate package or a
+reportlog-like plugin. It is the same evidence the text renderer uses (Layer 1),
+serialized instead of rendered — an opt-in output of the receptor itself, not a
+second collection. `pytest-reportlog` was evaluated for this role and does not
+suffice; see
+[`pytest_reportlog_gate_decision_2026-07-22.md`](pytest_reportlog_gate_decision_2026-07-22.md).
+
 Write a versioned JSONL artifact when requested, and consider enabling a
 temporary artifact automatically on unsuccessful runs. JSONL is suitable
 because events can be streamed and inspected without loading one large object.

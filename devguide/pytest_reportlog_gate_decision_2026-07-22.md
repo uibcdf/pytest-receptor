@@ -136,6 +136,42 @@ Deciding against reuse is not deciding against learning from it:
 - Its xdist fields (`worker_id`, `testrun_uid`, `item_index`) are a concrete
   reference for the provenance the bespoke model must carry.
 
+## Where it lives — inside the receptor, not a second plugin
+
+Deciding against reportlog does **not** mean building "our own reportlog" as a
+separate package or plugin. The bespoke artifact is a layer **inside
+`pytest-receptor`**, not a standalone tool.
+
+The receptor already collects this evidence live — it must, to render the
+compact text report at all (the `Occurrence`/`Group` records built in
+`pytest_sessionfinish` from pytest's reports). The structured artifact is the
+*same evidence serialized instead of rendered*, not a second collection.
+`PR-ARCH-001` formalizes that shared collection into one normalized event model:
+
+```
+pytest hooks
+     │
+     ▼
+  collector ──► normalized event model  (PR-ARCH-001)
+                    │        │        │
+                    ▼        ▼        ▼
+              text render  JSONL      future consumer
+              (today)      artifact   API
+                           (opt-in)
+```
+
+So the JSONL artifact is an **opt-in output of the receptor itself** (behind a
+flag), produced from the model that already feeds the text report — redacted,
+typed, and grouped, which is the layer reportlog does not provide. reportlog
+stays a *separate* plugin anyone can enable for raw pytest reports; the receptor
+does not reproduce it.
+
+Downstream, that artifact is also the anchor where SMonitor and a possible
+`pytest-molsyssuite` would attach namespaced **extension events** (via
+`PR-ARCH-002`) and from which they would read — but that is later and gated, and
+still lives around the receptor's artifact, not in a separate reportlog-like
+tool.
+
 ## Sequencing — decided is not scheduled
 
 The gate is now resolved, which unblocks `PR-ARCH-001`. It does **not** mean the
