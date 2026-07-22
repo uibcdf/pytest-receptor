@@ -81,7 +81,7 @@ limitation`.
 | PR-UX-002 | High | Every failure is rendered in full regardless of root-cause count | Truncate occurrence lists; render every root cause in full; summarize only a pathological spread, and only when the on-disk report is reachable | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-003 | Medium | Output provides no rerun target | Emit a literal rerun command per failure group that actually selects it | 0.6 | 0 | **done 2026-07-18** |
 | PR-ARCH-003 | High | Renderer replaces the private `TerminalReporter` | Rebuild on public hooks with the standard reporter silenced through public options | 0.6 | 0 | **done 2026-07-18** |
-| PR-ARCH-001 | High | Renderer formats reporter text instead of owning structured evidence | Normalized event model populated from pytest hooks; stop inferring exception type from formatted text | post | 1 | open |
+| PR-ARCH-001 | High | Renderer formats reporter text instead of owning structured evidence | Normalized event model populated from pytest hooks; stop inferring exception type from formatted text | post | 1 | open (gate decided 2026-07-22; deferred pending a real consumer) |
 | PR-ARCH-002 | Medium | No neutral extension-event protocol for third-party producers | Namespaced extension events, correlation service, unknown-namespace preservation, dummy-producer tests | post | 2 | open (gated) |
 | PR-API-001 | Medium | No programmatic consumer interface | Supported artifact reader and session/event API | post | 2 | open |
 | PR-OPS-001 | High | Python range rejects 3.13 patch releases | Change to `>=3.11,<3.14`; test representative versions | 0.6 | 0 | **done 2026-07-18** |
@@ -226,7 +226,7 @@ its post-0.6 entry is satisfied or explicitly accepted as a limitation.
 | The heartbeat was to become a watchdog | Deleted. CI runners own their own timeouts; a threaded watchdog tested against xdist and interruption is cost without a matching problem. |
 | `--receptor-full` versus `--receptor=human` | Kept as distinct. Human is complete but redundant (source echo, headers, ANSI, duplicated summary); `--receptor-full` is complete in agent format and still deduplicated. |
 | How to recover omitted detail | Not by re-running pytest. The complete report is written to `.pytest_cache/receptor/last-run.txt` during the run, so recovery is a file read (PR-FID-011). |
-| Evidence artifact format for 0.6 | Plain text, not JSONL. The versioned schema is post-0.6 and should first be checked against `pytest-reportlog`, which already streams per-report JSONL and may make a bespoke schema unnecessary. |
+| Evidence artifact format for 0.6 | Plain text, not JSONL. The versioned schema is post-0.6. `pytest-reportlog` was evaluated 2026-07-22 and does not suffice as the canonical artifact — no typed exceptions, no redaction, no extension events — so the schema is bespoke, borrowing reportlog's JSONL conventions. See [`pytest_reportlog_gate_decision_2026-07-22.md`](pytest_reportlog_gate_decision_2026-07-22.md). |
 | Dogfooding was scheduled in Phase 4 | Stage A shadow comparison should begin immediately after 0.6, since it is the only way to learn whether compact output is sufficient. |
 
 ## Current-to-target behavior matrix
@@ -276,7 +276,7 @@ Post-0.6 work must not begin until these are recorded.
 
 | Decision | Options | Recommended initial choice |
 | --- | --- | --- |
-| Canonical artifact | Reuse `pytest-reportlog`, bespoke JSONL, SQLite | Evaluate `pytest-reportlog` first; build bespoke only if it proves insufficient |
+| Canonical artifact | Reuse `pytest-reportlog`, bespoke JSONL, SQLite | **Decided 2026-07-22:** bespoke normalized model. reportlog serializes pytest's raw reports and lacks typed exceptions, redaction, and extension events; borrow its JSONL conventions only. See [`pytest_reportlog_gate_decision_2026-07-22.md`](pytest_reportlog_gate_decision_2026-07-22.md). |
 | Terminal syntax | Compact text, XML, JSON | Compact deterministic text — decided for 0.6 |
 | Artifact default | Always, red only, opt-in | Plain-text report always in 0.6; structured artifact opt-in later |
 | Warning policy | Hide, count, grouped, full | Count in 0.6; grouped with configurable baseline later |
@@ -395,6 +395,28 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-22b** — Canonical-artifact gate resolved: bespoke, not `pytest-reportlog`.
+
+Studied `pytest-reportlog` against the requirements by running it (v1.0.0) and
+reading its JSONL, not from memory. It captures more than assumed — under xdist
+its records carry `worker_id`, `testrun_uid`, and `item_index`, and it logs
+warnings with a structured category. But it serializes pytest's raw report
+objects, which the receptor already holds live, and lacks the semantic and safety
+layer that is the receptor's reason to exist: no structured exception type (still
+parsed from `reprcrash.message`), and — decisively — no redaction, ownership, or
+symlink safety, which `PR-SEC-002` requires before anything is written. It also
+carries no namespaced extension events, which the eight-repo MolSysSuite
+ecosystem (`molsysmt`, `molsysviewer`, `topomt`, `elastnetmt`, `smonitor`,
+`pyunitwizard`, `argdigest`, `depdigest`) would need through SMonitor.
+
+Decision: build the bespoke normalized model (`PR-ARCH-001`), borrowing
+reportlog's JSONL conventions (`$report_type` tag, streamed append, missing
+`SessionFinish` ⇒ interrupted) and leaving raw-report capture to reportlog for
+anyone who wants it. The gate is now decided, which unblocks `PR-ARCH-001`, but
+implementation stays deferred until a real consumer in those repos asks for a
+machine-readable artifact — no plausibility builds. Full write-up in
+[`pytest_reportlog_gate_decision_2026-07-22.md`](pytest_reportlog_gate_decision_2026-07-22.md).
 
 **2026-07-22a** — External-test rerun keeps its path under a forced rootdir.
 

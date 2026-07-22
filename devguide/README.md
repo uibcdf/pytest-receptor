@@ -27,12 +27,14 @@ Everything else is reference material for work that comes later.
 | `audit_action_register_2026-07-17.md` | Queue | **Live.** 43 identified items with severity, release, phase, and status. The single place where nothing may be missing. |
 | `critical_audit_2026-07-17.md` | Assessment | Historical record, still accurate. The 2026-07-17 read-only review that found the correctness defects. Not updated as items are fixed; the register tracks that. |
 | `evidence_preserving_architecture_proposal.md` | Proposal | Post-0.6 reference. Its ambition is intact but its sequencing was superseded by `scope_0.6.md`. See the header note in that file. |
+| `pytest_reportlog_gate_decision_2026-07-22.md` | Decision | **Current.** Resolves the canonical-artifact gate: bespoke event model, not `pytest-reportlog`, with reasons measured against its actual output. Unblocks `PR-ARCH-001`; implementation still deferred. |
 | `trust_and_adoption_criteria.md` | Criteria | Post-0.6 reference. Adoption levels, trust invariants, promotion gates, and the MolSysMT dogfooding program. |
 | `smonitor_and_molsyssuite_integration.md` | Exploration | Post-0.6, gated. Not an accepted contract. Nothing in it may be implemented before the extension protocol is designed against a neutral dummy producer. |
 | `molsysmt_pilot.md` | Brief | **Active.** What the MolSysMT team needs in order to run the receptor on their suite, what we need back from them, and what the plugin does not do yet. |
 | `pending_bugs/` | Inbox | **Active.** Untriaged defect reports. A disagreement with pytest about a run's outcome jumps the queue. |
 | `resolved_bugs/` | History | Field reports that have been fixed, kept with their resolution and reproducer. Moved out of the inbox rather than deleted. |
 | `pending_proposals/` | Inbox | **Active.** Untriaged design input from pilots and other projects. Everything here is either given a register identifier or moved to `superseded_proposals.md`. |
+| `resolved_proposals/` | History | Accepted proposals that have shipped, kept with their resolution. The counterpart to `resolved_bugs/`. |
 | `superseded_proposals.md` | History | Rejected and replaced proposals, preserved with the reason each was dropped. Includes the original development guide verbatim. |
 | `prior_art_2026-07-19.md` | Survey | **Current.** The two other plugins with the same thesis, what they do and do not do, measured rather than read. Includes where we are *not* better, and the decision not to publish a comparative benchmark. |
 | `original_issue_in_pytest.md` | History | The upstream pytest feature request that started the project. See the header note for which parts no longer hold. |
