@@ -31,6 +31,7 @@ Everything else is reference material for work that comes later.
 | `trust_and_adoption_criteria.md` | Criteria | Post-0.6 reference. Adoption levels, trust invariants, promotion gates, and the MolSysMT dogfooding program. |
 | `smonitor_and_molsyssuite_integration.md` | Exploration | Post-0.6, gated. Not an accepted contract. Nothing in it may be implemented before the extension protocol is designed against a neutral dummy producer. |
 | `molsysmt_pilot.md` | Brief | **Active.** What the MolSysMT team needs in order to run the receptor on their suite, what we need back from them, and what the plugin does not do yet. |
+| `for_collaborators.md` | Onboarding | **Active.** A short, portable note for a new collaborator in a consumer repo: how to run the receptor, that it is pre-1.0, and how to report anomalies and proposals. Meant to be copied into or linked from a consumer repo's devguide. |
 | `pending_bugs/` | Inbox | **Active.** Untriaged defect reports. A disagreement with pytest about a run's outcome jumps the queue. |
 | `resolved_bugs/` | History | Field reports that have been fixed, kept with their resolution and reproducer. Moved out of the inbox rather than deleted. |
 | `pending_proposals/` | Inbox | **Active.** Untriaged design input from pilots and other projects. Everything here is either given a register identifier or moved to `superseded_proposals.md`. |
