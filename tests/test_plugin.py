@@ -534,6 +534,28 @@ def test_each_group_carries_a_rerun_command(pytester):
     result.stdout.fnmatch_lines(["*rerun: pytest test_each_group*::test_a -q*"])
 
 
+def test_rerun_command_is_configurable(pytester):
+    """PR-UX-004: the rerun line must be pasteable in a project not driven by
+    bare pytest. The runner is configurable; the selection we append is not, so
+    a configured runner still reruns exactly the reported group."""
+    pytester.makeini("[pytest]\nreceptor_rerun_command = uv run pytest\n")
+    pytester.makepyfile("def test_a(): assert 0\n")
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines(
+        ["*rerun: uv run pytest test_rerun_command*::test_a -q*"]
+    )
+    assert "rerun: pytest " not in result.stdout.str()
+
+
+def test_empty_rerun_command_omits_the_line(pytester):
+    """PR-UX-004: an empty runner is an explicit opt-out, not a broken command."""
+    pytester.makeini("[pytest]\nreceptor_rerun_command =\n")
+    pytester.makepyfile("def test_a(): assert 0\n")
+    result = pytester.runpytest("--receptor=llm")
+    result.stdout.fnmatch_lines(["FAIL exit=1*"])
+    assert "rerun:" not in result.stdout.str()
+
+
 def test_ordinary_failure_counts_are_never_withheld(pytester):
     """PR-UX-002: grouping already collapsed the volume.
 

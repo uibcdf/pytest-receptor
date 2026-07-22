@@ -23,7 +23,9 @@ forgotten.
 Files here get read when a release is planned. Each one is then either given an
 identifier in the register, accepted as a documented limitation, or rejected with
 a reason and moved to
-[`../superseded_proposals.md`](../superseded_proposals.md). Nothing is deleted.
+[`../superseded_proposals.md`](../superseded_proposals.md). Once an accepted one
+ships, it moves to [`../resolved_proposals/`](../resolved_proposals/README.md)
+with its resolution attached. Nothing is deleted.
 
 ## Conventions
 

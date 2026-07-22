@@ -113,7 +113,7 @@ limitation`.
 | PR-PILOT-010 | Medium | A native extension's C-stdio banners flushed to the terminal at process exit, trailing the report | Flush libc buffers at each test teardown while capture is active, so the output is captured not leaked; document the fd-cached residue | 0.6 | 0 | **done 2026-07-21** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
-| PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | post-0.6 | 2 | proposed |
+| PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | 0.6 | 0 | **done 2026-07-21** |
 | PR-OPS-012 | Medium | A benchmark scenario stopped exercising the axis it was written for | Vary the `Green with many distinct warnings` scenario by a non-numeric token, so warning normalization cannot collapse its forty groups into one; refresh every published figure from the corrected run | 0.6 | 0 | **done 2026-07-19** |
 | PR-REL-007 | High | Benchmark figures depended on the caller's environment | Run harness subprocesses with colour disabled, so published numbers reproduce on any machine | 0.6 | 0 | **done 2026-07-18** |
 | PR-XD-001 | High | Distributed runs were untested and non-deterministic | Serial and xdist must produce identical output; occurrence and group order must be total | 0.6 | 0 | **done 2026-07-18** |
@@ -391,6 +391,23 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-21f** — Configurable rerun command shipped; resolved proposals
+archived.
+
+PR-UX-004: the `rerun:` line hard-coded `pytest`, so the promise it works pasted
+verbatim held only for a suite invoked as bare pytest — false for `uv run pytest`,
+`hatch test`, `tox`, or any wrapper, which is how most real projects run. A
+`receptor_rerun_command` ini value (default `pytest`) now sets the leading runner;
+the selection is still appended by us, so a configured runner reruns exactly the
+group, and an empty value omits the line. This was the last field-relevant gap
+before the tool is straightforwardly recommendable for a wrapper-driven project.
+
+Housekeeping: added `resolved_proposals/` as the home for accepted-and-shipped
+proposals (the counterpart to `resolved_bugs/`), and moved the two that were
+resolved into it — `built_in_normalizers_for_warning_variants` (PR-PILOT-007,
+resolved 2026-07-18) and `configurable_rerun_command` (PR-UX-004). The inbox now
+holds only untriaged input and pilot evidence.
 
 **2026-07-21e** — Native-extension stdout leak fixed; the field bug queue is
 empty.

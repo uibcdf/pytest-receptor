@@ -31,16 +31,24 @@ output — see *Do not restrict `--tb`* in [Usage](usage.md).
 | Setting | Type | Purpose |
 | :--- | :--- | :--- |
 | `receptor_normalizers` | line list | `regex -> replacement` rules applied before grouping, so project-specific dynamic values do not split one root cause into many. |
+| `receptor_rerun_command` | string | The runner each `rerun:` line starts with. Default `pytest`. Set it to match how you invoke pytest, or empty to omit the line. |
 
 ```ini
 [pytest]
 receptor_normalizers =
     device='cuda:\d+' -> device='cuda:N'
     tmp/[a-f0-9]{8}/ -> tmp/HASH/
+receptor_rerun_command = uv run pytest
 ```
 
 Rules apply to grouping only — the message you read is the raw one. A rule that
 fails to compile is skipped rather than costing you the run.
+
+`receptor_rerun_command` replaces only the leading `pytest`; the receptor still
+appends the selection and `-q`, so a configured runner reruns exactly the group
+it is printed under. The promise that the line works pasted verbatim holds only
+when this matches your invocation — a project driven by `uv run pytest`, `hatch
+test`, `tox`, or a wrapper must set it.
 
 ## Session outcomes
 

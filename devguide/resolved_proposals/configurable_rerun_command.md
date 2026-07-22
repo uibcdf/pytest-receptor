@@ -61,3 +61,23 @@ Open questions to settle before implementing:
 needs its own regression coverage: the command must be correct for the default,
 correct for a configured runner, and must never emit a command that would run a
 *different* selection than the group it belongs to.
+
+---
+
+## Resolution
+
+**Implemented 2026-07-21 (PR-UX-004).** A `receptor_rerun_command` ini value,
+default `pytest`, replaces only the leading runner; the receptor still appends
+the selection and `-q`, so a configured runner reruns exactly the reported group.
+An empty value omits the rerun line — the opt-out the prior art (`pytest-markdown-
+report`'s `--markdown-rerun-cmd=""`) offers.
+
+The open questions were settled as the proposal leaned: empty suppresses the
+line; it is an ini value only, not a per-run flag, because the invocation style
+is a property of the project rather than of the run; and no auto-detection —
+guessing `uv`/`just` from a lockfile was rejected, since a wrong rerun command
+that looks authoritative is worse than a generic one.
+
+Regressions cover all three requirements: the default still says `pytest`, a
+configured `uv run pytest` still selects the same node, and an empty value emits
+no line. Documented in `docs/reference.md`.

@@ -149,6 +149,15 @@ def pytest_addoption(parser):
         "project-specific dynamic values do not split one root cause into many. "
         "Example: `shape \\(\\d+, \\d+\\) -> shape (N, M)`",
     )
+    parser.addini(
+        "receptor_rerun_command",
+        type="string",
+        default="pytest",
+        help="The runner each failure group's `rerun:` line starts with, so it "
+        "is pasteable in a project not driven by bare pytest (`uv run pytest`, "
+        "`hatch test`, a wrapper). Selection arguments are still appended, so the "
+        "command always reruns exactly that group. Set it empty to omit the line.",
+    )
     group = parser.getgroup("receptor")
     group.addoption(
         "--receptor",
@@ -287,6 +296,9 @@ class ReceptorPlugin:
         self.profile = profile
         self.full = config.getoption("receptor_full")
         self.stats = config.getoption("receptor_stats")
+        # The runner the rerun line starts with. A project property (invocation
+        # style), so it is an ini value, not a per-run flag. Empty omits the line.
+        self._rerun_command = (config.getini("receptor_rerun_command") or "").strip()
         self._baseline = None
         self._terminal = None
         self._shown = ""
@@ -913,7 +925,9 @@ class ReceptorPlugin:
             remaining = len(group.occurrences) - len(shown)
             if remaining:
                 lines.append(f"      +{remaining} more")
-        lines.append(f"    rerun: {self._rerun(group)}")
+        rerun = self._rerun(group)
+        if rerun:
+            lines.append(f"    rerun: {rerun}")
         return lines
 
     def _section_sources(self, group, list_all):
@@ -944,12 +958,23 @@ class ReceptorPlugin:
 
         Node IDs are relative to rootdir, which is not necessarily where pytest
         was invoked. Pasting one back produced `file or directory not found`.
+
+        The leading runner is `receptor_rerun_command` (default `pytest`), so the
+        line is pasteable under `uv run pytest`, a wrapper, or whatever the
+        project uses; only the selection arguments we append decide what runs, so
+        a configured runner still reruns exactly this group. Empty omits the line.
         """
+        if not self._rerun_command:
+            return None
         nodeids = [occurrence.nodeid for occurrence in group.occurrences]
         if len(nodeids) == 1:
-            return f"pytest {self._selector(nodeids[0])} -q"
+            return f"{self._rerun_command} {self._selector(nodeids[0])} -q"
         files = sorted({nodeid.split("::", 1)[0] for nodeid in nodeids})
-        return "pytest " + " ".join(self._display_path(f) for f in files) + " -q"
+        return (
+            f"{self._rerun_command} "
+            + " ".join(self._display_path(f) for f in files)
+            + " -q"
+        )
 
     def _write_full_report(self, text):
         cache = getattr(self.config, "cache", None)
