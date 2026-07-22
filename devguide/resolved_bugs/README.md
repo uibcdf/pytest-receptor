@@ -31,3 +31,4 @@ stays an inbox. Nothing is closed by deletion.
 | `molsysmt_xdist_progress_skips_initial_deciles.md` | PR-PILOT-009 | 2026-07-21 |
 | `native_extension_stdout_leaks_after_final_report.md` | PR-PILOT-010 | 2026-07-21 |
 | `molsysmt_incomplete_stats_closes_terminal_stream.md` | PR-PILOT-011 | 2026-07-21 |
+| `external_single_test_rerun_loses_path_with_fixed_rootdir.md` | PR-PILOT-012 | 2026-07-22 |

@@ -922,7 +922,7 @@ class ReceptorPlugin:
                     if occurrence.attempts > 1
                     else ""
                 )
-                lines.append(f"      {self._selector(occurrence.nodeid)}{retried}")
+                lines.append(f"      {self._occurrence_selector(occurrence)}{retried}")
             remaining = len(group.occurrences) - len(shown)
             if remaining:
                 lines.append(f"      +{remaining} more")
@@ -967,15 +967,35 @@ class ReceptorPlugin:
         """
         if not self._rerun_command:
             return None
-        nodeids = [occurrence.nodeid for occurrence in group.occurrences]
-        if len(nodeids) == 1:
-            return f"{self._rerun_command} {self._selector(nodeids[0])} -q"
-        files = sorted({nodeid.split("::", 1)[0] for nodeid in nodeids})
-        return (
-            f"{self._rerun_command} "
-            + " ".join(self._display_path(f) for f in files)
-            + " -q"
-        )
+        if len(group.occurrences) == 1:
+            selector = self._occurrence_selector(group.occurrences[0])
+            return f"{self._rerun_command} {selector} -q"
+        files = sorted({self._occurrence_file(o) for o in group.occurrences} - {""})
+        return f"{self._rerun_command} " + " ".join(files) + " -q"
+
+    def _occurrence_file(self, occurrence):
+        """The test file for an occurrence, resolvable from the invocation dir.
+
+        Prefer the node ID's path. pytest can hand back a *pathless* node ID
+        (`::test_name`) for a test outside a forced `-c`/rootdir; the file is
+        still known from the failure location (`<file>:<lineno>`), so recover it
+        from there rather than emit an unusable `::test_name` selection.
+        """
+        path = occurrence.nodeid.partition("::")[0]
+        if path:
+            return self._display_path(path)
+        head, sep, tail = occurrence.location.rpartition(":")
+        if sep and tail.isdigit():
+            return head
+        return occurrence.location
+
+    def _occurrence_selector(self, occurrence):
+        """A pasteable `path::test` for one occurrence, path recovered if needed."""
+        file = self._occurrence_file(occurrence)
+        rest = occurrence.nodeid.partition("::")[2]
+        if file and rest:
+            return f"{file}::{rest}"
+        return file or occurrence.nodeid
 
     def _write_full_report(self, text):
         cache = getattr(self.config, "cache", None)

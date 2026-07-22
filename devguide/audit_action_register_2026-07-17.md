@@ -112,6 +112,7 @@ limitation`.
 | PR-PILOT-009 | Low | xdist progress opened at a non-round `35%` and skipped the milestones crossed during the warm-up | Emit every threshold already crossed, in order; step by twenty percent and announce 100% | 0.6 | 0 | **done 2026-07-21** |
 | PR-PILOT-010 | Medium | A native extension's C-stdio banners flushed to the terminal at process exit, trailing the report | Flush libc buffers at each test teardown while capture is active, so the output is captured not leaked; document the fd-cached residue | 0.6 | 0 | **done 2026-07-21** |
 | PR-PILOT-011 | High | `--receptor-stats` on a controlled incomplete exit crashed in pytest's late `pytest_unconfigure` (write to the closed stats temp file), turning exit 0 into 1 | Redirect the reporter's writer to a discard stream in `pytest_unconfigure` before pytest's late hooks; also keeps the Exit banner off stdout in both modes | 0.6 | 0 | **done 2026-07-21** |
+| PR-PILOT-012 | Medium | With `-c <ini>` fixing rootdir, a single test outside it has a pathless node ID, so the rerun rendered as `::test_name` -- not executable | Recover the file from the occurrence's failure location when the node ID has no path, for single and grouped occurrences | 0.6 | 0 | **done 2026-07-22** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | 0.6 | 0 | **done 2026-07-21** |
@@ -181,6 +182,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-009 | MolSysMT pilot: a completed 530-test run's progress began at `35%` and never emitted the earlier milestones | PILOT |
 | PR-PILOT-010 | MolSysMT dev cycle: after `PASS exit=0 \| 117 passed`, stdout carried many `dcdplugin)` DCD banners and a stray `s`, written by a native extension | PILOT |
 | PR-PILOT-011 | MolSysMT re-measurement: `--receptor-stats` on a controlled `pytest.exit(returncode=0)` rendered `INCOMPLETE exit=0` then raised `ValueError: I/O operation on closed file`, and the process returned 1 | PILOT |
+| PR-PILOT-012 | MolSysMT: `-c pytest.ini` with a single failing test outside rootdir rendered `rerun: python -m pytest ::test_name -q`, which exits 4 (`:: selection` with no file) | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
@@ -393,6 +395,18 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-22a** — External-test rerun keeps its path under a forced rootdir.
+
+PR-PILOT-012: found while MolSysMT re-ran a `/tmp` fixture under the project's
+`pytest.ini`. With `-c` fixing rootdir and a single test *outside* it, pytest 9
+hands back a pathless node ID (`::test_name`), and the rerun rendered as
+`python -m pytest ::test_name -q` — usage error, not executable. The file was
+never lost; it is in the failure location the report already prints. The rerun
+and the listed test IDs now recover it from the occurrence's location when the
+node ID has no path, for both single and grouped occurrences. Subprocess
+regressions cover both under a forced rootdir. Ordinary in-rootdir runs are
+unchanged. `pending_bugs/` is empty again.
 
 **2026-07-21g** — Third MolSysMT pilot pass: the last result-integrity defect
 fixed; small-suite penalty confirmed gone.

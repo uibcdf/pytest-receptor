@@ -585,6 +585,42 @@ def test_empty_rerun_command_omits_the_line(pytester):
     assert "rerun:" not in result.stdout.str()
 
 
+def test_external_single_test_rerun_keeps_its_path(pytester):
+    """PR-PILOT-012: with `-c <ini>` fixing rootdir and a single test outside it,
+    pytest returns a pathless node ID (`::test_name`); the rerun command must
+    still carry the file, recovered from the failure location, so it stays
+    executable. (MolSysMT ran a /tmp fixture under the project pytest.ini.)"""
+    proj = pytester.mkdir("proj")
+    (proj / "pytest.ini").write_text("[pytest]\n")
+    outside = pytester.mkdir("outside")
+    (outside / "test_ext.py").write_text("def test_x(): assert 3.5 == 4.5\n")
+    result = pytester.runpytest_subprocess(
+        "-c", "proj/pytest.ini", "--receptor=llm", "outside/test_ext.py::test_x"
+    )
+    assert result.ret == 1
+    result.stdout.fnmatch_lines(["*rerun: pytest outside/test_ext.py::test_x -q*"])
+    assert "pytest ::" not in result.stdout.str()
+
+
+def test_external_grouped_tests_rerun_keeps_the_file(pytester):
+    """PR-PILOT-012: the multi-occurrence branch recovers the file too."""
+    proj = pytester.mkdir("proj")
+    (proj / "pytest.ini").write_text("[pytest]\n")
+    outside = pytester.mkdir("outside")
+    (outside / "test_ext.py").write_text(
+        "import pytest\n"
+        "@pytest.fixture\n"
+        "def broken(): raise RuntimeError('shared')\n"
+        "@pytest.mark.parametrize('i', range(3))\n"
+        "def test_x(broken, i): pass\n"
+    )
+    result = pytester.runpytest_subprocess(
+        "-c", "proj/pytest.ini", "--receptor=llm", "outside/test_ext.py"
+    )
+    result.stdout.fnmatch_lines(["*rerun: pytest outside/test_ext.py -q*"])
+    assert "pytest ::" not in result.stdout.str()
+
+
 def test_ordinary_failure_counts_are_never_withheld(pytester):
     """PR-UX-002: grouping already collapsed the volume.
 
