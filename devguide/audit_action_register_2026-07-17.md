@@ -111,6 +111,7 @@ limitation`.
 | PR-PILOT-008 | Critical | A zero exit with collected tests left unexecuted printed `PASS ... \| incomplete: 39 of 526`, and the disk artifact could hold a stale prior verdict read mid-run | Compute the incomplete qualifier before the verdict token and downgrade `PASS` to `INCOMPLETE`; clear `last-run.txt` at session start so a mid-run read is "not yet" | 0.6 | 0 | **done 2026-07-21** |
 | PR-PILOT-009 | Low | xdist progress opened at a non-round `35%` and skipped the milestones crossed during the warm-up | Emit every threshold already crossed, in order; step by twenty percent and announce 100% | 0.6 | 0 | **done 2026-07-21** |
 | PR-PILOT-010 | Medium | A native extension's C-stdio banners flushed to the terminal at process exit, trailing the report | Flush libc buffers at each test teardown while capture is active, so the output is captured not leaked; document the fd-cached residue | 0.6 | 0 | **done 2026-07-21** |
+| PR-PILOT-011 | High | `--receptor-stats` on a controlled incomplete exit crashed in pytest's late `pytest_unconfigure` (write to the closed stats temp file), turning exit 0 into 1 | Redirect the reporter's writer to a discard stream in `pytest_unconfigure` before pytest's late hooks; also keeps the Exit banner off stdout in both modes | 0.6 | 0 | **done 2026-07-21** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | 0.6 | 0 | **done 2026-07-21** |
@@ -179,6 +180,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-008 | MolSysMT pilot: a `--receptor=llm -n 12` artifact read `PASS exit=0 \| 39 passed \| incomplete: 39 of 526 executed`, its count inconsistent with a progress stream already at 263/526 | PILOT |
 | PR-PILOT-009 | MolSysMT pilot: a completed 530-test run's progress began at `35%` and never emitted the earlier milestones | PILOT |
 | PR-PILOT-010 | MolSysMT dev cycle: after `PASS exit=0 \| 117 passed`, stdout carried many `dcdplugin)` DCD banners and a stray `s`, written by a native extension | PILOT |
+| PR-PILOT-011 | MolSysMT re-measurement: `--receptor-stats` on a controlled `pytest.exit(returncode=0)` rendered `INCOMPLETE exit=0` then raised `ValueError: I/O operation on closed file`, and the process returned 1 | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
@@ -391,6 +393,26 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-07-21g** — Third MolSysMT pilot pass: the last result-integrity defect
+fixed; small-suite penalty confirmed gone.
+
+PR-PILOT-011 (high): with `--receptor-stats`, a controlled `pytest.exit(0)`
+rendered the correct `INCOMPLETE exit=0` and then crashed the process to exit 1.
+The stats baseline points pytest's terminal writer at a temp file the receptor
+reads and closes in `pytest_unconfigure`; pytest's own later `pytest_unconfigure`
+writes an Exit banner to that now-closed writer. The fix redirects the writer to
+`os.devnull` before pytest's late hooks run — valid stream, no crash, exit code
+unchanged — which also removes the trailing `!!!! Exit !!!!` banner in both
+modes, so the receptor verdict is the final stdout block. A subprocess regression
+covers both. This was the divergence keeping the pilot in shadow mode.
+
+The re-measurement (`molsysmt_pilot_remeasurement_5146688.md`) confirms the
+small-suite penalty is gone on real surfaces — the 22-test serial case now saves
+tokens — so the provisional "prefer plain pytest below ~50 tests" policy is
+withdrawn; no threshold is needed. `pending_bugs/` is empty again. Whether to
+raise the trust level past shadow mode is the consumer's call, on a re-run of the
+controlled-incomplete scenario against this fix.
 
 **2026-07-21f** — Configurable rerun command shipped; resolved proposals
 archived.

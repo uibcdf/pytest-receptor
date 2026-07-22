@@ -113,6 +113,35 @@ def test_stale_report_artifact_is_cleared_at_session_start(pytester):
     assert result.ret == 0
 
 
+def test_incomplete_run_with_stats_does_not_change_exit_code(pytester):
+    """PR-PILOT-011: --receptor-stats pointed the standard reporter's writer at a
+    temp file it then closed, so pytest's own unconfigure crashed with 'I/O
+    operation on closed file' when it wrote an Exit banner on a controlled
+    pytest.exit -- turning exit 0 into 1. A measurement option must never change
+    pytest's exit status, and the receptor verdict must stay the final block."""
+    pytester.makeconftest(
+        "import pytest\n"
+        "def pytest_runtest_setup(item):\n"
+        "    if item.name == 'test_stop':\n"
+        "        pytest.exit('controlled', returncode=0)\n"
+    )
+    pytester.makepyfile(
+        "def test_stop(): pass\n"
+        "def test_a(): assert 0\n"
+        "def test_b(): assert 0\n"
+    )
+    for extra in ([], ["--receptor-stats"]):
+        result = pytester.runpytest_subprocess("--receptor=llm", *extra)
+        assert result.ret == 0, f"exit code changed with {extra}"
+        out = result.stdout.str()
+        assert out.lstrip().startswith("INCOMPLETE exit=0")
+        assert "PASS" not in out
+        assert "!!!!" not in out, "pytest's Exit banner trailed the report"
+        combined = out + result.stderr.str()
+        assert "I/O operation on closed file" not in combined
+        assert "Traceback" not in result.stderr.str()
+
+
 @pytest.mark.parametrize(
     "source, expected",
     [

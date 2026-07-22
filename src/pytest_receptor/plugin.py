@@ -301,6 +301,7 @@ class ReceptorPlugin:
         self._rerun_command = (config.getini("receptor_rerun_command") or "").strip()
         self._baseline = None
         self._terminal = None
+        self._sink = None
         self._shown = ""
         self._start = time.monotonic()  # PR-OPS-006
         self._failures = []
@@ -1011,14 +1012,35 @@ class ReceptorPlugin:
         Reading the baseline from ``pytest_sessionfinish`` would capture only
         the progress line.
         """
-        if not self.stats:
-            return
-        try:
-            line = self._stats_line(self._shown)
-        except Exception:
-            return
+        reporter = config.pluginmanager.getplugin("terminalreporter")
+        line = None
+        if self.stats:
+            try:
+                line = self._stats_line(self._shown)
+            except Exception:
+                line = None
+        # pytest writes an Exit/interrupt banner from its own pytest_unconfigure,
+        # after our report -- and in stats mode `_stats_line` has just closed the
+        # temp file the reporter's writer still points at, so that late write
+        # crashes with "I/O operation on closed file" and turns a zero exit into
+        # 1. Redirect the reporter to a discard stream first: no crash, exit code
+        # unchanged, and the receptor verdict stays the final stdout block.
+        # (PR-PILOT-011)
+        self._silence_late_terminal(reporter)
         if line and self._terminal is not None:
             self._terminal.write(line)
+
+    def _silence_late_terminal(self, reporter):
+        if reporter is None:
+            return
+        try:
+            from _pytest.config import create_terminal_writer
+
+            sink = open(os.devnull, "w", encoding="utf-8")
+            self._sink = sink  # hold a reference so it is not closed under us
+            reporter._tw = create_terminal_writer(self.config, sink)
+        except Exception:
+            pass
 
     # ----------------------------------------------------------------- stats
 
