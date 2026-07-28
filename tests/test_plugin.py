@@ -91,6 +91,41 @@ def test_zero_exit_with_unexecuted_tests_is_not_pass(pytester):
     assert "PASS" not in out
 
 
+def test_deselected_tests_do_not_read_as_incomplete(pytester):
+    """A conftest that deselects tests through pytest_deselected has produced a
+    completed run over the effective selection, not an interrupted one. The
+    denominator must be the post-deselection total, so the verdict is PASS and
+    the deselected tests are counted separately. (MolSysMT pilot: its conftest
+    deselects the peptide_parity tests, and the receptor read the pre-
+    deselection collection count as `INCOMPLETE exit=0 | 39 of 79 executed`.)"""
+    pytester.makeini(
+        "[pytest]\nmarkers =\n    slow: parity tests deselected unless requested\n"
+    )
+    pytester.makeconftest(
+        "def pytest_collection_modifyitems(config, items):\n"
+        "    deselected = [i for i in items if i.get_closest_marker('slow')]\n"
+        "    if deselected:\n"
+        "        config.hook.pytest_deselected(items=deselected)\n"
+        "        items[:] = [i for i in items if not i.get_closest_marker('slow')]\n"
+    )
+    pytester.makepyfile(
+        "import pytest\n"
+        "def test_a(): assert 1\n"
+        "def test_b(): assert 1\n"
+        "@pytest.mark.slow\n"
+        "def test_c(): assert 1\n"
+        "@pytest.mark.slow\n"
+        "def test_d(): assert 1\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    assert result.ret == 0
+    summary = result.stdout.str().lstrip().splitlines()[0]
+    assert summary.startswith("PASS exit=0")
+    assert "2 passed" in summary
+    assert "2 deselected" in summary
+    assert "incomplete" not in summary.lower()
+
+
 def test_stale_report_artifact_is_cleared_at_session_start(pytester):
     """A new run must not leave the previous run's report readable while it is
     still executing. (MolSysMT pilot: a stale PASS artifact was read mid-run and

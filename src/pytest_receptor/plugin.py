@@ -319,6 +319,7 @@ class ReceptorPlugin:
             else Path.cwd()
         )
         self._collected = 0
+        self._deselected = 0
         self._finished = 0
         self._next_threshold = _PROGRESS_STEP
         self._last_progress = self._start
@@ -430,8 +431,35 @@ class ReceptorPlugin:
         except Exception:
             pass
 
-    def pytest_collection_modifyitems(self, items):
-        self._collected = len(items)
+    def pytest_deselected(self, items):
+        """Count intentionally deselected tests so they are not mistaken for
+        tests left unexecuted.
+
+        A conftest that calls ``pytest_deselected`` for a marker the user did not
+        request (MolSysMT deselects its ``peptide_parity`` parity tests) is a
+        completed run over the *effective* selection, not an interrupted one.
+        These are reported separately; the denominator is the post-deselection
+        total, taken from ``session.items`` in :meth:`pytest_collection_finish`.
+        """
+        self._deselected += len(items)
+
+    def pytest_collection_finish(self, session):
+        """Capture the effective run set after all collection modification.
+
+        ``pytest_collection_modifyitems`` fires while the item list is still
+        being edited, and its ordering against a project's own deselection hook
+        is not guaranteed -- reading the length there once counted the pre-
+        deselection total and reported an intentional selection as
+        ``INCOMPLETE``. ``session.items`` here is the final, post-deselection
+        list, so the denominator matches what pytest actually runs.
+
+        Under xdist the controller collects nothing of its own; its denominator
+        comes from :meth:`pytest_xdist_node_collection_finished`, whose ids are
+        already post-deselection. Guarding on a non-empty item list keeps this
+        from zeroing that out on the controller.
+        """
+        if session.items:
+            self._collected = len(session.items)
 
     def pytest_warning_recorded(self, warning_message, when, nodeid, location):
         """Group warnings as they arrive.
@@ -740,6 +768,8 @@ class ReceptorPlugin:
             counts[outcome] = counts.get(outcome, 0) + 1
         if self._errors:
             counts["errors"] = len(self._errors)
+        if self._deselected:
+            counts["deselected"] = self._deselected
         executed = len(set(self._outcomes) | self._errors)
         duration = time.monotonic() - self._start
 
@@ -761,7 +791,10 @@ class ReceptorPlugin:
         parts = [f"{verdict} exit={int(exitstatus)}"]
 
         detail = []
-        for label in ("failed", "errors", "passed", "skipped", "xfailed", "xpassed"):
+        for label in (
+            "failed", "errors", "passed", "skipped", "xfailed", "xpassed",
+            "deselected",
+        ):
             if counts.get(label):
                 detail.append(f"{counts[label]} {label}")
         if detail:
