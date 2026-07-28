@@ -9,6 +9,9 @@ source:
 
 build:
   number: 0
+  # Pure Python, no compiled extensions: one architecture-independent package
+  # installs on linux, osx and win. The run/python constraint below (>=3.11,<3.14)
+  # makes the same package valid on Python 3.11, 3.12 and 3.13. No build matrix.
   noarch: python
 
 requirements:
