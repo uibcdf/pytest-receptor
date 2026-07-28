@@ -57,8 +57,12 @@ That is 109 tokens. Plain `pytest` spends 3,300 on the same run.
 ## Install
 
 ```bash
-pip install pytest-receptor
+conda install -c uibcdf pytest-receptor
 ```
+
+A PyPI release (`pip install pytest-receptor`, discovered automatically by pytest
+as an unofficial plugin) is planned but not published yet; until then, use conda
+or install from source. See the [installation guide](https://uibcdf.github.io/pytest-receptor/installation.html).
 
 Requires Python 3.11-3.13 and pytest 8 or later. Every combination of
 Python 3.11/3.12/3.13 with pytest 8 and 9 is exercised in CI, so the support

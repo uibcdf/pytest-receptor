@@ -12,20 +12,19 @@ Every combination of those Python and pytest versions is exercised in CI,
 serially and under `pytest-xdist`, so the support claim is evidence rather than
 intent.
 
-## From PyPI
+## From conda (uibcdf channel)
+
+The published package lives on the UIBCDF Anaconda channel:
 
 ```bash
-pip install pytest-receptor
+conda install -c uibcdf pytest-receptor
 ```
 
-Or with your dependency manager of choice:
+## From PyPI (planned)
 
-```bash
-poetry add --group dev pytest-receptor
-pdm add -d pytest-receptor
-uv pip install pytest-receptor
-pipenv install --dev pytest-receptor
-```
+A PyPI release is planned so that `pip install pytest-receptor` works and pytest
+discovers the plugin automatically as an unofficial plugin. It is not published
+yet — until then, use conda (above) or install from source.
 
 ## From source
 
@@ -57,7 +56,7 @@ byte-for-byte equivalence.
 ## Removing it
 
 ```bash
-pip uninstall pytest-receptor
+conda remove pytest-receptor   # or: pip uninstall pytest-receptor, if installed from source
 ```
 
 Nothing is left behind except `.pytest_cache/d/receptor/`, which you can delete.
