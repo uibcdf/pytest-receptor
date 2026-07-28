@@ -7,8 +7,8 @@ Everything you might need to look up, in tables.
 | Option | Default | Effect |
 | :--- | :--- | :--- |
 | `--receptor=human` | ✔ default | Unchanged pytest. The plugin registers nothing; output is byte-identical to not having it installed. |
-| `--receptor=llm` | | Compact output for a coding agent. |
-| `--receptor=ci` | | The same renderer with build-log defaults: nothing held back, no on-disk report referenced. |
+| `--receptor=llm` | | Compact output for a coding agent that can open the on-disk report; holds back only a pathological spread of root causes (>10). See [Choosing between `llm` and `ci`](usage.md#choosing-between-llm-and-ci). |
+| `--receptor=ci` | | The same renderer with build-log defaults: nothing held back, no on-disk report referenced, because a CI log gets one shot and the runner is gone afterwards. See [Choosing between `llm` and `ci`](usage.md#choosing-between-llm-and-ci). |
 | `--receptor-full` | off | Expand everything: every occurrence, every message in full. |
 | `--receptor-stats` | off | Append what this run cost against pytest as *you* configured it. Measured in the same run, not estimated. |
 

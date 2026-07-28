@@ -23,9 +23,24 @@ underneath, in [How it works](how-it-works.md). What it does not do, in
 `human` registers nothing, so plain `pytest` is byte-identical to not having the
 receptor installed. Safe to add to a shared environment.
 
-`ci` differs from `llm` for one reason: a CI runner is destroyed at job end, so
-the on-disk report is unreachable by the time anyone reads the log. Nothing may
-be held back.
+### Choosing between `llm` and `ci`
+
+One question decides it: **will the reader be able to open the on-disk report?**
+
+- **`llm`** assumes yes — the agent shares the filesystem with the run. So when
+  failures fan out past ~10 distinct root causes, it shows the first ten in full
+  and points at the report for the rest; the agent opens it only if that
+  pathological case actually happens. The trade-off is measured: holding back
+  saves a few tokens per extra cause but costs far more if the file has to be
+  read, so it triggers only on a genuine spread, never on an ordinary handful of
+  failures.
+- **`ci`** assumes no — a CI runner is destroyed at job end and the log gets one
+  shot, so the report is unreachable by the time anyone reads it. Nothing may be
+  held back and no report path is printed: every root cause is expanded inline.
+
+Same renderer, same truth-preserving rules. They differ only in what survives
+for the reader — which is why each fits its own context and neither is simply
+"more" than the other.
 
 ## What a failing run looks like
 

@@ -83,6 +83,17 @@ having it installed. There is a test asserting exactly that.
 This matters in a shared environment. You can install it for yourself, or for
 your agent, without altering what anyone else sees.
 
+**`llm` vs `ci` — one question: will the reader be able to open the on-disk
+report?** `llm` assumes yes (the agent shares the filesystem), so on a
+pathological spread of failures — past ~10 distinct root causes — it shows the
+first ten in full and points at the report for the rest, which the agent opens
+only if it needs to. `ci` assumes no: a CI runner is destroyed at job end and the
+log gets one shot, so nothing is held back and no report path is printed — every
+root cause is expanded inline. Same renderer and same truth-preserving rules;
+they differ only in what survives for the reader, so neither is simply "more"
+than the other. Details in the
+[usage guide](https://uibcdf.github.io/pytest-receptor/usage.html#choosing-between-llm-and-ci).
+
 You do not need to combine these with pytest's own quieting flags —
 `--receptor=llm` already sets the equivalent of `-qq --no-header --no-summary`,
 so adding them changes nothing. One caveat: do **not** pass `--tb=line` or
