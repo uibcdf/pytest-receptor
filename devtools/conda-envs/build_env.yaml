@@ -1,0 +1,14 @@
+channels:
+  - uibcdf
+  - conda-forge
+
+dependencies:
+  # Core tools for building and uploading conda packages
+  - conda-build
+  - anaconda-client
+
+  # Python packaging helpers
+  - python >=3.11,<3.14
+  - pip
+  - setuptools >=77.0
+  - versioningit >=3.0

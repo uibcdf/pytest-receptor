@@ -26,6 +26,9 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Written by versioningit at build time; the git tag is the source of truth.
+pytest_receptor/_version.py
+
 # Pytest / Test / Coverage
 .cache/
 .pytest_cache/

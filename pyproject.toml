@@ -1,12 +1,15 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=77.0", "versioningit>=3.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytest-receptor"
 dynamic = ["version"]
 description = "A pytest plugin to adapt test output for different receptors (humans, LLMs, CI)."
 readme = "README.md"
+authors = [
+    { name = "UIBCDF Development Team" },
+]
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "pytest>=8.0.0",
@@ -25,16 +28,39 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 
+[project.urls]
+Homepage = "https://github.com/uibcdf/pytest-receptor"
+Repository = "https://github.com/uibcdf/pytest-receptor"
+
 [project.entry-points."pytest11"]
 receptor = "pytest_receptor.plugin"
-
-# Single source of truth for the version: src/pytest_receptor/__init__.py.
-# The conda recipe carries a copy; tests/test_packaging.py checks it matches.
-[tool.hatch.version]
-path = "src/pytest_receptor/__init__.py"
 
 [project.optional-dependencies]
 dev = [
     "ruff",
     "tiktoken",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pytest_receptor*"]
+
+# The version has a single source of truth: the git tag. versioningit derives it
+# at build time and writes pytest_receptor/_version.py (gitignored), the same
+# convention as the rest of the UIBCDF suite (argdigest, pyunitwizard). The conda
+# recipe reads GIT_DESCRIBE_TAG from the same tag, so nothing is edited by hand.
+[tool.versioningit]
+default-version = "0.0.0+unknown"
+
+[tool.versioningit.format]
+distance = "{base_version}+{distance}.{vcs}{rev}"
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+
+[tool.versioningit.vcs]
+method = "git"
+match = ["*"]
+default-tag = "0.0.0"
+
+[tool.versioningit.write]
+file = "pytest_receptor/_version.py"

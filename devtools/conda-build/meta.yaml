@@ -1,9 +1,8 @@
 {% set name = "pytest-receptor" %}
-{% set version = "0.6.0" %}
 
 package:
   name: {{ name|lower }}
-  version: {{ version }}
+  version: "{{ environ['GIT_DESCRIBE_TAG'] }}"
 
 source:
   path: ../..
@@ -11,13 +10,13 @@ source:
 build:
   number: 0
   noarch: python
-  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
 
 requirements:
   host:
     - python >=3.11,<3.14
-    - hatchling
     - pip
+    - setuptools >=77.0
+    - versioningit >=3.0
   run:
     - python >=3.11,<3.14
     - pytest >=8.0.0
@@ -32,3 +31,4 @@ about:
   home: https://github.com/uibcdf/pytest-receptor
   license: MIT
   summary: A pytest plugin to adapt test output for different receptors (humans, LLMs, CI).
+  dev_url: https://github.com/uibcdf/pytest-receptor

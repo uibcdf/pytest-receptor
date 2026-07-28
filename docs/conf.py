@@ -1,11 +1,15 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath("../src"))
+sys.path.insert(0, os.path.abspath(".."))
 
 project = "pytest-receptor"
 copyright = "2026, uibcdf"
 author = "uibcdf"
-release = "0.1.0"
+
+try:
+    from pytest_receptor import __version__ as release
+except Exception:
+    release = "0.0.0+unknown"
 
 extensions = [
     "sphinx.ext.autodoc",

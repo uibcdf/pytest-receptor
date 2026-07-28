@@ -38,12 +38,12 @@ def test_conda_recipe_matches_pyproject_bound():
     assert "python >=3.11,<3.14" in CONDA_RECIPE.read_text()
 
 
-def test_conda_recipe_version_matches_package():
-    # PR-REL-004: the version lives in __init__.py, but the recipe needs a
-    # literal. This is the only guard against the two drifting apart, as they
-    # already did once (0.1.0 vs 0.1.1).
-    import pytest_receptor
-
-    assert f'{{% set version = "{pytest_receptor.__version__}" %}}' in (
-        CONDA_RECIPE.read_text()
-    )
+def test_conda_recipe_version_is_git_derived():
+    # PR-REL-004 used to guard against a hand-copied literal drifting from
+    # __init__.py. There is no literal any more: the version has one source, the
+    # git tag. versioningit derives the package version and the recipe reads the
+    # same tag through GIT_DESCRIBE_TAG, so drift is structurally impossible. This
+    # asserts the recipe stays git-derived and no literal creeps back in.
+    recipe = CONDA_RECIPE.read_text()
+    assert "GIT_DESCRIBE_TAG" in recipe
+    assert "set version" not in recipe
