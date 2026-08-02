@@ -1247,12 +1247,17 @@ def test_progress_is_bounded_by_thresholds_not_by_clock(pytester):
     assert any("100%" in ln for ln in lines)
 
 
-def test_progress_reports_round_thresholds_only(pytester):
-    """After the warm-up the first line is a round milestone the run has already
-    passed, not the odd percentage it happens to sit at. Steps of twenty, and
-    100% is included. (MolSysMT pilot found a leading `35%` line confusing.)"""
+def test_progress_percent_always_matches_its_own_fraction(pytester):
+    """The percent on each line is the real one, derived from the count printed
+    beside it, so the two can never disagree. Milestones crossed during the
+    warm-up silence are skipped, not back-filled with the current count: that
+    back-fill is what printed the impossible `40% 647/1168` (647 is 55%, not
+    40%) -- twice, the same snapshot -- on a MolSysViewer `-n 12` run. Steps of
+    twenty bound the output; at a live crossing the real percent already sits on
+    the milestone. A long warm-up here forces several milestones to pass unseen
+    before the first line, exercising the skip that used to misfire."""
     pytester.makeconftest(
-        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.3\n"
+        "from pytest_receptor import plugin\nplugin._PROGRESS_AFTER = 0.5\n"
     )
     pytester.makepyfile(
         "import time, pytest\n"
@@ -1263,9 +1268,17 @@ def test_progress_reports_round_thresholds_only(pytester):
     lines = [
         ln for ln in result.stderr.str().splitlines() if ln.startswith("receptor:")
     ]
-    percents = [int(PROGRESS_LINE.match(ln).group(1)) for ln in lines]
+    matches = [PROGRESS_LINE.match(ln) for ln in lines]
+    assert all(matches), f"malformed progress line: {lines}"
+    percents = [int(m.group(1)) for m in matches]
+    finished = [int(m.group(2)) for m in matches]
+    collected = [int(m.group(3)) for m in matches]
     assert percents, "a run past the warm-up must show it is alive"
-    assert all(p % 20 == 0 for p in percents), f"non-round milestone: {percents}"
+    # The heart of it: no line's percent may contradict its own fraction.
+    for p, f, c in zip(percents, finished, collected):
+        assert p == f * 100 // c, f"{p}% disagrees with {f}/{c}"
+    # No milestone is announced twice with the same snapshot (the `-n` bug).
+    assert len(finished) == len(set(finished)), f"duplicate snapshot: {finished}"
     assert percents == sorted(set(percents)), f"not strictly increasing: {percents}"
     assert percents[-1] == 100, f"the run reached its end: {percents}"
 

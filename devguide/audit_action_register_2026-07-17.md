@@ -114,6 +114,7 @@ limitation`.
 | PR-PILOT-011 | High | `--receptor-stats` on a controlled incomplete exit crashed in pytest's late `pytest_unconfigure` (write to the closed stats temp file), turning exit 0 into 1 | Redirect the reporter's writer to a discard stream in `pytest_unconfigure` before pytest's late hooks; also keeps the Exit banner off stdout in both modes | 0.6 | 0 | **done 2026-07-21** |
 | PR-PILOT-012 | Medium | With `-c <ini>` fixing rootdir, a single test outside it has a pathless node ID, so the rerun rendered as `::test_name` -- not executable | Recover the file from the occurrence's failure location when the node ID has no path, for single and grouped occurrences | 0.6 | 0 | **done 2026-07-22** |
 | PR-PILOT-013 | High | A conftest that deselects tests via `pytest_deselected` (MolSysMT's `peptide_parity`) read as `INCOMPLETE exit=0 \| 39 of 79 executed`: the denominator was captured in `pytest_collection_modifyitems`, before the project's own deselection trimmed the list | Take the denominator from `session.items` in `pytest_collection_finish` (after all deselection); count deselected tests separately and report them; guard the controller's xdist denominator | 0.6 | 0 | **done 2026-07-28** |
+| PR-PILOT-014 | Low | Under `-n 12` the warm-up hid 55% of the run, so the back-fill from PR-PILOT-009 emitted `20% 647/1168` and `40% 647/1168` -- two identical snapshots, each a round label contradicting its own fraction (647 is 55%) | Print the real percent (`finished*100//collected`), which at a live crossing already sits on the milestone; skip milestones crossed during the warm-up silence instead of back-filling them with the current count | 0.6 | 0 | **done 2026-08-02** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | 0.6 | 0 | **done 2026-07-21** |
@@ -185,6 +186,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-011 | MolSysMT re-measurement: `--receptor-stats` on a controlled `pytest.exit(returncode=0)` rendered `INCOMPLETE exit=0` then raised `ValueError: I/O operation on closed file`, and the process returned 1 | PILOT |
 | PR-PILOT-012 | MolSysMT: `-c pytest.ini` with a single failing test outside rootdir rendered `rerun: python -m pytest ::test_name -q`, which exits 4 (`:: selection` with no file) | PILOT |
 | PR-PILOT-013 | MolSysMT: a build-peptide selection whose conftest deselects `peptide_parity` rendered `INCOMPLETE exit=0 \| 39 passed \| incomplete: 39 of 79 executed`, while normal pytest reported the 39 at 100% and exit 0 -- the 40-test gap was exactly the intentional deselection | PILOT |
+| PR-PILOT-014 | MolSysViewer: `--receptor=llm -n 12` over 1168 tests printed `20% 647/1168` then `40% 647/1168` -- same count, same 20s -- before `60% 701/1168`; the round label disagreed with its own fraction (647 is 55%) and repeated | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
@@ -397,6 +399,29 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-08-02a** — xdist progress no longer prints a percent that contradicts its
+own count.
+
+PR-PILOT-014 (low): a MolSysViewer `--receptor=llm -n 12` run over 1168 tests
+opened its progress with two identical lines, `20% 647/1168` and `40% 647/1168`
+(same count, same 20s), before `60% 701/1168`. Both round labels disagreed with
+the fraction beside them — 647 of 1168 is 55%, not 20% or 40% — and the same
+snapshot was announced twice. The cause was the back-fill added for PR-PILOT-009:
+after the warm-up, `_emit_progress` emitted every 20% milestone already crossed,
+each labelled with the round threshold but stamped with the *current* count.
+Under `-n 12` the 20s warm-up hides more than half the run, so two milestones are
+back-filled at once with one shared, wrong-for-both snapshot. The line now shows
+the real percent (`finished*100//collected`), which at a live crossing already
+sits on the round milestone, so the label can never contradict its fraction;
+milestones crossed during the warm-up silence are skipped rather than
+re-announced (the first post-warm-up call realigns to the next uncrossed
+milestone and stays quiet). This supersedes the PR-PILOT-009 mechanism while
+keeping its intent — output bounded by percentage not clock, 100% still announced
+before the verdict. The empty-summary half of the same field report was already
+closed by PR-PILOT-013 and re-verified gone. Regression added
+(`test_progress_percent_always_matches_its_own_fraction`); `pending_bugs/` is
+empty again.
 
 **2026-07-28a** — Intentional deselection no longer reads as an incomplete run.
 

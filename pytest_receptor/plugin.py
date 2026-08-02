@@ -322,6 +322,7 @@ class ReceptorPlugin:
         self._deselected = 0
         self._finished = 0
         self._next_threshold = _PROGRESS_STEP
+        self._progress_started = False
         self._last_progress = self._start
         # Under xdist the plugin is instantiated in every worker as well as the
         # controller. Each worker sees the whole collected list but only its own
@@ -403,18 +404,29 @@ class ReceptorPlugin:
 
         if self._collected:
             percent = self._finished * 100 // self._collected
-            # Emit every threshold crossed since the last line, in order. After
-            # the warm-up this catches up on the round milestones already passed
-            # (20%, 40%, ...) rather than the odd percentage the run happens to
-            # sit at; in steady state it is a single line as each is crossed.
-            # 100% is included -- the run reaching its end on stderr, a moment
-            # before the verdict lands on stdout.
-            while self._next_threshold <= percent and self._next_threshold <= 100:
+            if not self._progress_started:
+                # The first line after the warm-up. Every 20% milestone already
+                # behind us was crossed during the silence, so we never watched
+                # it happen; re-announcing it now with the *current* count is
+                # what printed the impossible `40% 647/1168` under `-n` (647 is
+                # 55%, not 40%), the same milestone twice. Skip to the next
+                # uncrossed milestone and stay quiet -- from here each one is
+                # crossed live.
+                self._progress_started = True
+                self._next_threshold = (percent // _PROGRESS_STEP + 1) * _PROGRESS_STEP
+                return
+            # A live crossing. Print the real percent, derived from the count
+            # beside it, so the two can never disagree; emitting only on a
+            # crossing still bounds the output to five lines, and at a crossing
+            # the real percent already sits on the round milestone without being
+            # forced there. 100% lands here too, a moment before the verdict
+            # reaches stdout.
+            if percent >= self._next_threshold:
                 self._progress_line(
-                    f"{self._next_threshold}% {self._finished}/{self._collected}",
+                    f"{percent}% {self._finished}/{self._collected}",
                     elapsed,
                 )
-                self._next_threshold += _PROGRESS_STEP
+                self._next_threshold = (percent // _PROGRESS_STEP + 1) * _PROGRESS_STEP
             return
 
         # Nothing was collected up front -- fall back to a clock, since some
