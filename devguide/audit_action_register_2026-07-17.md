@@ -986,7 +986,7 @@ blocked on `PR-ARCH-002`, the event model on the `pytest-reportlog` gate.
 
 A parallel implementation of this project existed on `origin/main` and was
 replaced by 0.6. It is preserved on the `event-model-v0.5` branch; the review is
-in `pending_proposals/salvage_from_event_model_branch.md`.
+in `salvage_from_event_model_branch.md`.
 
 Three things taken. Its traceback pruning closes PR-FID-006, which 0.6 had
 deferred and which mattered most for the MolSysMT pilot: dropping every external

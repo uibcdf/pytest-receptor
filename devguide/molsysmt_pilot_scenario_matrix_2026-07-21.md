@@ -87,5 +87,5 @@ longer be needed.
 Both referenced defects are resolved: the `PASS`-with-`incomplete:` artifact and
 the stale mid-run snapshot are fixed in the verdict logic and by clearing the
 artifact at session start, and the progress-decile contract is corrected in the
-docs. See [`../resolved_bugs/`](../resolved_bugs/README.md). This does not close
+docs. See [`resolved_bugs/`](resolved_bugs/README.md). This does not close
 the pilot, which stays in shadow mode.

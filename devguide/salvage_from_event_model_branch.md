@@ -29,7 +29,7 @@ Not yet, and not on a date. Three conditions, all of which must hold:
    a neutral dummy producer. Until then `hooks.py` and the SMonitor bridge are
    the only concrete proposal of what that protocol might look like, even though
    they cannot be adopted as they stand.
-3. **`ci_error_annotations.md` is accepted or rejected.** Its implementation
+3. **`pending_proposals/ci_error_annotations.md` is accepted or rejected.** Its implementation
    sketch was reconstructed from this branch; if it is accepted, the branch is
    where the original lives.
 
@@ -59,7 +59,7 @@ public hooks, XML versus plain text — so this is a salvage review, not a merge
 ancestor for that file.
 
 Some of the reasoning behind those decisions is recorded in
-[`../superseded_proposals.md`](../superseded_proposals.md); the branch is
+[`superseded_proposals.md`](superseded_proposals.md); the branch is
 evidence that the alternatives were built rather than only imagined.
 
 ## Worth taking

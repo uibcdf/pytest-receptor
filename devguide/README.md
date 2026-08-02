@@ -58,7 +58,7 @@ full from 0.6.
 | Branch | Why it exists | When it may go |
 | --- | --- | --- |
 | `main` | The project. | — |
-| `event-model-v0.5` | A parallel implementation that was on `origin/main` until 0.6 replaced it. Preserved rather than deleted; five things were salvaged from it, three of them after it had been declared exhausted. | Only when all three conditions in [`pending_proposals/salvage_from_event_model_branch.md`](pending_proposals/salvage_from_event_model_branch.md) hold. Not on a date. |
+| `event-model-v0.5` | A parallel implementation that was on `origin/main` until 0.6 replaced it. Preserved rather than deleted; five things were salvaged from it, three of them after it had been declared exhausted. | Only when all three conditions in [`salvage_from_event_model_branch.md`](salvage_from_event_model_branch.md) hold. Not on a date. |
 
 ## Conventions
 
