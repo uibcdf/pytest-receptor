@@ -7,11 +7,13 @@ documentation lives in `docs/`.
 
 If you are picking the project up, read in this order:
 
-1. **`scope_0.6.md`** — what the next release is, and why it is deliberately
-   small. Start here.
+1. **`release_1.0_readiness.md`** — current position, remaining gates, and the
+   proposed 0.8/0.9 sequence. Start here.
 2. **`audit_action_register_2026-07-17.md`** — the complete work queue. Every
    task in the project has an identifier here.
-3. **`critical_audit_2026-07-17.md`** — why the plan looks the way it does.
+3. **`scope_0.6.md`** — the accepted design of the current renderer and its
+   reliability floor.
+4. **`critical_audit_2026-07-17.md`** — why the plan looks the way it does.
 
 If you are here because you are piloting the receptor on another project, read
 **`molsysmt_pilot.md`** instead; it is written for you and assumes none of the
@@ -23,12 +25,14 @@ Everything else is reference material for work that comes later.
 
 | Document | Kind | Status |
 | --- | --- | --- |
-| `scope_0.6.md` | Plan | **Authority for the next release.** Defines the objective function, what ships, what does not, the output design, and acceptance criteria. |
+| `scope_0.6.md` | Plan | **Historical authority for the current renderer.** Defines the objective function, reliability floor, output design, and 0.6 acceptance criteria. |
 | `audit_action_register_2026-07-17.md` | Queue | **Live.** 43 identified items with severity, release, phase, and status. The single place where nothing may be missing. |
 | `critical_audit_2026-07-17.md` | Assessment | Historical record, still accurate. The 2026-07-17 read-only review that found the correctness defects. Not updated as items are fixed; the register tracks that. |
 | `evidence_preserving_architecture_proposal.md` | Proposal | Post-0.6 reference. Its ambition is intact but its sequencing was superseded by `scope_0.6.md`. See the header note in that file. |
-| `pytest_reportlog_gate_decision_2026-07-22.md` | Decision | **Current.** Resolves the canonical-artifact gate: bespoke event model, not `pytest-reportlog`, with reasons measured against its actual output. Unblocks `PR-ARCH-001`; implementation still deferred. |
+| `pytest_reportlog_gate_decision_2026-07-22.md` | Decision | **Current.** Resolves the canonical-artifact gate: bespoke event model, not `pytest-reportlog`, with reasons measured against its actual output. Its decision now underlies the local `events@1` implementation. |
 | `trust_and_adoption_criteria.md` | Criteria | Post-0.6 reference. Adoption levels, trust invariants, promotion gates, and the MolSysMT dogfooding program. |
+| `release_1.0_readiness.md` | Dashboard | **Live.** Maps the accepted 1.0 criteria to executable evidence, remaining architecture, and the proposed 0.8/0.9 sequence. |
+| `pypi_release.md` | Runbook | **Current.** Official pytest discovery/listing rules, Trusted Publishing setup, immutable-release checks, and the exact 1.0 PyPI procedure. |
 | `smonitor_and_molsyssuite_integration.md` | Exploration | Post-0.6, gated. Not an accepted contract. Nothing in it may be implemented before the extension protocol is designed against a neutral dummy producer. |
 | `molsysmt_pilot.md` | Brief | **Active.** What the MolSysMT team needs in order to run the receptor on their suite, what we need back from them, and what the plugin does not do yet. |
 | `for_collaborators.md` | Onboarding | **Active.** A short, portable note for a new collaborator in a consumer repo: how to run the receptor, that it is pre-1.0, and how to report anomalies and proposals. Meant to be copied into or linked from a consumer repo's devguide. |

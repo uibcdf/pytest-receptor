@@ -11,6 +11,8 @@ Everything you might need to look up, in tables.
 | `--receptor=ci` | | The same renderer with build-log defaults: nothing held back, no on-disk report referenced, because a CI log gets one shot and the runner is gone afterwards. See [Choosing between `llm` and `ci`](usage.md#choosing-between-llm-and-ci). |
 | `--receptor-full` | off | Expand everything: every occurrence, every message in full. |
 | `--receptor-stats` | off | Append what this run cost against pytest as *you* configured it. Measured in the same run, not estimated. |
+| `--receptor-events=PATH` | off | Stream normalized `pytest-receptor.events@1` JSONL and finalize it with integrity metadata. Requires `llm` or `ci`. See [Versioned evidence artifacts](artifacts.md). |
+| `--receptor-events-max-bytes=BYTES` | 52428800 | Set the artifact's hard total-size ceiling. Minimum 65536. Omitted events are counted and declared in the finalized stream. |
 
 ## What the compact profiles set on pytest
 
@@ -52,8 +54,10 @@ test`, `tox`, or a wrapper must set it.
 
 ## Session outcomes
 
-Exactly one of these opens every run, derived from `pytest.ExitCode` rather than
-from the absence of failure reports.
+Exactly one of these opens every run. The numeric status is always pytest's;
+the label refines statuses that pytest uses for more than one state when the
+receptor has concrete evidence, rather than inferring success or failure from
+the absence of reports.
 
 | Line | Exit | Meaning |
 | :--- | :---: | :--- |
@@ -63,6 +67,7 @@ from the absence of failure reports.
 | `COLLECTION_ERROR exit=2` | 2 | Collection failed before the suite could run. |
 | `ERROR exit=3` | 3 | An internal pytest error. |
 | `USAGE_ERROR exit=4` | 4 | pytest was invoked incorrectly. |
+| `USAGE_ERROR exit=5 \| invalid selection` | 5 | Under xdist, pytest returned its no-tests status for an invocation containing nonexistent filesystem targets; every missing target follows. |
 | `NO_TESTS exit=5` | 5 | Nothing was collected. |
 | `RECEPTOR_ERROR` | *preserved* | The receptor itself failed. pytest's status and the raw evidence follow. |
 
@@ -110,22 +115,22 @@ Each appears only when it has something to say.
 | `skipped: N in M groups` | Any test was skipped. Grouped by reason; `(no reason declared)` is its own group. |
 | `xfailed: N in M groups` | Any expected failure occurred. |
 | `unexpected passes:` | An `xfail` test passed. Named individually, with its reason. |
+| `invalid selection:` | An xdist invocation returned exit 5 while containing explicit filesystem targets that do not exist. Every missing target is listed. |
 | `full report: <path>` | Detail was held back, and only then. |
 
 ## Progress on stderr
 
 ```text
-receptor: 20% 190/530 20s
+receptor: 20% 106/530 20s
 receptor: 40% 212/530 22s
 receptor: 100% 530/530 67s
 ```
 
 One line as the run crosses each twenty-percent threshold, after a silent
 twenty-second warm-up, ending at 100% — at most five lines however long the run
-takes. Thresholds already passed when the warm-up ends are emitted together, in
-order, so every percentage is a round milestone; the count beside the first can
-already be a little past it, since reporting only began at the warm-up. Never on
-stdout. Under xdist, emitted by the controller only.
+takes. Thresholds already passed during the warm-up are skipped; later lines are
+emitted at live crossings with a percentage calculated from the count beside
+it. Never on stdout. Under xdist, emitted by the controller only.
 
 ## Exit status
 

@@ -212,17 +212,18 @@ goes to stderr, never to stdout, as the run crosses each twenty percent, ending
 at 100%:
 
 ```text
-receptor: 20% 1866/9332 108s
+receptor: 20% 1867/9332 108s
 receptor: 40% 3733/9332 210s
 ```
 
 Reporting by threshold rather than by clock keeps this at five lines however long
 the suite runs, and the elapsed time shows pace — a step that suddenly takes four
 times longer than the last is worth knowing about while the run is still going.
-Any thresholds already crossed when the warm-up ends are emitted together, in
-order, so the numbers are always round. It is a liveness signal, not a hang
-detector: it fires when a test finishes, so a stuck test produces no further
-lines — but the last one printed tells you where it got to.
+Thresholds already crossed during the warm-up are skipped. Later lines are
+emitted at live crossings with a percentage calculated from their own count. It
+is a liveness signal, not a hang detector: it fires when a test finishes, so a
+stuck test produces no further lines — but the last one printed tells you where
+it got to.
 
 **Colour is forced off, and this may change numbers you have already taken.**
 `FORCE_COLOR` or `PY_COLORS` in an environment makes pytest emit ANSI even into

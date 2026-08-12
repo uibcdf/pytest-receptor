@@ -7,9 +7,9 @@ surprise discovered in the middle of a debugging session.
 
 | Gap | Detail |
 | :--- | :--- |
-| **Worker identity** | You are told a group has 38 occurrences and which tests they are, but not which worker ran each. See below — this is a decision, not a backlog item. |
+| **Worker identity in text** | You are told a group has 38 occurrences and which tests they are, but not which worker ran each. The JSONL phase event retains the worker ID. See below — omission from text is a decision, not a backlog item. |
 | **Warning baselines** | Warnings are grouped, but there is no accepted-baseline comparison, so you cannot yet ask "what is *new* since last week". |
-| **A machine-readable artifact** | The complete report is plain text, not JSON. A structured artifact is deferred until `pytest-reportlog`, which already streams per-report JSONL, has been evaluated. |
+| **Artifact retention and large records** | JSONL is opt-in, streamed, and has an auditable hard total-size ceiling (50 MiB by default). Captured sections remain inline, so one oversized event can be omitted when it reaches that ceiling. External blobs and cleanup/retention remain deployment responsibilities. |
 | **Cause chains beyond one link** | `raise X from Y` reports Y. A longer chain reports only the first cause. |
 | **Semantic truncation budgets** | Long messages are cut at a fixed length with the omission stated, rather than at a structural boundary. |
 
@@ -59,8 +59,8 @@ catch a secret that does not look like one. Do not rely on it to make a log safe
 to publish.
 ```
 
-The on-disk report is created owner-only and refuses to follow a symlink, which
-bounds who can read it rather than what goes into it.
+The on-disk text report and JSONL artifact are created owner-only and refuse to
+follow a symlink, which bounds who can read them rather than what goes into them.
 
 ### Untrusted test output
 
@@ -80,7 +80,7 @@ an instruction and never suggests a command that mutates your environment.
 ## Untested combinations
 
 Covered by CI: Python 3.11–3.13, pytest 8 and 9, serial and distributed,
-`pytest-cov`, `pytest-rerunfailures`, and pytest's built-in subtests.
+`pytest-cov`, `pytest-rerunfailures`, `pytest-subtests`, and JUnit XML.
 
 Everything else in your plugin stack is unknown territory. If a plugin you rely
 on goes quiet under `--receptor=llm`, that is a defect on our side — silencing

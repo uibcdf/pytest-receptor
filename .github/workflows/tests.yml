@@ -25,9 +25,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - run: pip install ruff
-      - run: ruff check src tests devtools
-      - run: ruff format --check src tests devtools
+      - run: pip install -e ".[lint]"
+      - run: ruff check pytest_receptor tests devtools docs/conf.py
+      - run: ruff format --check pytest_receptor tests devtools docs/conf.py
 
   test:
     name: py${{ matrix.python }} / pytest ${{ matrix.pytest }}
@@ -46,17 +46,17 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install pinned pytest, then the plugin without touching it
+      - name: Install pinned pytest and the integration matrix
         run: |
           python -m pip install --upgrade pip
-          pip install "pytest~=${{ matrix.pytest }}.0" pytest-xdist
-          pip install -e . --no-deps
+          pip install "pytest~=${{ matrix.pytest }}.0" -e ".[test]"
 
-      - name: Record what is actually installed, and prove the pin took
+      - name: Record what is installed, and prove the pytest pin took
         env:
           WANT: ${{ matrix.pytest }}
         run: |
           python -c "import sys, pytest; print(sys.version); print('pytest', pytest.__version__)"
+          pip list | grep -E '^pytest($|-)|^coverage|^packaging'
           python -c "import os, pytest; got = pytest.__version__.split('.')[0]; want = os.environ['WANT']; raise SystemExit(0 if got == want else f'wanted pytest {want}, got {pytest.__version__}')"
 
       - name: Run the suite
@@ -76,10 +76,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - run: |
-          pip install pytest tiktoken
-          pip install -e . --no-deps
+      - run: pip install -e ".[benchmark]"
       - run: python devtools/benchmarks/run_benchmarks.py
+      - run: python devtools/benchmarks/run_performance.py --tests 500 --repeat 2
 
   packaging:
     # PR-OPS-001 shipped a requires-python that rejected the very interpreter
@@ -90,8 +89,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - run: pip install build
+      - run: pip install build twine
       - run: python -m build
+      - run: python -m twine check --strict dist/*
       - name: Install the built wheel into a clean environment
         run: |
           python -m venv /tmp/clean

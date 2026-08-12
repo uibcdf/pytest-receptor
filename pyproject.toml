@@ -7,6 +7,7 @@ name = "pytest-receptor"
 dynamic = ["version"]
 description = "A pytest plugin to adapt test output for different receptors (humans, LLMs, CI)."
 readme = "README.md"
+keywords = ["pytest", "plugin", "testing", "LLM", "CI"]
 authors = [
     { name = "UIBCDF Development Team" },
 ]
@@ -17,7 +18,7 @@ dependencies = [
 license = "MIT"
 license-files = ["LICENSE"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: Pytest",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
@@ -31,15 +32,57 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/uibcdf/pytest-receptor"
 Repository = "https://github.com/uibcdf/pytest-receptor"
+Issues = "https://github.com/uibcdf/pytest-receptor/issues"
+Changelog = "https://github.com/uibcdf/pytest-receptor/blob/main/CHANGELOG.md"
 
 [project.entry-points."pytest11"]
 receptor = "pytest_receptor.plugin"
 
 [project.optional-dependencies]
-dev = [
-    "ruff",
-    "tiktoken",
+test = [
+    "packaging>=24",
+    "pytest-cov>=6,<8",
+    "pytest-rerunfailures>=15,<17",
+    "pytest-subtests>=0.14,<0.16",
+    "pytest-xdist>=3.6,<4",
 ]
+lint = [
+    "ruff==0.16.1",
+]
+docs = [
+    "myst-parser>=4,<5",
+    "sphinx>=8,<10",
+    "sphinx-rtd-theme>=3,<4",
+]
+benchmark = [
+    "tiktoken>=0.9,<1",
+]
+release = [
+    "build>=1.2,<2",
+    "packaging>=24",
+    "twine>=6,<7",
+]
+dev = [
+    "build>=1.2,<2",
+    "myst-parser>=4,<5",
+    "packaging>=24",
+    "pytest-cov>=6,<8",
+    "pytest-rerunfailures>=15,<17",
+    "pytest-subtests>=0.14,<0.16",
+    "pytest-xdist>=3.6,<4",
+    "ruff==0.16.1",
+    "sphinx>=8,<10",
+    "sphinx-rtd-theme>=3,<4",
+    "tiktoken>=0.9,<1",
+    "twine>=6,<7",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]
 
 [tool.setuptools.packages.find]
 where = ["."]

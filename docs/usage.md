@@ -85,17 +85,16 @@ On **stderr**, after a silent twenty-second warm-up, one line as the run crosses
 each twenty-percent threshold, ending at 100%:
 
 ```text
-receptor: 20% 190/530 20s
+receptor: 20% 106/530 20s
 receptor: 40% 212/530 22s
 receptor: 60% 318/530 29s
 receptor: 80% 424/530 35s
 receptor: 100% 530/530 67s
 ```
 
-Thresholds already passed when the warm-up ends are emitted together, in order,
-so every line is a round milestone the run has genuinely reached rather than the
-odd percentage it happens to sit at. The count beside the first line can be a
-little past its milestone, since reporting only begins once the warm-up is over.
+Thresholds already passed during the warm-up are skipped. From then on, each
+line is emitted at a live crossing and its percentage is calculated from the
+count beside it, so the two cannot disagree.
 
 | Property | |
 | :--- | :--- |

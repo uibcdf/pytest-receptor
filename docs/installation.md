@@ -22,9 +22,18 @@ conda install -c uibcdf pytest-receptor
 
 ## From PyPI (planned)
 
-A PyPI release is planned so that `pip install pytest-receptor` works and pytest
-discovers the plugin automatically as an unofficial plugin. It is not published
-yet — until then, use conda (above) or install from source.
+Version 1.0 is planned as the first PyPI release. Its package metadata already
+declares pytest's `pytest11` entry point and `Framework :: Pytest` classifier,
+so installation will make pytest discover it automatically:
+
+```bash
+pip install pytest-receptor
+```
+
+The official pytest plugin list is generated from PyPI project names beginning
+with `pytest-` or `pytest_`; it is informational rather than an endorsement.
+The package is not on PyPI yet — until 1.0, use conda (above) or install from
+source.
 
 ## From source
 

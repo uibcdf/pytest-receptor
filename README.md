@@ -13,8 +13,8 @@ scroll back. `pytest-receptor` renders the same run for that consumer: it says
 what happened, groups repeated failures by root cause, and tells the agent
 exactly what to re-run.
 
-> **Status: pre-1.0.** The output format is this plugin's public API and it may
-> still change. What will not change is the reliability floor: the receptor
+> **1.0 release candidate.** The reliability, CLI, outcome, and
+> `pytest-receptor.events@1` compatibility contracts are frozen. The receptor
 > never reports an unsuccessful or incomplete run as a success, and a failure
 > inside the receptor itself never costs you the run.
 
@@ -60,9 +60,10 @@ That is 109 tokens. Plain `pytest` spends 3,300 on the same run.
 conda install -c uibcdf pytest-receptor
 ```
 
-A PyPI release (`pip install pytest-receptor`, discovered automatically by pytest
-as an unofficial plugin) is planned but not published yet; until then, use conda
-or install from source. See the [installation guide](https://uibcdf.github.io/pytest-receptor/installation.html).
+Version 1.0 is planned as the first PyPI release (`pip install
+pytest-receptor`). Its official `pytest11` metadata makes pytest discover it
+automatically after installation. Until then, use conda or install from source.
+See the [installation guide](https://uibcdf.github.io/pytest-receptor/installation.html).
 
 Requires Python 3.11-3.13 and pytest 8 or later. Every combination of
 Python 3.11/3.12/3.13 with pytest 8 and 9 is exercised in CI, so the support
@@ -77,7 +78,15 @@ pytest --receptor=ci      # compact output for a CI log
 pytest --receptor=human   # the default, stated explicitly
 pytest --receptor=llm --receptor-full   # expand every failure group
 pytest --receptor=llm --receptor-stats  # what did this actually save?
+pytest --receptor=llm --receptor-events=events.jsonl  # normalized evidence
+pytest --receptor=llm --receptor-events=events.jsonl \
+  --receptor-events-max-bytes=104857600              # explicit artifact cap
 ```
+
+The opt-in JSONL stream is versioned, owner-only, integrity-checked on
+finalization, and readable with `pytest_receptor.read_artifact`. A missing final
+session record is reported as incomplete. See the
+[artifact guide](https://uibcdf.github.io/pytest-receptor/artifacts.html).
 
 **Installing the plugin does not change anything until you ask it to.** The
 default is `human`, and `human` is a true passthrough: the plugin registers
@@ -111,8 +120,10 @@ See the [usage guide](https://uibcdf.github.io/pytest-receptor/usage.html).
 
 ### It always tells you what actually happened
 
-The verdict comes from pytest's exit status, never from the absence of failure
-reports:
+The numeric exit status comes from pytest, never from the absence of failure
+reports. The label refines that status only when pytest merges distinct states:
+collection errors and interrupts both use exit 2, and xdist can return exit 5
+for an invocation that contains nonexistent filesystem targets.
 
 ```text
 PASS exit=0 | 126 passed, 2 skipped | 4.21s | 3 warnings
@@ -120,6 +131,7 @@ FAIL exit=1 | 2 failed, 87 passed | 12.40s | 2 root causes
 NO_TESTS exit=5
 INTERRUPTED exit=2 | incomplete: 12 of 128 executed
 COLLECTION_ERROR exit=2
+USAGE_ERROR exit=5 | invalid selection
 ```
 
 A run stopped by `-x`, `--maxfail`, or an interrupt is marked incomplete even
@@ -186,16 +198,16 @@ The redaction is a conservative net for obvious shapes — `api_key=`, `Bearer .
 
 pytest streams a progress character per test; suppressing those leaves a long
 suite completely silent. Progress now goes to **stderr** — never stdout, so the
-report stays as parseable as before — once per ten percent of the suite:
+report stays as parseable as before — once per twenty percent of the suite:
 
 ```text
-receptor: 10% 933/9332 52s
-receptor: 20% 1866/9332 108s
+receptor: 20% 1867/9332 52s
+receptor: 40% 3733/9332 108s
 ```
 
-Reporting by decile rather than by clock bounds this at nine lines whether the
-run takes five minutes or three hours, and the elapsed time exposes pace: a
-decile that suddenly takes four times longer is visible before the run ends.
+Reporting by percentage rather than by clock bounds this at five lines whether
+the run takes five minutes or three hours, and the elapsed time exposes pace: a
+step that suddenly takes four times longer is visible before the run ends.
 
 It is a liveness signal, not a hang detector: the line is emitted when a test
 finishes, so a stuck test produces no further output. What survives is how far

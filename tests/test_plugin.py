@@ -6,6 +6,7 @@ safety, and compatibility. Each test names the register identifier it protects.
 
 import importlib.util
 import re
+from xml.etree import ElementTree
 
 import pytest
 
@@ -22,10 +23,7 @@ def test_green_run_reports_pass_with_exit_code(pytester):
 def test_a_slow_test_adds_no_per_test_timing(pytester):
     """Per-test durations are profiling, not truth or economy: pytest --durations
     owns that on demand, so the compact report never spends tokens on it."""
-    pytester.makepyfile(
-        "import time\n"
-        "def test_slow(): time.sleep(0.6)\n"
-    )
+    pytester.makepyfile("import time\ndef test_slow(): time.sleep(0.6)\n")
     result = pytester.runpytest("--receptor=llm")
     result.stdout.fnmatch_lines(["PASS exit=0 | 1 passed*"])
     assert "slowest" not in result.stdout.str()
@@ -44,6 +42,54 @@ def test_no_tests_is_not_reported_as_success(pytester):
     assert result.ret == 5
     result.stdout.fnmatch_lines(["NO_TESTS exit=5*"])
     assert "PASS" not in result.stdout.str()
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("xdist") is None,
+    reason="pytest-xdist is not installed",
+)
+def test_xdist_missing_selection_is_reported_as_usage_error(pytester):
+    """PR-PILOT-015: xdist turns a mixed valid/missing selection into exit 5
+    without preserving pytest's useful serial ``file or directory not found``
+    diagnostic. The receptor must retain the exit code while making every bad
+    selection actionable, both on stdout and in the full report.
+    """
+    pytester.makepyfile(test_valid="def test_a(): assert 1\ndef test_b(): assert 1\n")
+
+    result = pytester.runpytest_subprocess(
+        "--receptor=llm",
+        "-n",
+        "2",
+        "test_valid.py",
+        "missing_one",
+        "missing_two/test_file.py",
+    )
+
+    assert result.ret == 5
+    output = result.stdout.str()
+    assert output.lstrip().startswith("USAGE_ERROR exit=5 | invalid selection")
+    assert "file or directory not found: missing_one" in output
+    assert "file or directory not found: missing_two/test_file.py" in output
+    assert "file or directory not found: 2" not in output
+    assert "file or directory not found: test_valid.py" not in output
+    assert "NO_TESTS" not in output
+
+    artifact = pytester.path / ".pytest_cache" / "d" / "receptor" / "last-run.txt"
+    full = artifact.read_text(encoding="utf-8")
+    assert "file or directory not found: missing_one" in full
+    assert "file or directory not found: missing_two/test_file.py" in full
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("xdist") is None,
+    reason="pytest-xdist is not installed",
+)
+def test_xdist_genuinely_empty_selection_stays_no_tests(pytester):
+    """The PR-PILOT-015 refinement applies only with concrete path evidence."""
+    pytester.makepyfile(test_empty="# no tests here\n")
+    result = pytester.runpytest_subprocess("--receptor=llm", "-n", "2", "test_empty.py")
+    assert result.ret == 5
+    assert result.stdout.str().lstrip().startswith("NO_TESTS exit=5")
 
 
 def test_interrupted_run_is_not_reported_as_success(pytester):
@@ -161,9 +207,7 @@ def test_incomplete_run_with_stats_does_not_change_exit_code(pytester):
         "        pytest.exit('controlled', returncode=0)\n"
     )
     pytester.makepyfile(
-        "def test_stop(): pass\n"
-        "def test_a(): assert 0\n"
-        "def test_b(): assert 0\n"
+        "def test_stop(): pass\ndef test_a(): assert 0\ndef test_b(): assert 0\n"
     )
     for extra in ([], ["--receptor-stats"]):
         result = pytester.runpytest_subprocess("--receptor=llm", *extra)
@@ -529,7 +573,25 @@ def test_truncation_states_what_was_omitted(pytester):
         "def test_a(): raise ValueError('y' * 6000)\n",
     )
     result = pytester.runpytest("--receptor=llm")
-    result.stdout.fnmatch_lines(["*characters omitted; see full report*"])
+    result.stdout.fnmatch_lines(
+        ["*characters omitted; original=*; retained=*; sha256=*; see full report*"]
+    )
+
+
+def test_full_report_retains_message_omitted_from_terminal(pytester):
+    pytester.makepyfile(
+        "def test_long(): raise ValueError('BEGIN-' + 'x' * 3000 + '-END')"
+    )
+
+    result = pytester.runpytest("--receptor=llm")
+
+    assert result.ret == pytest.ExitCode.TESTS_FAILED
+    terminal = result.stdout.str()
+    assert "characters omitted; original=" in terminal
+    report = pytester.path / ".pytest_cache" / "d" / "receptor" / "last-run.txt"
+    complete = report.read_text(encoding="utf-8")
+    assert "characters omitted" not in complete
+    assert "BEGIN-" + "x" * 3000 + "-END" in complete
 
 
 def test_every_occurrence_keeps_its_node_id(pytester):
@@ -906,6 +968,62 @@ def test_other_plugins_can_still_report(pytester):
     assert "short test summary info" not in output
 
 
+def test_junit_artifact_survives_compact_reporting(pytester):
+    """Terminal compression must not suppress pytest's machine artifact."""
+    pytester.makepyfile("def test_ok(): assert 1\ndef test_bad(): assert 0\n")
+    report = pytester.path / "junit.xml"
+    result = pytester.runpytest("--receptor=llm", f"--junitxml={report}")
+    assert result.ret == 1
+    assert result.stdout.str().lstrip().startswith("FAIL exit=1")
+    root = ElementTree.parse(report).getroot()
+    assert root.find(".//testcase[@name='test_ok']") is not None
+    failed = root.find(".//testcase[@name='test_bad']/failure")
+    assert failed is not None
+
+
+subtests = pytest.mark.skipif(
+    importlib.util.find_spec("pytest_subtests") is None,
+    reason="pytest-subtests is not installed",
+)
+
+
+@subtests
+def test_subtest_failure_is_preserved(pytester):
+    """A subtest report is real failure evidence, not progress decoration."""
+    pytester.makepyfile(
+        "def test_cases(subtests):\n"
+        "    with subtests.test(case='passing'):\n"
+        "        assert 1\n"
+        "    with subtests.test(case='failing'):\n"
+        "        assert 1 == 2\n"
+    )
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+    assert result.ret == 1
+    assert output.lstrip().startswith("FAIL exit=1")
+    assert "AssertionError" in output
+    assert "test_cases" in output
+
+
+@subtests
+def test_distinct_subtests_are_not_reported_as_retries(pytester):
+    pytester.makepyfile(
+        "def test_cases(subtests):\n"
+        "    for case in ('alpha', 'beta'):\n"
+        "        with subtests.test(msg='case check', case=case):\n"
+        "            assert False, case\n"
+    )
+
+    result = pytester.runpytest("--receptor=llm")
+    output = result.stdout.str()
+
+    assert result.ret == 1
+    assert "[1] AssertionError | 2 subtests | call" in output
+    assert "[case check] (case='alpha')" in output
+    assert "[case check] (case='beta')" in output
+    assert "after 2 attempts" not in output
+
+
 def test_quieting_flags_are_redundant(pytester):
     """`--receptor=llm` already configures the reporter; -q adds nothing."""
     pytester.makepyfile("def test_a(): assert 0\n")
@@ -1275,7 +1393,7 @@ def test_progress_percent_always_matches_its_own_fraction(pytester):
     collected = [int(m.group(3)) for m in matches]
     assert percents, "a run past the warm-up must show it is alive"
     # The heart of it: no line's percent may contradict its own fraction.
-    for p, f, c in zip(percents, finished, collected):
+    for p, f, c in zip(percents, finished, collected, strict=True):
         assert p == f * 100 // c, f"{p}% disagrees with {f}/{c}"
     # No milestone is announced twice with the same snapshot (the `-n` bug).
     assert len(finished) == len(set(finished)), f"duplicate snapshot: {finished}"

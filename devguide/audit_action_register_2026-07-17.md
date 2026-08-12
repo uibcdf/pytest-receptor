@@ -75,15 +75,15 @@ limitation`.
 | PR-FID-008 | High | Reporter bucket counts are treated as logical test outcomes | 0.6: aggregate by node ID and report the failing phase. Post: full logical/attempt/subtest model | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-011 | High | Omitted detail is only recoverable by re-running pytest | Write the complete agent-format report to `.pytest_cache/receptor/last-run.txt` and reference it | 0.6 | 0 | **done 2026-07-18** |
 | PR-FID-006 | Medium | External traceback origins are removed | Keep every local frame, each local-to-external boundary, and the terminal frame, marking elisions. Cause chains remain post-0.6 | 0.6 | 0 | **done 2026-07-18** |
-| PR-FID-009 | High | Fixed character truncation is not an auditable information budget | 0.6: project-declared normalizers so non-semantic values stop splitting a cause. Post: semantic budgets reporting original size, retained size, hash, and omissions | post | 2 | in progress |
+| PR-FID-009 | High | Fixed character truncation is not an auditable information budget | 0.6: project-declared normalizers so non-semantic values stop splitting a cause. Post: semantic budgets reporting original size, retained size, hash, and omissions | post | 2 | **done 2026-08-12** |
 | PR-FID-010 | Medium | Skip and xfail reasons are not grouped or trackable | Grouped by reason with counts. Post: an optional baseline to expose drift | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-001 | Medium | Adaptive hints can prescribe the wrong dependency mutation | Delete installation hints; replace with the exact rerun command | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-002 | High | Every failure is rendered in full regardless of root-cause count | Truncate occurrence lists; render every root cause in full; summarize only a pathological spread, and only when the on-disk report is reachable | 0.6 | 0 | **done 2026-07-18** |
 | PR-UX-003 | Medium | Output provides no rerun target | Emit a literal rerun command per failure group that actually selects it | 0.6 | 0 | **done 2026-07-18** |
 | PR-ARCH-003 | High | Renderer replaces the private `TerminalReporter` | Rebuild on public hooks with the standard reporter silenced through public options | 0.6 | 0 | **done 2026-07-18** |
-| PR-ARCH-001 | High | Renderer formats reporter text instead of owning structured evidence | Normalized event model populated from pytest hooks; stop inferring exception type from formatted text | post | 1 | open (gate decided 2026-07-22; deferred pending a real consumer) |
+| PR-ARCH-001 | High | Renderer formats reporter text instead of owning structured evidence | Normalized event model populated from pytest hooks; stop inferring exception type from formatted text | post | 1 | **done 2026-08-12** |
 | PR-ARCH-002 | Medium | No neutral extension-event protocol for third-party producers | Namespaced extension events, correlation service, unknown-namespace preservation, dummy-producer tests | post | 2 | open (gated) |
-| PR-API-001 | Medium | No programmatic consumer interface | Supported artifact reader and session/event API | post | 2 | open |
+| PR-API-001 | Medium | No programmatic consumer interface | Supported artifact reader and session/event API | post | 2 | in progress 2026-08-12 (reader shipped locally; real consumer validation remains) |
 | PR-OPS-001 | High | Python range rejects 3.13 patch releases | Change to `>=3.11,<3.14`; test representative versions | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-002 | Medium | Heartbeat is not periodic | Delete the heartbeat feature and its claims; revisit only with lifecycle evidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-003 | High | Suppressed human output is retained in memory unconditionally | Resolved by the public-hook architecture: no terminal-writer capture exists | 0.6 | 0 | **done 2026-07-18** |
@@ -93,14 +93,14 @@ limitation`.
 | PR-OPS-009 | Medium | `--receptor=human` is not a true passthrough | Register nothing in human mode; output must be byte-identical to pytest without the plugin | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-010 | Medium | `CiTerminalReporter` duplicates the LLM renderer | Delete the duplicated class; keep `--receptor=ci` as a profile of the single renderer with CI-appropriate defaults | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-004 | Medium | Suppression depends on four undocumented pytest mechanisms | Isolate them in one version-tested adapter; drop the `tbstyle` workaround if pytest#14720 is resolved | post | 3 | open |
-| PR-OPS-005 | Medium | Output-channel authority is undefined | 0.6: silencing no longer suppresses other plugins' terminal summaries, with a coverage regression. Post: full stdout/stderr/artifact contract | post | 1 | in progress |
+| PR-OPS-005 | Medium | Output-channel authority is undefined | Define pytest exit status, receptor stdout/stderr, third-party coexistence, the full text report, and JUnit authority including degraded boundaries | post | 1 | **done 2026-08-12** |
 | PR-SEC-001 | High | Test text can inject control markup or agent instructions | 0.6: strip ANSI and control characters, structural safety, untrusted-data delimitation. Post: hint provenance and confidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-SEC-002 | High | Artifacts may persist secrets without policy | 0.6: owner-only report, symlink refusal, and conservative credential redaction before anything is rendered or written. Post: configurable patterns, retention, size, audit metadata | post | 1 | in progress |
 | PR-DOC-001 | Medium | Documentation overstates XML, heartbeat, dump, and warning behavior | Align every public claim with executable evidence | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-002 | Low | Editorial debt in public documents | Fix mixed-language terms, `Dumping` where deduplication is meant, `Formated`, and the `file://` license link | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-003 | Medium | `draft_ideas.md` presented an unimplemented design as current | Preserve it as history with supersession notes rather than deleting it | 0.6 | 0 | **done 2026-07-18** |
 | PR-DOC-004 | Medium | The term "lossless" overstates achievable durability | Narrow the claim to evidence-preserving during normal pytest lifecycle operation | 0.6 | 0 | **done 2026-07-18** |
-| PR-REL-001 | Medium | No compatibility CI exists | 0.6: Python 3.11-3.13 against pytest 8 and 9, serial and xdist. Post: coverage, JUnit, reruns, subtests | 0.6 | 0 | **done 2026-07-18** |
+| PR-REL-001 | Medium | No compatibility CI exists | Python 3.11-3.13 against pytest 8 and 9, serial and xdist, with coverage, JUnit, reruns, and subtests active in every matrix cell | 0.6 | 0 | **done 2026-08-12** |
 | PR-PILOT-001 | Critical | Setup and teardown failures were counted as `failed`, disagreeing with pytest's `errors` | Track phase states separately, as pytest does; report both counts | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-002 | High | Printed paths and rerun commands did not resolve from the invocation directory | Render every path relative to `invocation_params.dir` | 0.6 | 0 | **done 2026-07-18** |
 | PR-PILOT-003 | High | Warning groups were truncated by frequency, hiding 57 of 60 | List every distinct warning group | 0.6 | 0 | **done 2026-07-18** |
@@ -115,6 +115,7 @@ limitation`.
 | PR-PILOT-012 | Medium | With `-c <ini>` fixing rootdir, a single test outside it has a pathless node ID, so the rerun rendered as `::test_name` -- not executable | Recover the file from the occurrence's failure location when the node ID has no path, for single and grouped occurrences | 0.6 | 0 | **done 2026-07-22** |
 | PR-PILOT-013 | High | A conftest that deselects tests via `pytest_deselected` (MolSysMT's `peptide_parity`) read as `INCOMPLETE exit=0 \| 39 of 79 executed`: the denominator was captured in `pytest_collection_modifyitems`, before the project's own deselection trimmed the list | Take the denominator from `session.items` in `pytest_collection_finish` (after all deselection); count deselected tests separately and report them; guard the controller's xdist denominator | 0.6 | 0 | **done 2026-07-28** |
 | PR-PILOT-014 | Low | Under `-n 12` the warm-up hid 55% of the run, so the back-fill from PR-PILOT-009 emitted `20% 647/1168` and `40% 647/1168` -- two identical snapshots, each a round label contradicting its own fraction (647 is 55%) | Print the real percent (`finished*100//collected`), which at a live crossing already sits on the milestone; skip milestones crossed during the warm-up silence instead of back-filling them with the current count | 0.6 | 0 | **done 2026-08-02** |
+| PR-PILOT-015 | High | Under xdist, a mixture of valid and nonexistent filesystem targets returned `NO_TESTS exit=5` without naming the malformed targets | Preserve pytest's exit 5; refine the report to `USAGE_ERROR` only with concrete invalid-selection evidence and list every missing target on stdout and disk | post | 1 | **done 2026-08-12** |
 | PR-OPS-011 | Medium | Compact output did not guarantee freedom from ANSI | Force `color = "no"` in compact profiles, covering `FORCE_COLOR`, `PY_COLORS` and an explicit `--color=yes`; leave the `--receptor-stats` baseline alone so it records what pytest would really have emitted | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-012 | Medium | The benchmark scenario for warning variety varied its warnings by number, and numeric normalization collapsed all forty into one group | Vary the scenario by a non-numeric token, as its unit-test counterpart already does; republish the affected figures | 0.6 | 0 | **done 2026-07-19** |
 | PR-UX-004 | Medium | The rerun command always says `pytest`, so it is not pasteable in a project driven by `just`, `uv run`, `tox` or a wrapper -- and being pasteable is the promise we state most often | Add `receptor_rerun_command`, defaulting to `pytest`; regression-cover that a configured runner still selects exactly the reported group | 0.6 | 0 | **done 2026-07-21** |
@@ -124,11 +125,11 @@ limitation`.
 | PR-FID-012 | Medium | Bare assertions were typed as `Failure` | Recognize an assertion crash that carries no exception name | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-002 | Medium | Benchmarks use a dishonest baseline and measure only compression | Baseline `pytest -q --no-header --tb=short`; record environment; measure diagnostic sufficiency | 0.6 | 0 | **done 2026-07-18** |
 | PR-REL-003 | Low | Benchmark module fails collection without the optional tokenizer | Resolved: benchmarking moved out of the test suite into `devtools/benchmarks/`, which degrades to a labelled approximation without `tiktoken` | 0.6 | 0 | **done 2026-07-18** |
-| PR-REL-004 | Low | Package metadata is incomplete and the version is duplicated | Version centralized in `__init__.py` via `[tool.hatch.version]`, with a recipe-drift regression. Remaining: license expression, authors, URLs, classifiers | post | 3 | in progress |
-| PR-REL-005 | Medium | No differential parity harness against pytest and JUnit | Compare semantic models automatically across the supported matrix | post | 3 | open |
+| PR-REL-004 | Low | Package metadata is incomplete and the version is duplicated | Git-tag-derived version through versioningit; license expression, authors, PyPI discovery classifier and entry point, support classifiers, project URLs, changelog, immutable-release verifier, and OIDC publication workflow | post | 3 | **done 2026-08-12** |
+| PR-REL-005 | Medium | No differential parity harness against pytest and JUnit | Compare semantic models automatically across the supported matrix | post | 3 | **done 2026-08-12** |
 | PR-REL-006 | Medium | No dogfooding program is scheduled | Stage A running: shadow comparison on MolSysMT, seven defects found and fixed, first real development cycle passed on sufficiency. Post: Stage B and C | post | 4 | in progress |
 
-**0.6 blockers: 31. Post-0.6: 12.** Most 0.6 items are corrections or deletions;
+**0.6 blockers: 31. Post-0.6: 13.** Most 0.6 items are corrections or deletions;
 only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 
 ## Evidence and provenance
@@ -160,7 +161,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-OPS-002 | A single six-second test emitted no heartbeat | AUD |
 | PR-OPS-003 | `captured_lines` receives every terminal write | AUD, ARCH |
 | PR-OPS-004 | No longer subclasses the reporter, but suppression still needs: `reporter.reportchars = ""`, mutating `config.option.tbstyle` inside `pytest_sessionfinish`, `create_terminal_writer` from `_pytest.config`, and `reporter._tw`. Collection is entirely public API | AUD, SCOPE |
-| PR-OPS-005 | Other plugins and early errors can bypass the replacement reporter; the inverse also bit us -- `no_summary` swallowed pytest-cov's report entirely | AUD |
+| PR-OPS-005 | Other plugins and early errors can bypass the replacement reporter; the inverse also bit us -- `no_summary` swallowed pytest-cov's report entirely. The executable coexistence regressions and `docs/channels.md` now define each boundary | AUD, TESTED |
 | PR-OPS-006 | `time.time()` used for durations and heartbeat | AUD |
 | PR-OPS-007 | Only dummy terminal-writer traffic is captured | AUD |
 | PR-OPS-008 | No defined behavior when the renderer or artifact writer raises | ARCH, TRUST, SCOPE |
@@ -187,6 +188,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-PILOT-012 | MolSysMT: `-c pytest.ini` with a single failing test outside rootdir rendered `rerun: python -m pytest ::test_name -q`, which exits 4 (`:: selection` with no file) | PILOT |
 | PR-PILOT-013 | MolSysMT: a build-peptide selection whose conftest deselects `peptide_parity` rendered `INCOMPLETE exit=0 \| 39 passed \| incomplete: 39 of 79 executed`, while normal pytest reported the 39 at 100% and exit 0 -- the 40-test gap was exactly the intentional deselection | PILOT |
 | PR-PILOT-014 | MolSysViewer: `--receptor=llm -n 12` over 1168 tests printed `20% 647/1168` then `40% 647/1168` -- same count, same 20s -- before `60% 701/1168`; the round label disagreed with its own fraction (647 is 55%) and repeated | PILOT |
+| PR-PILOT-015 | MolSysMT: xdist with one valid target and one missing target returned exit 5 and rendered only `NO_TESTS`; the full report contained no further evidence, while the serial boundary retained `file or directory not found` | PILOT |
 | PR-OPS-011 | Our own text was plain by construction rather than by guarantee; nothing stopped a third-party plugin colouring the same stream | SCOPE |
 | PR-OPS-012 | The row moved from -63.8% to -97.4% with no change to the renderer; the scenario written to detect under-reported warning groups no longer had more than one group | SELF |
 | PR-UX-004 | `pytest-markdown-report` ships `--markdown-rerun-cmd`; we ship no equivalent and had not noticed the gap | PRIOR-ART |
@@ -197,7 +199,7 @@ only PR-UX-002, PR-UX-003, and PR-FID-011 add behavior.
 | PR-REL-002 | The published table compares against default pytest; against `-q --no-header` the green case is roughly 12 tokens versus 9, not an 87.88% saving | AUD, SCOPE |
 | PR-REL-003 | `tests/test_token_savings.py` could not be collected without `tiktoken` | AUD |
 | PR-REL-004 | `pyproject.toml` and `devtools/conda-build/meta.yaml` declared 0.1.0 and 0.1.1; now single-sourced and guarded by `tests/test_packaging.py` | ARCH |
-| PR-REL-005 | Semantic parity with pytest and JUnit is asserted but never measured | TRUST |
+| PR-REL-005 | Curated semantic parity is compared automatically against plain pytest and JUnit for serial and xdist runs; CI repeats it over every supported Python/pytest cell | TRUST, TESTED |
 | PR-REL-006 | MolSysMT is identified as the proving ground but no stage is scheduled; Stage A began 2026-07-18, evidence in the `molsysmt_*` documents and `resolved_bugs/` | TRUST, PILOT |
 
 ## Split-release decomposition
@@ -399,6 +401,105 @@ The audit program is complete only when:
 - no proposal in any devguide document lacks an identifier here.
 
 ## Revision log
+
+**2026-08-12f** — PR-REL-004 and the local half of PyPI publication readiness
+are complete.
+
+Current official pytest documentation confirms that installed plugins are
+autoloaded through the `pytest11` entry-point group and recommends the
+`Framework :: Pytest` classifier; both were already correct here. Pytest's
+official plugin page is an automated informational scan of PyPI names beginning
+with `pytest-` or `pytest_`, not a curated submission or endorsement. The exact
+`pytest-receptor` PyPI JSON endpoint returned 404 today, so the name appears
+available until a first publication reserves it. Metadata now also carries
+keywords, issue tracker, changelog, matching MIT expression, authors, README,
+Python classifiers, and repository URL. A release-event workflow builds once,
+runs strict metadata and tag/version checks, installs the wheel and proves
+pytest discovery, then publishes from a protected `pypi` environment with
+short-lived OIDC credentials and PyPI attestations. `pypi_release.md` records
+the exact pending-publisher values and manual approval boundary. Transfer to
+the pytest-dev organization is explicitly optional and deferred until the
+plugin has external users; it is not confused with automatic listing.
+
+**2026-08-12e** — The initial `pytest-receptor.events@1` artifact and reader
+contracts are executable.
+
+`--receptor-events=PATH` now streams the same normalized phase and warning
+evidence used by the renderer, in serial and under xdist, and ends with a
+`session_finish` record containing exit truth, normalized outcome, explicit
+zero-inclusive counts, execution completeness, and SHA-256 integrity metadata
+covering every preceding record. Absence or truncation of that final record is
+read as an incomplete stream, never success. Files are owner-only, symlinks are
+refused, and persisted text receives the existing sanitization and conservative
+credential redaction. `pytest_receptor.read_artifact` validates integrity and
+schema major, preserves unknown record types, and distinguishes stream
+finalization from run completeness. PR-API-001 remains in progress until a real
+external consumer exercises the API; size bounds, blobs, configurable policy,
+and broader failure injection remain 0.9 work.
+
+**2026-08-12d** — PR-ARCH-001 now has an executable normalized evidence
+boundary rather than a deferred design.
+
+`SessionEvidence` receives every runtime phase and collection failure, warning,
+logical outcome, skip/xfail/xpass reason, captured section, worker identity,
+duration, sequence, and per-phase attempt number. Failure groups, counts,
+warning groups, captured-output rendering, progress, and emergency fallback are
+all projections of this model; no pytest report object is retained through
+session finish. Runtime exception types come from `CallInfo.excinfo`, are
+attached as JSON-safe report attributes before xdist serialization, and carry
+their qualified name and `structured` provenance. Where pytest supplies only a
+formatted collection failure, the model records that limitation as
+`formatted` instead of presenting parsed text as structured fact. Exact text
+contracts remain unchanged. PR-ARCH-001 stays in progress until session
+finalization metadata and subtest identity are represented; JSONL and its
+reader remain separately open under the 0.8 release gate.
+
+**2026-08-12c** — Text contracts, channel authority, and differential parity are
+now executable.
+
+PR-OPS-005 is complete for the current architecture: `docs/channels.md` defines
+pytest's process status as automation authority, the receptor-owned stdout
+block, bounded stderr progress, third-party output coexistence, lifecycle and
+failure semantics of the full text report, and JUnit as today's independent
+machine artifact. Existing regressions prove progress never touches stdout,
+other terminal-summary plugins survive, stale artifacts disappear at session
+start, unavailable artifacts cannot make detail unreachable, and renderer
+failure preserves pytest's status.
+
+PR-REL-005 now has a differential harness rather than an assertion of parity.
+For green, call failure, setup error, skip, xfail, xpass, and empty runs, it runs
+plain pytest with JUnit and the receptor separately, then compares exit status
+and semantic counts. Every scenario runs serially and under xdist; the existing
+CI matrix repeats the harness on Python 3.11–3.13 and pytest 8–9. Exact golden
+tests separately protect green, single-failure, and mixed-state text output as
+the provisional public API. `release_1.0_readiness.md` records the boundary:
+these close validation gaps but do not substitute for the normalized event
+model, versioned artifact, reader, or sustained dogfooding required by 1.0.
+
+**2026-08-12b** — CI now proves the compatibility claims it publishes.
+
+PR-REL-001 is complete through its post-0.6 deliverable: every Python/pytest
+matrix cell now installs and exercises xdist, pytest-cov, pytest-rerunfailures,
+pytest-subtests, and JUnit XML rather than silently skipping integrations that
+were absent. Project-owned Ruff configuration replaces ambient defaults, lint
+targets the real flat package instead of the nonexistent `src/`, and format is
+enforced over package, tests, devtools, and the Sphinx configuration. The docs
+workflow now runs on pull requests, treats warnings as errors, and deploys only
+outside pull requests. Tool extras in `pyproject.toml` are the shared dependency
+contract for local development and CI.
+
+**2026-08-12a** — Missing explicit targets under xdist remain actionable.
+
+PR-PILOT-015 (high): pytest-xdist can turn a mixed valid/missing filesystem
+selection into exit 5 while dropping the serial collection boundary's `file or
+directory not found` diagnostic. The receptor now checks pytest's already-parsed
+`config.args` on the controller, relative to the invocation directory. When exit
+5 coincides with concrete missing-target evidence it renders `USAGE_ERROR exit=5
+| invalid selection` and lists every missing target on stdout and in the full
+report. The numeric exit code remains pytest's; an existing target that simply
+collects no tests remains `NO_TESTS exit=5`. `--pyargs` is excluded because its
+targets require pytest's module-resolution semantics. Two xdist subprocess
+regressions cover both sides, and the field report moved to `resolved_bugs/`.
 
 **2026-08-02a** — xdist progress no longer prints a percent that contradicts its
 own count.

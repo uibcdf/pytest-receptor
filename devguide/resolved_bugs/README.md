@@ -34,3 +34,4 @@ stays an inbox. Nothing is closed by deletion.
 | `external_single_test_rerun_loses_path_with_fixed_rootdir.md` | PR-PILOT-012 | 2026-07-22 |
 | `deselected_tests_reported_incomplete.md` | PR-PILOT-013 | 2026-07-28 |
 | `full_suite_empty_success_output_molsysviewer.md` | PR-PILOT-013, PR-PILOT-014 | 2026-08-02 |
+| `xdist_mixed_valid_and_missing_paths_hide_the_usage_error.md` | PR-PILOT-015 | 2026-08-12 |

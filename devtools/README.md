@@ -34,3 +34,17 @@ The version has a single source of truth: the git tag. `versioningit` derives it
 at build time and writes `pytest_receptor/_version.py` (gitignored); the conda
 recipe reads the same tag through `GIT_DESCRIBE_TAG`. Nothing is edited by hand —
 this matches the rest of the UIBCDF suite (`argdigest`, `pyunitwizard`).
+
+## Benchmarks
+
+Token/output benchmarks and the separate wall-time/peak-RSS benchmark live in
+`benchmarks/`:
+
+```bash
+python devtools/benchmarks/run_benchmarks.py
+python devtools/benchmarks/run_performance.py
+```
+
+The performance harness uses a unique temporary directory, disables unrelated
+third-party plugins, and removes it after the run, so concurrent invocations do
+not interfere.

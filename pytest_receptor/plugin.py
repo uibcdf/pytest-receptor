@@ -18,17 +18,36 @@ Design notes that are easy to undo by accident:
 
 from __future__ import annotations
 
+import ast
 import ctypes
+import hashlib
 import os
 import re
 import sys
 import tempfile
 import time
 import traceback
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+
+from .artifact import (
+    DEFAULT_MAX_BYTES,
+    MIN_MAX_BYTES,
+    SCHEMA,
+    ArtifactError,
+    JsonlArtifactWriter,
+)
+from .model import (
+    CapturedSection,
+    ExceptionEvidence,
+    PhaseEvent,
+    SessionEvidence,
+    SubtestIdentity,
+    WarningEvent,
+)
 
 # A native extension that writes to stdout through C stdio (fprintf(stdout, ...))
 # is fully buffered when pytest has redirected fd 1 to a capture file, so its
@@ -178,12 +197,36 @@ def pytest_addoption(parser):
         help="Append what this run cost compared with pytest as you normally "
         "run it, so you can judge on your own suite whether this is worth it.",
     )
+    group.addoption(
+        "--receptor-events",
+        metavar="PATH",
+        help="Write normalized evidence as versioned JSONL. Requires an llm or "
+        "ci profile; no final session record means the artifact is incomplete.",
+    )
+    group.addoption(
+        "--receptor-events-max-bytes",
+        type=int,
+        default=DEFAULT_MAX_BYTES,
+        metavar="BYTES",
+        help="Maximum JSONL artifact size (default: 50 MiB, minimum: 65536). "
+        "Further events are counted as dropped and the stream is finalized.",
+    )
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config):
     receptor = config.getoption("receptor")
+    if config.getoption("receptor_events") and (
+        config.getoption("receptor_events_max_bytes") < MIN_MAX_BYTES
+    ):
+        raise pytest.UsageError(
+            f"--receptor-events-max-bytes must be at least {MIN_MAX_BYTES}"
+        )
     if receptor == "human":
+        if config.getoption("receptor_events"):
+            raise pytest.UsageError(
+                "--receptor-events requires --receptor=llm or --receptor=ci"
+            )
         # PR-OPS-009: register nothing at all, so output is byte-identical to
         # pytest without the plugin.
         return
@@ -270,6 +313,8 @@ class Occurrence:
     #: How many times this test ran before its final outcome. Above one means a
     #: rerun plugin retried it.
     attempts: int = 1
+    subtest: str = ""
+    subtest_index: int = 0
 
 
 @dataclass
@@ -280,6 +325,7 @@ class Group:
     phase: str
     message: str
     location: str
+    fingerprint: str
     cause: str = ""
     frames: list = field(default_factory=list)
     #: Keyed by node ID so a retried test stays one occurrence.
@@ -296,6 +342,11 @@ class ReceptorPlugin:
         self.profile = profile
         self.full = config.getoption("receptor_full")
         self.stats = config.getoption("receptor_stats")
+        self._artifact_option = config.getoption("receptor_events")
+        self._artifact_max_bytes = config.getoption("receptor_events_max_bytes")
+        self._artifact = None
+        self._artifact_issue = ""
+        self._run_id = uuid.uuid4().hex
         # The runner the rerun line starts with. A project property (invocation
         # style), so it is an ini value, not a per-run flag. Empty omits the line.
         self._rerun_command = (config.getini("receptor_rerun_command") or "").strip()
@@ -304,13 +355,7 @@ class ReceptorPlugin:
         self._sink = None
         self._shown = ""
         self._start = time.monotonic()  # PR-OPS-006
-        self._failures = []
-        # pytest's states are per phase, not per test: a test that passes and
-        # then fails its teardown counts as both `passed` and `error`. A single
-        # value per node ID cannot represent that, and folding it into `failed`
-        # disagrees with pytest about what happened.
-        self._outcomes = {}
-        self._errors = set()
+        self._evidence = SessionEvidence()
         # Where the reader ran pytest. Every path we print has to resolve from
         # here, or they cannot act on it.
         self._invocation = Path(
@@ -318,9 +363,16 @@ class ReceptorPlugin:
             if getattr(config, "invocation_params", None) is not None
             else Path.cwd()
         )
-        self._collected = 0
-        self._deselected = 0
-        self._finished = 0
+        # xdist does not collect on the controller. If its workers receive a
+        # mixture of valid and missing explicit paths, pytest returns exit 5
+        # and drops the serial run's actionable UsageError. Validate only the
+        # already-parsed collection arguments so options and their values can
+        # never be mistaken for paths (PR-PILOT-015).
+        self._invalid_selections = (
+            ()
+            if hasattr(config, "workerinput")
+            else _missing_selection_paths(config, self._invocation)
+        )
         self._next_threshold = _PROGRESS_STEP
         self._progress_started = False
         self._last_progress = self._start
@@ -331,11 +383,6 @@ class ReceptorPlugin:
         # to go backwards. Only the controller has the global view, so only the
         # controller speaks.
         self._is_worker = hasattr(config, "workerinput")
-        self._warnings = 0
-        self._warning_groups = {}
-        self._skipped = {}
-        self._xfailed = {}
-        self._xpassed = []
         self._project_normalizers = _compile_normalizers(config)
 
     # ------------------------------------------------------------------ hooks
@@ -361,7 +408,7 @@ class ReceptorPlugin:
         without this the controller has no denominator and falls back to a bare
         count. Declared optional so the plugin still loads when xdist is absent.
         """
-        self._collected = max(self._collected, len(ids))
+        self._evidence.collected = max(self._evidence.collected, len(ids))
 
     def pytest_sessionstart(self, session):
         """Clear a previous run's artifact so a mid-run read never returns it.
@@ -373,6 +420,7 @@ class ReceptorPlugin:
         """
         if self._is_worker:
             return
+        self._start_artifact()
         cache = getattr(self.config, "cache", None)
         if cache is None:
             return
@@ -383,6 +431,61 @@ class ReceptorPlugin:
         except Exception:
             # Losing this cleanup must never cost the run.
             pass
+
+    def _start_artifact(self):
+        if not self._artifact_option:
+            return
+        path = Path(self._artifact_option)
+        if not path.is_absolute():
+            path = self._invocation / path
+        try:
+            from . import __version__
+
+            self._artifact = JsonlArtifactWriter(
+                path,
+                {
+                    "schema": SCHEMA,
+                    "type": "session_start",
+                    "run_id": self._run_id,
+                    "receptor_version": __version__,
+                    "pytest_version": pytest.__version__,
+                    "python_version": sys.version.split()[0],
+                    "args": [
+                        _sanitize(str(arg))
+                        for arg in getattr(self.config, "invocation_params", ()).args
+                    ],
+                    "rootdir": self._display_path(self.config.rootpath),
+                    "invocation_dir": str(self._invocation),
+                    "mode": "xdist"
+                    if self.config.pluginmanager.hasplugin("xdist")
+                    and getattr(self.config.option, "numprocesses", None)
+                    else "serial",
+                },
+                max_bytes=self._artifact_max_bytes,
+            )
+        except Exception as exc:
+            self._artifact = None
+            self._artifact_issue = _sanitize(f"{type(exc).__name__}: {exc}")
+
+    def _write_artifact_phase(self, event):
+        if self._artifact is None:
+            return
+        try:
+            self._artifact.write_phase(self._run_id, event)
+        except ArtifactError as exc:
+            self._artifact.close()
+            self._artifact_issue = _sanitize(str(exc))
+            self._artifact = None
+
+    def _write_artifact_warning(self, event):
+        if self._artifact is None:
+            return
+        try:
+            self._artifact.write_warning(self._run_id, event)
+        except ArtifactError as exc:
+            self._artifact.close()
+            self._artifact_issue = _sanitize(str(exc))
+            self._artifact = None
 
     def _emit_progress(self):
         """A sign of life on stdout's quieter sibling.
@@ -402,8 +505,8 @@ class ReceptorPlugin:
         if elapsed < _PROGRESS_AFTER:
             return
 
-        if self._collected:
-            percent = self._finished * 100 // self._collected
+        if self._evidence.collected:
+            percent = self._evidence.finished * 100 // self._evidence.collected
             if not self._progress_started:
                 # The first line after the warm-up. Every 20% milestone already
                 # behind us was crossed during the silence, so we never watched
@@ -423,7 +526,7 @@ class ReceptorPlugin:
             # reaches stdout.
             if percent >= self._next_threshold:
                 self._progress_line(
-                    f"{percent}% {self._finished}/{self._collected}",
+                    f"{percent}% {self._evidence.finished}/{self._evidence.collected}",
                     elapsed,
                 )
                 self._next_threshold = (percent // _PROGRESS_STEP + 1) * _PROGRESS_STEP
@@ -434,7 +537,7 @@ class ReceptorPlugin:
         if elapsed - (self._last_progress - self._start) < _PROGRESS_AFTER:
             return
         self._last_progress = time.monotonic()
-        self._progress_line(str(self._finished), elapsed)
+        self._progress_line(str(self._evidence.finished), elapsed)
 
     def _progress_line(self, marker, elapsed):
         try:
@@ -453,7 +556,7 @@ class ReceptorPlugin:
         These are reported separately; the denominator is the post-deselection
         total, taken from ``session.items`` in :meth:`pytest_collection_finish`.
         """
-        self._deselected += len(items)
+        self._evidence.deselected += len(items)
 
     def pytest_collection_finish(self, session):
         """Capture the effective run set after all collection modification.
@@ -471,7 +574,7 @@ class ReceptorPlugin:
         from zeroing that out on the controller.
         """
         if session.items:
-            self._collected = len(session.items)
+            self._evidence.collected = len(session.items)
 
     def pytest_warning_recorded(self, warning_message, when, nodeid, location):
         """Group warnings as they arrive.
@@ -480,7 +583,6 @@ class ReceptorPlugin:
         and origin are structured data and there is no need to parse them back
         out of a formatted string.
         """
-        self._warnings += 1
         category = getattr(warning_message, "category", None)
         name = getattr(category, "__name__", None) or "Warning"
         text = _sanitize(str(getattr(warning_message, "message", "")))
@@ -488,27 +590,33 @@ class ReceptorPlugin:
         lineno = getattr(warning_message, "lineno", 0)
         origin = f"{self._display_path(filename)}:{lineno}" if filename else ""
 
-        key = (name, _normalize_warning(self._normalize(text)))
-        group = self._warning_groups.get(key)
-        if group is None:
-            group = {
-                "category": name,
-                "message": text,
-                "origin": origin,
-                "count": 0,
-                "variants": set(),
-            }
-            self._warning_groups[key] = group
-        group["count"] += 1
-        # Normalizing numbers merges `(1441,) vs (605,)` with `(1441,) vs
-        # (1289,)`. That is right -- one warning -- but the reader should know
-        # the numbers differed rather than have them silently replaced by
-        # whichever arrived first.
-        group["variants"].add(text)
+        event = WarningEvent(
+            name,
+            text,
+            origin,
+            _sanitize(nodeid or ""),
+            _sanitize(when or ""),
+            self._evidence.next_sequence(),
+        )
+        self._evidence.warnings.append(event)
+        self._write_artifact_warning(event)
 
     def pytest_collectreport(self, report):
         if report.failed:
-            self._failures.append(report)
+            self._record_report(report)
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_runtest_makereport(self, item, call):
+        """Attach structured exception identity before xdist serializes reports."""
+        report = yield
+        if call.excinfo is not None:
+            exception_type = call.excinfo.type
+            report.receptor_exception_type = exception_type.__name__
+            report.receptor_exception_qualified_type = (
+                f"{exception_type.__module__}.{exception_type.__qualname__}"
+            )
+            report.receptor_exception_type_source = "structured"
+        return report
 
     @pytest.hookimpl(wrapper=True, trylast=True)
     def pytest_runtest_teardown(self, item, nextitem):
@@ -525,35 +633,117 @@ class ReceptorPlugin:
             pass
 
     def pytest_runtest_logreport(self, report):
-        nodeid = report.nodeid
+        self._record_report(report)
         if report.when == "teardown":
-            self._finished += 1
             self._emit_progress()
 
-        if report.failed:
-            self._failures.append(report)
-            # pytest_report_teststatus in _pytest/runner.py: a failure outside
-            # the call phase is an *error*, not a failed test.
-            if report.when in ("setup", "teardown"):
-                self._errors.add(nodeid)
-            else:
-                self._outcomes[nodeid] = "failed"
-        elif report.when == "call":
-            if hasattr(report, "wasxfail"):
-                if report.passed:
-                    self._xpassed.append((nodeid, report.wasxfail or ""))
-                    self._outcomes[nodeid] = "xpassed"
-                else:
-                    self._xfailed[nodeid] = _sanitize(report.wasxfail or "")
-                    self._outcomes[nodeid] = "xfailed"
-            elif report.skipped:
-                self._skipped[nodeid] = _skip_reason(report)
-                self._outcomes[nodeid] = "skipped"
-            else:
-                self._outcomes.setdefault(nodeid, "passed")
-        elif report.skipped and report.when == "setup":
-            self._skipped[nodeid] = _skip_reason(report)
-            self._outcomes.setdefault(nodeid, "skipped")
+    def _record_report(self, report):
+        """Normalize a pytest report at the collection boundary."""
+        phase = getattr(report, "when", None) or "collection"
+        nodeid = _sanitize(str(getattr(report, "nodeid", "")))
+        attempt = self._evidence.attempt_for(nodeid, phase)
+        subtest = self._subtest_identity(report, nodeid, attempt)
+        reason = ""
+        if phase == "call" and hasattr(report, "wasxfail"):
+            reason = _sanitize(report.wasxfail or "")
+            outcome = "xpassed" if report.passed else "xfailed"
+        elif report.skipped:
+            reason = _skip_reason(report)
+            outcome = "skipped"
+        else:
+            outcome = str(getattr(report, "outcome", "unknown"))
+
+        # pytest-rerunfailures changes a failed report's public outcome to
+        # ``rerun``. Preserve that attempt's diagnostic evidence in the JSONL
+        # stream while SessionEvidence.failures keeps it out of the final
+        # failure rendering if a later attempt passes.
+        exception = (
+            self._exception_evidence(report)
+            if report.failed or outcome == "rerun"
+            else None
+        )
+        sections = tuple(
+            CapturedSection(
+                name=_sanitize(str(name)),
+                kind=_section_kind(str(name)),
+                content=_sanitize(str(content)),
+            )
+            for name, content in getattr(report, "sections", ())
+        )
+        duration = getattr(report, "duration", None)
+        event = PhaseEvent(
+            sequence=self._evidence.next_sequence(),
+            nodeid=nodeid,
+            phase=phase,
+            outcome=outcome,
+            duration=float(duration) if duration is not None else None,
+            worker_id=_sanitize(str(getattr(report, "worker_id", "") or "")),
+            attempt=attempt,
+            reason=reason,
+            exception=exception,
+            sections=sections,
+            subtest=subtest,
+        )
+        self._evidence.add_phase(event)
+        self._write_artifact_phase(event)
+
+    def _subtest_identity(self, report, nodeid, attempt):
+        """Normalize pytest-subtests without importing its optional package."""
+        context = getattr(report, "context", None)
+        old_describe = getattr(report, "sub_test_description", None)
+        builtin_describe = getattr(report, "_sub_test_description", None)
+        describe = old_describe or builtin_describe
+        if context is None or not callable(describe):
+            return None
+        message = _sanitize(getattr(context, "msg", "") or "")
+        parameters = []
+        for key, value in sorted(
+            getattr(context, "kwargs", {}).items(), key=lambda item: str(item[0])
+        ):
+            rendered = _subtest_parameter(
+                value,
+                builtin=builtin_describe is not None,
+                distributed=bool(getattr(report, "worker_id", "")),
+            )
+            parameters.append((_sanitize(str(key)), rendered))
+        parts = [f"[{message}]" if message else ""]
+        if parameters:
+            parts.append(
+                "(" + ", ".join(f"{key}={value}" for key, value in parameters) + ")"
+            )
+        description = " ".join(part for part in parts if part)
+        if not description:
+            try:
+                description = _sanitize(describe())
+            except Exception:
+                description = "(<subtest>)"
+        return SubtestIdentity(
+            index=self._evidence.next_subtest_index(nodeid, attempt),
+            description=description,
+            message=message,
+            parameters=tuple(parameters),
+        )
+
+    def _exception_evidence(self, report):
+        exc_type, message, location, _phase = self._describe(report)
+        structured_type = getattr(report, "receptor_exception_type", "")
+        qualified_type = getattr(report, "receptor_exception_qualified_type", "")
+        type_source = getattr(report, "receptor_exception_type_source", "")
+        if structured_type:
+            exc_type = str(structured_type)
+            type_source = str(type_source or "structured")
+        else:
+            type_source = "formatted" if message else "unknown"
+        return ExceptionEvidence(
+            type_name=exc_type,
+            qualified_type=str(qualified_type),
+            type_source=type_source,
+            message=message,
+            location=location,
+            cause=self._cause(report),
+            frames=tuple(self._frames(report)),
+            raw_longrepr=_sanitize(str(getattr(report, "longrepr", ""))),
+        )
 
     @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self, session, exitstatus):
@@ -566,8 +756,20 @@ class ReceptorPlugin:
         tw = self._terminal or self.config.get_terminal_writer()
         try:
             groups = self._build_groups()
-            summary = self._summary_line(session, exitstatus, groups)
-            full_report = self._render(summary, groups, limit=None, list_all=True)
+            selection_errors = (
+                self._invalid_selections
+                if int(exitstatus) == int(pytest.ExitCode.NO_TESTS_COLLECTED)
+                else ()
+            )
+            summary = self._summary_line(session, exitstatus, groups, selection_errors)
+            self._finalize_artifact(session, exitstatus, groups, selection_errors)
+            full_report = self._render(
+                summary,
+                groups,
+                limit=None,
+                list_all=True,
+                selection_errors=selection_errors,
+            )
             path = self._write_full_report(full_report)
             if self.full:
                 shown = full_report
@@ -580,7 +782,12 @@ class ReceptorPlugin:
                 # what was cut, so nothing becomes unreachable.
                 limit = self.profile.detailed_groups if path is not None else None
                 shown = self._render(
-                    summary, groups, limit=limit, list_all=False, path=path
+                    summary,
+                    groups,
+                    limit=limit,
+                    list_all=False,
+                    path=path,
+                    selection_errors=selection_errors,
                 )
             # No leading blank: the verdict is the first thing on stdout, so a
             # consumer reading line one gets the answer.
@@ -589,13 +796,118 @@ class ReceptorPlugin:
         except Exception as exc:  # pragma: no cover - exercised via tests
             self._emergency(tw, exitstatus, exc)
 
+    def _finalize_artifact(self, session, exitstatus, groups, selection_errors):
+        if self._artifact is None:
+            if self._artifact_option and self._artifact_issue:
+                self._artifact_warning()
+            return
+        counts = {
+            label: sum(outcome == label for outcome in self._evidence.outcomes.values())
+            for label in ("passed", "failed", "skipped", "xfailed", "xpassed")
+        }
+        counts.update(
+            {
+                "errors": len(self._evidence.errors),
+                "warnings": self._evidence.warning_count,
+                "collected": self._evidence.collected,
+                "executed": self._evidence.executed,
+                "not_executed": max(
+                    self._evidence.collected - self._evidence.executed, 0
+                ),
+                "deselected": self._evidence.deselected,
+                "reruns": self._evidence.reruns,
+                "subtests": self._evidence.subtest_counts,
+            }
+        )
+        stop_reason = self._stop_reason(session, exitstatus, self._evidence.executed)
+        verdict, note = _verdict(exitstatus)
+        if verdict == "NO_TESTS" and selection_errors:
+            verdict = "USAGE_ERROR"
+        if verdict == "INTERRUPTED" and any(
+            group.phase == "collect" for group in groups
+        ):
+            verdict = "COLLECTION_ERROR"
+        if stop_reason and verdict == "PASS":
+            verdict = "INCOMPLETE"
+        try:
+            for group in groups:
+                self._artifact.write(
+                    {
+                        "schema": SCHEMA,
+                        "type": "root_cause",
+                        "run_id": self._run_id,
+                        "event_id": f"{self._run_id}:cause:{group.fingerprint}",
+                        "fingerprint": group.fingerprint,
+                        "exception_type": group.exc_type,
+                        "phase": group.phase,
+                        "location": group.location,
+                        "occurrences": [
+                            {
+                                "nodeid": occurrence.nodeid,
+                                "attempts": occurrence.attempts,
+                                "subtest_index": occurrence.subtest_index,
+                            }
+                            for occurrence in group.occurrences
+                        ],
+                    }
+                )
+            self._artifact.finalize(
+                {
+                    "schema": SCHEMA,
+                    "type": "session_finish",
+                    "run_id": self._run_id,
+                    "exitstatus": int(exitstatus),
+                    "outcome": verdict,
+                    "complete": not bool(stop_reason),
+                    "stop_reason": stop_reason,
+                    "note": note,
+                    "duration": time.monotonic() - self._start,
+                    "counts": counts,
+                    "root_causes": len(groups),
+                    "invalid_selections": list(selection_errors),
+                }
+            )
+        except ArtifactError as exc:
+            self._artifact_issue = _sanitize(str(exc))
+            self._artifact_warning()
+        finally:
+            self._artifact = None
+
+    def _artifact_warning(self):
+        try:
+            sys.stderr.write(
+                f"receptor artifact: unavailable: {self._artifact_issue}\n"
+            )
+            sys.stderr.flush()
+        except Exception:
+            pass
+
     # ------------------------------------------------------------- collection
 
     def _build_groups(self):
         groups = {}
-        for report in self._failures:
-            exc_type, message, location, phase = self._describe(report)
-            cause = self._cause(report)
+        subtest_failure_nodes = {
+            event.nodeid
+            for event in self._evidence.failures
+            if event.subtest is not None
+        }
+        for event in self._evidence.failures:
+            evidence = event.exception
+            assert evidence is not None
+            if (
+                event.subtest is None
+                and event.nodeid in subtest_failure_nodes
+                and re.fullmatch(r"contains \d+ failed subtests?", evidence.message)
+            ):
+                # pytest 9 + xdist adds a synthetic parent failure alongside
+                # the real SubtestReports. It is logical outcome evidence, not
+                # a second diagnostic cause.
+                continue
+            exc_type = evidence.type_name
+            message = evidence.message
+            location = evidence.location
+            phase = event.phase
+            cause = evidence.cause
             # One exception type raised from one line in one phase is one bug.
             # The message is deliberately *not* part of the key: a parametrized
             # test failing on twenty inputs produces twenty messages, and keying
@@ -609,10 +921,14 @@ class ReceptorPlugin:
                 group = Group(
                     exc_type=exc_type,
                     phase=phase,
-                    message=_truncate(message),
+                    # Keep complete evidence in the model. Presentation
+                    # budgets belong in _render_group so last-run.txt and the
+                    # JSONL stream remain recovery sources.
+                    message=message,
                     location=location,
+                    fingerprint=_fingerprint(key),
                     cause=cause,
-                    frames=self._frames(report),
+                    frames=list(evidence.frames),
                 )
                 groups[key] = group
             # Normalized so non-semantic values do not inflate the variant
@@ -623,23 +939,38 @@ class ReceptorPlugin:
             # per report made a test rerun three times read as three tests,
             # which is simply false, and false counts are the one thing this
             # project exists to prevent.
-            existing = group.by_nodeid.get(report.nodeid)
+            occurrence_key = (
+                (event.nodeid, event.attempt, event.subtest.index)
+                if event.subtest is not None
+                else (event.nodeid,)
+            )
+            existing = group.by_nodeid.get(occurrence_key)
             if existing is None:
-                group.by_nodeid[report.nodeid] = Occurrence(
-                    nodeid=report.nodeid,
+                group.by_nodeid[occurrence_key] = Occurrence(
+                    nodeid=event.nodeid,
                     phase=phase,
                     location=location,
-                    sections=self._sections(report),
+                    sections=self._renderable_sections(event.sections),
+                    attempts=event.attempt,
+                    subtest=(
+                        event.subtest.description if event.subtest is not None else ""
+                    ),
+                    subtest_index=(
+                        event.subtest.index if event.subtest is not None else 0
+                    ),
                 )
             else:
-                existing.attempts += 1
-                existing.sections = self._sections(report) or existing.sections
+                existing.attempts = max(existing.attempts, event.attempt)
+                existing.sections = (
+                    self._renderable_sections(event.sections) or existing.sections
+                )
         # Under xdist, reports arrive in whatever order the workers finish, so
         # both levels need an explicit total order or the same failure renders
         # differently between runs.
         for group in groups.values():
             group.occurrences = sorted(
-                group.by_nodeid.values(), key=lambda o: _natural(o.nodeid)
+                group.by_nodeid.values(),
+                key=lambda o: (_natural(o.nodeid), o.attempts, o.subtest_index),
             )
         # Largest blast radius first -- that is the one worth fixing -- then a
         # stable tiebreak.
@@ -715,16 +1046,14 @@ class ReceptorPlugin:
 
         return _prune_frames(raw)
 
-    def _sections(self, report):
+    def _renderable_sections(self, captured):
+        """Keep renderable section evidence complete until presentation."""
         sections = {}
-        for name, content in getattr(report, "sections", []):
-            lowered = name.lower()
-            for marker in ("stdout", "stderr", "log"):
-                if marker in lowered:
-                    text = _sanitize(content).strip()
-                    if text:
-                        sections[marker] = _truncate(text)
-                    break
+        for section in captured:
+            if section.kind in ("stdout", "stderr", "log"):
+                text = section.content.strip()
+                if text:
+                    sections[section.kind] = text
         return sections
 
     def _normalize(self, message):
@@ -736,6 +1065,28 @@ class ReceptorPlugin:
             except Exception:
                 continue
         return message
+
+    def _build_warning_groups(self):
+        """Derive the legacy warning presentation from normalized events."""
+        groups = {}
+        for warning in self._evidence.warnings:
+            key = (
+                warning.category,
+                _normalize_warning(self._normalize(warning.message)),
+            )
+            group = groups.get(key)
+            if group is None:
+                group = {
+                    "category": warning.category,
+                    "message": warning.message,
+                    "origin": warning.origin,
+                    "count": 0,
+                    "variants": set(),
+                }
+                groups[key] = group
+            group["count"] += 1
+            group["variants"].add(warning.message)
+        return groups
 
     def _display_path(self, path):
         """A path that resolves from where pytest was actually invoked.
@@ -774,18 +1125,24 @@ class ReceptorPlugin:
 
     # ---------------------------------------------------------------- render
 
-    def _summary_line(self, session, exitstatus, groups):
+    def _summary_line(self, session, exitstatus, groups, selection_errors=()):
         counts = {}
-        for outcome in self._outcomes.values():
+        for outcome in self._evidence.outcomes.values():
             counts[outcome] = counts.get(outcome, 0) + 1
-        if self._errors:
-            counts["errors"] = len(self._errors)
-        if self._deselected:
-            counts["deselected"] = self._deselected
-        executed = len(set(self._outcomes) | self._errors)
+        if self._evidence.errors:
+            counts["errors"] = len(self._evidence.errors)
+        if self._evidence.deselected:
+            counts["deselected"] = self._evidence.deselected
+        executed = self._evidence.executed
         duration = time.monotonic() - self._start
 
         verdict, note = _verdict(exitstatus)
+        # Under xdist, missing explicit paths surface as NO_TESTS rather than
+        # pytest's serial USAGE_ERROR. Keep pytest's authoritative exit code,
+        # but refine the label from evidence available on the controller so an
+        # empty selection cannot hide a malformed invocation.
+        if verdict == "NO_TESTS" and selection_errors:
+            verdict = "USAGE_ERROR"
         # pytest raises Interrupted for collection errors, so exit status alone
         # cannot tell them apart from a real interrupt.
         if verdict == "INTERRUPTED" and any(g.phase == "collect" for g in groups):
@@ -802,9 +1159,17 @@ class ReceptorPlugin:
             verdict = "INCOMPLETE"
         parts = [f"{verdict} exit={int(exitstatus)}"]
 
+        if selection_errors:
+            parts.append("invalid selection")
+
         detail = []
         for label in (
-            "failed", "errors", "passed", "skipped", "xfailed", "xpassed",
+            "failed",
+            "errors",
+            "passed",
+            "skipped",
+            "xfailed",
+            "xpassed",
             "deselected",
         ):
             if counts.get(label):
@@ -818,8 +1183,8 @@ class ReceptorPlugin:
             parts.append(incomplete)
 
         parts.append(f"{duration:.2f}s")
-        if self._warnings:
-            parts.append(f"{self._warnings} warnings")
+        if self._evidence.warning_count:
+            parts.append(f"{self._evidence.warning_count} warnings")
         if groups:
             # Stated even when there is only one: "38 failed | 1 root cause" is
             # the whole point, and suppressing it hides the best news in the
@@ -832,18 +1197,35 @@ class ReceptorPlugin:
 
     def _stop_reason(self, session, exitstatus, executed):
         if exitstatus == pytest.ExitCode.INTERRUPTED:
-            return f"incomplete: {executed} of {self._collected} executed"
+            return f"incomplete: {executed} of {self._evidence.collected} executed"
         shouldstop = getattr(session, "shouldstop", False)
         shouldfail = getattr(session, "shouldfail", False)
         if shouldstop or shouldfail:
             reason = "maxfail" if shouldfail else "stopped"
-            return f"incomplete ({reason}): {executed} of {self._collected} executed"
-        if self._collected and executed < self._collected:
-            return f"incomplete: {executed} of {self._collected} executed"
+            return (
+                f"incomplete ({reason}): {executed} of "
+                f"{self._evidence.collected} executed"
+            )
+        if self._evidence.collected and executed < self._evidence.collected:
+            return f"incomplete: {executed} of {self._evidence.collected} executed"
         return ""
 
-    def _render(self, summary, groups, limit, list_all, path=None):
+    def _render(
+        self,
+        summary,
+        groups,
+        limit,
+        list_all,
+        path=None,
+        selection_errors=(),
+    ):
         lines = [summary]
+
+        if selection_errors:
+            lines.append("")
+            lines.append("invalid selection:")
+            for selection in selection_errors:
+                lines.append(f"  file or directory not found: {selection}")
 
         for index, group in enumerate(groups, start=1):
             if limit is not None and index > limit:
@@ -856,7 +1238,8 @@ class ReceptorPlugin:
             lines.append("")
             lines.extend(self._render_group(index, group, list_all))
 
-        if self._warning_groups:
+        warning_groups = self._build_warning_groups()
+        if warning_groups:
             lines.append("")
             # Every distinct warning, always. Truncating by frequency is
             # exactly backwards: the group that appears once is the one most
@@ -866,11 +1249,12 @@ class ReceptorPlugin:
             # many tests it has -- a pilot run of 9,332 tests produced 216
             # warnings in 60 groups.
             groups_shown = sorted(
-                self._warning_groups.values(),
+                warning_groups.values(),
                 key=lambda g: (-g["count"], g["category"], g["origin"]),
             )
             lines.append(
-                f"warnings: {self._warnings} in {len(self._warning_groups)} groups"
+                f"warnings: {self._evidence.warning_count} in "
+                f"{len(warning_groups)} groups"
             )
             for group in groups_shown:
                 # One line per group. Two read better, but this section is pure
@@ -891,7 +1275,10 @@ class ReceptorPlugin:
         # A scientific suite skips heavily for missing optional dependencies,
         # and "412 skipped" does not tell you which capability is absent. The
         # reasons are bounded by their variety, not by the number of tests.
-        for label, reasons in (("skipped", self._skipped), ("xfailed", self._xfailed)):
+        for label, reasons in (
+            ("skipped", self._evidence.skipped),
+            ("xfailed", self._evidence.xfailed),
+        ):
             grouped = {}
             for reason in reasons.values():
                 grouped[reason] = grouped.get(reason, 0) + 1
@@ -912,10 +1299,10 @@ class ReceptorPlugin:
             if remaining:
                 lines.append(f"  +{remaining} more")
 
-        if self._xpassed:
+        if self._evidence.xpassed:
             lines.append("")
             lines.append("unexpected passes:")
-            for nodeid, reason in self._xpassed:
+            for nodeid, reason in self._evidence.xpassed:
                 suffix = f" - {_sanitize(reason)}" if reason else ""
                 lines.append(f"  {self._selector(nodeid)}{suffix}")
 
@@ -933,7 +1320,8 @@ class ReceptorPlugin:
             f"[{index}] {group.exc_type} | {_tests(group)} | {group.phase}",
             f"    {group.location}",
         ]
-        for line in group.message.splitlines():
+        message = group.message if list_all else _truncate(group.message)
+        for line in message.splitlines():
             # rstrip only: pytest pads its assertion explanations with
             # whitespace-only lines, which cost a token and read as corruption.
             # Genuinely empty lines are kept, since a diff of multi-line strings
@@ -946,6 +1334,7 @@ class ReceptorPlugin:
             shown = [v for v in group.variants.values()][1 : 1 + _SHOWN_TESTS]
             lines.append(f"    {extra} other message{'s' if extra > 1 else ''}:")
             for variant in shown:
+                variant = variant if list_all else _truncate(variant)
                 lines.append(f"      {variant.splitlines()[0]}")
             if extra > len(shown):
                 lines.append(f"      +{extra - len(shown)} more")
@@ -955,9 +1344,13 @@ class ReceptorPlugin:
         for occurrence in self._section_sources(group, list_all):
             for name, content in occurrence.sections.items():
                 lines.append(f"    captured {name} ({occurrence.nodeid}):")
+                if not list_all:
+                    content = _truncate(content)
                 for line in content.splitlines():
                     lines.append(f"      {line}")
 
+        if len(group.occurrences) == 1 and group.occurrences[0].subtest:
+            lines.append(f"    subtest: {group.occurrences[0].subtest}")
         if len(group.occurrences) > 1:
             lines.append("    tests:")
             shown = group.occurrences if list_all else group.occurrences[:_SHOWN_TESTS]
@@ -967,7 +1360,10 @@ class ReceptorPlugin:
                     if occurrence.attempts > 1
                     else ""
                 )
-                lines.append(f"      {self._occurrence_selector(occurrence)}{retried}")
+                subtest = f" :: {occurrence.subtest}" if occurrence.subtest else ""
+                lines.append(
+                    f"      {self._occurrence_selector(occurrence)}{subtest}{retried}"
+                )
             remaining = len(group.occurrences) - len(shown)
             if remaining:
                 lines.append(f"      +{remaining} more")
@@ -1077,6 +1473,11 @@ class ReceptorPlugin:
         Reading the baseline from ``pytest_sessionfinish`` would capture only
         the progress line.
         """
+        if self._artifact is not None:
+            # A hook failure before sessionfinish still leaves a flushed,
+            # readable stream. Missing session_finish is its incomplete marker.
+            self._artifact.close()
+            self._artifact = None
         reporter = config.pluginmanager.getplugin("terminalreporter")
         line = None
         if self.stats:
@@ -1199,10 +1600,39 @@ class ReceptorPlugin:
             f"{type(exc).__name__}: {exc} | raw pytest evidence follows"
         )
         tw.line("".join(traceback.format_exception(exc)).rstrip())
-        for report in self._failures:
+        for event in self._evidence.failures:
             tw.line("")
-            tw.line(str(getattr(report, "nodeid", "?")))
-            tw.line(str(getattr(report, "longrepr", "")))
+            tw.line(event.nodeid or "?")
+            if event.exception is not None:
+                tw.line(event.exception.raw_longrepr)
+
+
+def _missing_selection_paths(config, invocation):
+    """Return explicit filesystem selections that do not exist.
+
+    ``config.args`` is pytest's parsed ``file_or_dir`` list, unlike
+    ``invocation_params.args`` which still contains options and option values.
+    Module names under ``--pyargs`` are intentionally left to pytest's import
+    resolution and are not filesystem selections.
+    """
+    if getattr(config.option, "pyargs", False):
+        return ()
+
+    missing = []
+    for arg in getattr(config, "args", ()):
+        path_text = str(arg).partition("::")[0]
+        if not path_text:
+            continue
+        path = Path(path_text)
+        if not path.is_absolute():
+            path = invocation / path
+        try:
+            exists = path.exists()
+        except OSError:
+            exists = False
+        if not exists:
+            missing.append(_sanitize(arg))
+    return tuple(missing)
 
 
 def _compile_normalizers(config):
@@ -1255,6 +1685,15 @@ def _skip_reason(report):
     # pytest writes a bare "Skipped" when no reason was given; grouping on that
     # produces a line that says nothing.
     return "" if text == "Skipped" else text
+
+
+def _section_kind(name):
+    """Classify a section without discarding its original pytest label."""
+    lowered = name.lower()
+    for marker in ("stdout", "stderr", "log"):
+        if marker in lowered:
+            return marker
+    return "other"
 
 
 def _short_path(path):
@@ -1361,7 +1800,37 @@ def _exception_type(message):
 
 def _tests(group):
     count = len(group.occurrences)
+    if group.occurrences and all(item.subtest for item in group.occurrences):
+        return f"{count} subtest" if count == 1 else f"{count} subtests"
     return f"{count} test" if count == 1 else f"{count} tests"
+
+
+def _safe_repr(value):
+    """A sanitized parameter representation that cannot break collection."""
+    try:
+        rendered = repr(value)
+    except Exception:
+        rendered = f"<{type(value).__name__}: repr unavailable>"
+    return _truncate(_sanitize(rendered))
+
+
+def _subtest_parameter(value, *, builtin, distributed):
+    """Stable parameter text across pytest 9's serial/xdist round trip."""
+    if not builtin:
+        return _safe_repr(value)
+    rendered = str(value)
+    # Builtin SubtestContext stores saferepr strings. Its xdist deserializer
+    # constructs the context again and saferepr-quotes those strings a second
+    # time; unwrap exactly that transport layer.
+    if distributed:
+        try:
+            unwrapped = ast.literal_eval(rendered)
+        except (SyntaxError, ValueError):
+            pass
+        else:
+            if isinstance(unwrapped, str):
+                rendered = unwrapped
+    return _truncate(_sanitize(rendered))
 
 
 def _sanitize(text):
@@ -1397,10 +1866,22 @@ def _normalize_warning(message):
     return _NUMBER.sub("N", message)
 
 
+def _fingerprint(parts):
+    """Stable identifier for the exact fields used by diagnostic grouping."""
+    canonical = "\x1f".join(str(part) for part in parts).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
 def _truncate(message, limit=_MAX_MESSAGE):
     if len(message) <= limit:
         return message
     head = message[: limit - 400]
     tail = message[-400:]
     omitted = len(message) - len(head) - len(tail)
-    return f"{head}\n... [{omitted} characters omitted; see full report] ...\n{tail}"
+    digest = hashlib.sha256(message.encode("utf-8")).hexdigest()[:12]
+    retained = len(head) + len(tail)
+    metadata = (
+        f"{omitted} characters omitted; original={len(message)}; "
+        f"retained={retained}; sha256={digest}; see full report"
+    )
+    return f"{head}\n... [{metadata}] ...\n{tail}"

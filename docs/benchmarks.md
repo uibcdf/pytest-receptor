@@ -5,9 +5,36 @@ Reproduce everything here:
 ```bash
 python devtools/benchmarks/run_benchmarks.py            # the tables below
 python devtools/benchmarks/run_benchmarks.py --scale    # 8,000 tests, 12 workers
+python devtools/benchmarks/run_performance.py            # wall time and peak RSS
 ```
 
 Subprocesses run with colour disabled, so figures do not change with your shell.
+
+## Runtime and memory
+
+The performance harness disables third-party plugin autoload, explicitly loads
+Receptor, redirects output to `DEVNULL`, and measures each pytest child with
+`wait4`. This separates renderer work from terminal I/O and attributes peak RSS
+to the run being measured. Modes rotate order and the reported value is the
+median after an unreported warm-up.
+
+Local reference measurement on Linux, CPython 3.13.14, 1,000 tests, median of
+two runs:
+
+| Scenario | Mode | Wall time | Peak RSS | Time vs quiet | RSS vs quiet |
+| :--- | :--- | ---: | ---: | ---: | ---: |
+| green | pytest quiet | 1.036s | 40.0 MiB | baseline | baseline |
+| green | receptor | 1.115s | 40.8 MiB | +7.6% | +0.8 MiB |
+| green | receptor + JSONL | 1.309s | 40.8 MiB | +26.3% | +0.8 MiB |
+| setup cascade | pytest quiet | 2.288s | 41.7 MiB | baseline | baseline |
+| setup cascade | receptor | 2.588s | 43.5 MiB | +13.1% | +1.8 MiB |
+| setup cascade | receptor + JSONL | 2.767s | 44.5 MiB | +20.9% | +2.8 MiB |
+
+These are reference observations, not portable promises: CPU, filesystem,
+pytest and Python affect time and RSS. The meaningful result is that the
+measurement is reproducible and reports absolute values as well as percentages.
+At 2,000 tests in a single-run scale check, the largest observed increment was
+5.0 MiB RSS and 24.9% wall time (JSONL enabled).
 
 ## Two baselines
 

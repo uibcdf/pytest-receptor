@@ -9,9 +9,9 @@ happened, groups repeated failures by root cause, and gives the exact command to
 re-run them.
 
 ```{note}
-**Pre-1.0.** The output format is this plugin's public API and may still change.
-The reliability floor will not: an unsuccessful or incomplete run is never
-reported as a success, and a failure inside the receptor never costs you the run.
+The 1.x compatibility contract protects the reliability floor, documented
+outcome meanings, options, and `pytest-receptor.events@1`. See
+[Compatibility and migration](compatibility.md).
 ```
 
 ```{toctree}
@@ -23,6 +23,9 @@ installation
 usage
 reference
 how-it-works
+channels
+artifacts
+compatibility
 limitations
 benchmarks
 ```
@@ -35,6 +38,9 @@ benchmarks
 | Run it and read its output | [Usage](usage.md) |
 | Look up an option, an outcome label, or an output field | [Reference](reference.md) |
 | Understand what it does to pytest, and why | [How it works](how-it-works.md) |
+| Know which output channel is authoritative | [Output channels and authority](channels.md) |
+| Produce or read normalized JSONL evidence | [Versioned evidence artifacts](artifacts.md) |
+| Understand the 1.x promises or migrate from 0.7 | [Compatibility and migration](compatibility.md) |
 | Know what it does **not** do | [Limitations](limitations.md) |
 | See measured token costs, and how they were measured | [Benchmarks](benchmarks.md) |
 
