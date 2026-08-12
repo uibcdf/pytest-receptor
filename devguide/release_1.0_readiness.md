@@ -5,6 +5,11 @@
 **Status:** live dashboard derived from the accepted trust and architecture
 documents. It does not replace their scope or lower their acceptance criteria.
 
+**Pause/resume:** architecture and local release preparation are consolidated
+in commit `4535431`. The ordered operational path through CI, tag, PyPI,
+`uibcdf` conda, and pytest's automated plugin report is now
+`roadmap_to_1.0_publication.md`.
+
 Version 1.0 means the Level 2 evidence-preserving architecture, not merely a
 stable rendering of the current plain-text report. This dashboard separates
 work that is already executable from evidence that requires sustained use.

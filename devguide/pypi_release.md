@@ -2,6 +2,10 @@
 
 **Verified:** 2026-08-12 against the current pytest and PyPA documentation.
 
+The cross-channel release order and resume checklist are authoritative in
+`roadmap_to_1.0_publication.md`; this document remains the detailed PyPI
+runbook.
+
 ## What happens automatically
 
 Pytest loads installed third-party plugins from the `pytest11` entry-point

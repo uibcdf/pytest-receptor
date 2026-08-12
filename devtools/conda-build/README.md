@@ -1,7 +1,9 @@
 # Releasing pytest-receptor to the `uibcdf` conda channel
 
-This is the exact, verified process used for `0.6.0`. Follow it and there are no
-decisions left to make.
+This is the exact, verified process used for `0.6.0`. For the coordinated 1.0.0
+publication order and evidence checklist, start with
+`../../devguide/roadmap_to_1.0_publication.md`; this remains the conda-specific
+runbook.
 
 ## The one rule: the version is the git tag
 
@@ -10,8 +12,9 @@ git tag at build time, and `conda-build` reads the same tag through
 `GIT_DESCRIBE_TAG` (see `meta.yaml`). So the release starts by tagging, and
 everything downstream follows from that.
 
-Version bumps follow the suite convention: raise the **minor** digit by one from
-the latest tag (`0.5.0 → 0.6.0`).
+Version bumps follow Semantic Versioning. The next planned release is `1.0.0`;
+after a public immutable release, corrections use a new patch version such as
+`1.0.1`.
 
 ## Prerequisites
 
