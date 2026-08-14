@@ -183,6 +183,21 @@ def test_receptor_has_semantic_parity_with_pytest_and_junit(
             if event.type == "phase" and event.data["phase"] == "collect"
         ]
         assert len(collection_events) == junit["errors"] == 2
+    elif scenario == "teardown_error":
+        # A test whose call passes but whose teardown raises is one logical test
+        # with an error. pytest 9's JUnit stores exactly that; pytest 8's JUnit
+        # emits a second <testcase> for the teardown, inflating tests and passed
+        # while still agreeing on errors. The receptor reports the one logical
+        # node on both, so assert its model directly and only require JUnit to
+        # agree on the version-independent tallies.
+        assert artifact_model == {
+            "tests": 2,
+            "failed": 0,
+            "errors": 1,
+            "skipped": 0,
+            "passed": 1,
+        }
+        assert (junit["errors"], junit["failed"], junit["skipped"]) == (1, 0, 0)
     else:
         assert artifact_model == junit
     # Reader completeness means the integrity-protected final record exists.
