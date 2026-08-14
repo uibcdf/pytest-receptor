@@ -7,11 +7,18 @@ import email
 from pathlib import Path
 from zipfile import ZipFile
 
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import (
     canonicalize_name,
     parse_sdist_filename,
     parse_wheel_filename,
 )
+
+# The supported interpreter range, compared as a version set rather than a
+# string: packaging serializes an equivalent `SpecifierSet` in whatever order
+# it likes (26.2 emits `<3.14,>=3.11`), so an exact-text match rejected a wheel
+# whose constraint was in fact identical.
+REQUIRED_PYTHON = SpecifierSet(">=3.11,<3.14")
 
 
 def validate_release(dist: Path, tag: str) -> str:
@@ -41,10 +48,15 @@ def validate_release(dist: Path, tag: str) -> str:
             name for name in archive.namelist() if name.endswith(".dist-info/METADATA")
         )
         metadata = email.message_from_bytes(archive.read(metadata_path))
-    if metadata.get("Requires-Python") != ">=3.11,<3.14":
+    requires_python = metadata.get("Requires-Python")
+    try:
+        declared = SpecifierSet(requires_python) if requires_python else None
+    except InvalidSpecifier:
+        declared = None
+    if declared != REQUIRED_PYTHON:
         raise ValueError(
             "release must support exactly Python 3.11-3.13; got "
-            f"Requires-Python: {metadata.get('Requires-Python')}"
+            f"Requires-Python: {requires_python}"
         )
     return expected
 

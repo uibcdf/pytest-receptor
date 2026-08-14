@@ -96,6 +96,16 @@ def test_release_checker_accepts_exact_tag_and_python_support(tmp_path):
     assert _release_module().validate_release(tmp_path, "v1.0.0") == "1.0.0"
 
 
+def test_release_checker_accepts_reordered_python_specifier(tmp_path):
+    # packaging serializes an equivalent SpecifierSet in its own order; 26.2
+    # emits `<3.14,>=3.11` from a `>=3.11,<3.14` declaration. The constraint is
+    # identical, so the checker must accept it. An exact-text match did not, and
+    # failed the real 1.0.0 release build.
+    _release_files(tmp_path, requires_python="<3.14,>=3.11")
+
+    assert _release_module().validate_release(tmp_path, "1.0.0") == "1.0.0"
+
+
 @pytest.mark.parametrize("tag", ["1.0.1", "1.0.0+dirty", ""])
 def test_release_checker_rejects_wrong_or_non_public_tag(tmp_path, tag):
     _release_files(tmp_path)
