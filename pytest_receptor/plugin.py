@@ -278,7 +278,6 @@ def _silence_standard_reporter(config):
     reporter = config.pluginmanager.getplugin("terminalreporter")
     if reporter is not None:
         reporter.reportchars = ""
-    _silence_xdist_startup(config)
 
 
 def _silence_xdist_startup(config):
@@ -292,6 +291,15 @@ def _silence_xdist_startup(config):
     So this neuters exactly one method rather than unregistering the plugin,
     because the same object also carries `pytest_testnodedown`, which announces
     a worker dying. That is a completeness signal and must survive.
+
+    Called from ``pytest_sessionstart`` rather than ``pytest_configure``: xdist
+    registers ``terminaldistreporter`` from inside its own ``pytest_configure``,
+    and since both configure hooks are ``trylast`` their order is not fixed. On
+    the runs where xdist configured after us the plugin was not yet registered,
+    the stub was never installed, and the banner leaked -- intermittently,
+    depending on plugin registration order. By session start every configure has
+    run, so the object exists; a ``tryfirst`` session start then installs the
+    stub before xdist's own (``trylast``) session start brings the nodes up.
     """
     dist = config.pluginmanager.getplugin("terminaldistreporter")
     if dist is None:
@@ -410,6 +418,7 @@ class ReceptorPlugin:
         """
         self._evidence.collected = max(self._evidence.collected, len(ids))
 
+    @pytest.hookimpl(tryfirst=True)
     def pytest_sessionstart(self, session):
         """Clear a previous run's artifact so a mid-run read never returns it.
 
@@ -417,9 +426,15 @@ class ReceptorPlugin:
         documented path must not exist rather than hold the last run's verdict:
         the MolSysMT pilot read a stale `PASS` artifact while a new run was still
         executing and took it for the live result. Absent means "not yet".
+
+        `tryfirst` so the xdist startup banner is silenced before xdist's own
+        (`trylast`) session start brings the nodes up; see
+        `_silence_xdist_startup`.
         """
         if self._is_worker:
             return
+        if not self.stats:
+            _silence_xdist_startup(self.config)
         self._start_artifact()
         cache = getattr(self.config, "cache", None)
         if cache is None:
