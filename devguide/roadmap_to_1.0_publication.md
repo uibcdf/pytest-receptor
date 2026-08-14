@@ -7,7 +7,8 @@
 **Release candidate commit:** `3ac6ca7` (was `4535431`; two CI-fix commits were
 added on resume — see the resume note below)
 
-**Latest published/tagged source release:** `0.7.0`
+**Latest published/tagged source release:** `1.0.0` — tagged on `4ff9666` and
+published to `uibcdf` conda on 2026-08-14; PyPI still pending (Phases 2/4).
 
 **Target:** publish the same immutable `1.0.0` source in GitHub, PyPI, and the
 `uibcdf` Anaconda.org channel, then verify its automatic discovery by pytest and
@@ -31,8 +32,11 @@ named beside it.
   commits on top of it (see the resume note below).
 - [x] The complete GitHub Actions matrix is green — on `3ac6ca7`, not on
   `4535431`. See the resume note below.
-- [ ] PyPI and GitHub one-time Trusted Publisher setup is complete.
-- [ ] `1.0.0` is tagged, released, and published.
+- [x] `1.0.0` is tagged (annotated, on `4ff9666`) and pushed.
+- [x] `1.0.0` is built and published to `uibcdf` conda (Phase 5). Conda-first
+  by request; it needs neither the GitHub Release nor the PyPI publisher.
+- [ ] PyPI and GitHub one-time Trusted Publisher setup is complete (Phase 2).
+- [ ] The GitHub Release is published, triggering the PyPI OIDC upload (Phase 4).
 
 ### Resume 2026-08-14 — the candidate moved to `3ac6ca7`
 
@@ -220,9 +224,13 @@ and pytest discovers the plugin through the installed `pytest11` entry point.
 Follow `devtools/conda-build/README.md`, with `1.0.0` replacing its historical
 0.6 example.
 
-- [ ] Ensure conda build tools are installed and the uploader is authenticated
+**Done 2026-08-14.** The `uibcdf` channel exposes `noarch/pytest-receptor-1.0.0-py_0.conda`
+alongside 0.6.0 and 0.7.0; a clean env installed from the channel and pytest
+autoloaded `pytest_receptor.plugin`. Steps and the one gotcha below.
+
+- [x] Ensure conda build tools are installed and the uploader is authenticated
   for the `uibcdf` Anaconda.org account.
-- [ ] Keep automatic upload disabled and build from the checked-out `1.0.0`
+- [x] Keep automatic upload disabled and build from the checked-out `1.0.0`
   tag:
 
   ```bash
@@ -231,23 +239,29 @@ Follow `devtools/conda-build/README.md`, with `1.0.0` replacing its historical
   conda build devtools/conda-build
   ```
 
-- [ ] Confirm the recipe tests pass and inspect the one `noarch` output:
+- [x] Confirm the recipe tests pass and inspect the one `noarch` output:
 
   ```bash
   conda build devtools/conda-build --output
   ```
 
-  Expected version: `1.0.0`; build: `py_0`; runtime constraint:
-  `python >=3.11,<3.14`; dependency: `pytest >=8.0.0`.
+  Got version `1.0.0`; build `py_0`; `depends: pytest >=8.0.0, python >=3.11,<3.14`.
 
-- [ ] Upload that exact file explicitly:
+- [x] Upload that exact file explicitly. **Use `anaconda org upload`, not the
+  bare `anaconda upload`:** the current anaconda-client (1.14.1, behind the
+  anaconda-cli-base wrapper) makes the bare command open an interactive
+  anaconda.com/anaconda.org destination picker, which hangs with no TTY. The
+  explicit `org` subcommand routes straight to anaconda.org.
 
   ```bash
   CONDA_PACKAGE=$(conda build devtools/conda-build --output)
-  anaconda upload --user uibcdf "$CONDA_PACKAGE" --label main
+  anaconda org upload --user uibcdf "$CONDA_PACKAGE" --label main
   ```
 
-- [ ] Verify channel metadata and a clean install:
+- [x] Verify channel metadata and a clean install. `conda search` lags the
+  upload because Anaconda.org regenerates `repodata.json` asynchronously;
+  `conda clean --index-cache` (or `anaconda org show uibcdf/pytest-receptor`)
+  confirms it sooner.
 
   ```bash
   conda search -c uibcdf --override-channels pytest-receptor=1.0.0
@@ -257,7 +271,7 @@ Follow `devtools/conda-build/README.md`, with `1.0.0` replacing its historical
     pytest --trace-config --help 2>&1 | grep 'pytest_receptor.plugin'
   ```
 
-- [ ] Return to `main` and clean conda build intermediates:
+- [x] Return to `main` and clean conda build intermediates:
 
   ```bash
   git switch main
@@ -307,13 +321,13 @@ Fill this only after the facts exist:
 
 | Evidence | URL or value |
 | :--- | :--- |
-| Final release commit | pending |
-| GitHub CI run | pending |
-| GitHub Release 1.0.0 | pending |
-| PyPI 1.0.0 | pending |
-| PyPI provenance | pending |
-| Anaconda.org `uibcdf` 1.0.0 | pending |
-| pytest community plugin report | pending |
+| Final release commit | `4ff9666` (tag `1.0.0`) |
+| GitHub CI run | run 31793572259 — full matrix green on `4ff9666` |
+| GitHub Release 1.0.0 | pending (Phase 4; deferred with PyPI) |
+| PyPI 1.0.0 | pending (Phase 4) |
+| PyPI provenance | pending (Phase 4) |
+| Anaconda.org `uibcdf` 1.0.0 | published 2026-08-14 — <https://anaconda.org/uibcdf/pytest-receptor> (`noarch/pytest-receptor-1.0.0-py_0.conda`) |
+| pytest community plugin report | pending (Phase 6, after PyPI) |
 
 ## Verified upstream mechanisms
 
