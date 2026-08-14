@@ -2,7 +2,10 @@
 
 **Paused:** 2026-08-12
 
-**Release candidate commit:** `4535431`
+**Resumed:** 2026-08-14
+
+**Release candidate commit:** `3ac6ca7` (was `4535431`; two CI-fix commits were
+added on resume — see the resume note below)
 
 **Latest published/tagged source release:** `0.7.0`
 
@@ -24,10 +27,34 @@ named beside it.
 - [x] `pytest11` autoload metadata and `Framework :: Pytest` are declared.
 - [x] The GitHub OIDC publication workflow and immutable-release checker exist.
 - [x] Changelog and 1.x compatibility contract are prepared for `1.0.0`.
-- [ ] Commit `4535431` is pushed to `origin/main`.
-- [ ] The complete GitHub Actions matrix is green on that commit.
+- [x] The candidate is pushed to `origin/main` — `4535431` plus two CI-fix
+  commits on top of it (see the resume note below).
+- [x] The complete GitHub Actions matrix is green — on `3ac6ca7`, not on
+  `4535431`. See the resume note below.
 - [ ] PyPI and GitHub one-time Trusted Publisher setup is complete.
 - [ ] `1.0.0` is tagged, released, and published.
+
+### Resume 2026-08-14 — the candidate moved to `3ac6ca7`
+
+The paused candidate `4535431` passed locally but its GitHub Actions matrix was
+red, for two reasons the local runs did not surface:
+
+- **`fdad41a`** — the JUnit parity test asserted equality with pytest 8's
+  teardown-error tallies. pytest 8 emits a second `<testcase>` for a test whose
+  teardown raises; pytest 9 consolidates it. The receptor already reports the
+  one logical test on both, so the test now asserts its model directly and
+  requires JUnit only on the version-independent errors/failed/skipped counts.
+- **`3ac6ca7`** — `bringing up nodes...` leaked in front of the verdict on some
+  runners but not others. The suppression stubbed xdist's `terminaldistreporter`
+  during `pytest_configure`, but xdist registers that object from its own
+  (`trylast`) `pytest_configure`; when it configured after us the stub was never
+  installed and the banner leaked. Moved to a `tryfirst` `pytest_sessionstart`,
+  which runs after every configure and before xdist brings the nodes up.
+
+The full matrix — Python 3.11/3.12/3.13 × pytest 8/9, serial and xdist, plus
+lint, packaging, and benchmarks — is green on `3ac6ca7` (CI run 31790476329).
+Per the invariants below, `3ac6ca7` is now the candidate; `4535431` must not be
+tagged.
 
 ## Release invariants
 
