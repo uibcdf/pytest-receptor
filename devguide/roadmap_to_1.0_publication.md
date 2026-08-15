@@ -8,7 +8,8 @@
 added on resume — see the resume note below)
 
 **Latest published/tagged source release:** `1.0.0` — tagged on `4ff9666` and
-published to `uibcdf` conda on 2026-08-14; PyPI still pending (Phases 2/4).
+published to all three destinations: `uibcdf` conda (2026-08-14), and GitHub
+Release plus PyPI (2026-08-15). Publication complete.
 
 **Target:** publish the same immutable `1.0.0` source in GitHub, PyPI, and the
 `uibcdf` Anaconda.org channel, then verify its automatic discovery by pytest and
@@ -35,8 +36,8 @@ named beside it.
 - [x] `1.0.0` is tagged (annotated, on `4ff9666`) and pushed.
 - [x] `1.0.0` is built and published to `uibcdf` conda (Phase 5). Conda-first
   by request; it needs neither the GitHub Release nor the PyPI publisher.
-- [ ] PyPI and GitHub one-time Trusted Publisher setup is complete (Phase 2).
-- [ ] The GitHub Release is published, triggering the PyPI OIDC upload (Phase 4).
+- [x] PyPI and GitHub one-time Trusted Publisher setup is complete (Phase 2).
+- [x] The GitHub Release is published, triggering the PyPI OIDC upload (Phase 4).
 
 ### Resume 2026-08-14 — the candidate moved to `3ac6ca7`
 
@@ -118,10 +119,14 @@ green on that SHA.
 Complete this before creating the GitHub Release, because publishing that
 release triggers the workflow immediately.
 
-- [ ] In GitHub repository settings, create environment `pypi`.
-- [ ] Restrict deployment branches/tags appropriately and require manual
+**Done 2026-08-15.** The `pypi` environment was created via `gh api` with
+required reviewer `dprada` (user id 531231) and a `*.*.*` tag deployment policy;
+the pending Trusted Publisher was registered on PyPI under GitHub owner `uibcdf`.
+
+- [x] In GitHub repository settings, create environment `pypi`.
+- [x] Restrict deployment branches/tags appropriately and require manual
   approval from trusted maintainers.
-- [ ] In the PyPI account, register this pending Trusted Publisher exactly:
+- [x] In the PyPI account, register this pending Trusted Publisher exactly:
 
   | Field | Value |
   | :--- | :--- |
@@ -131,10 +136,11 @@ release triggers the workflow immediately.
   | Workflow filename | `release.yml` |
   | Environment | `pypi` |
 
-- [ ] Recheck that the PyPI name is still available immediately before
+- [x] Recheck that the PyPI name is still available immediately before
   release. Availability observed on 2026-08-12 was provisional; only the first
-  successful upload reserves the name.
-- [ ] Confirm no obsolete `PYPI_API_TOKEN` secret is required by the workflow.
+  successful upload reserves the name. The pending publisher claimed the name on
+  first OIDC publish (2026-08-15).
+- [x] Confirm no obsolete `PYPI_API_TOKEN` secret is required by the workflow.
 
 A pending publisher can create a new PyPI project on its first successful OIDC
 publication and then becomes a normal publisher automatically. There is no need
@@ -189,9 +195,13 @@ SHA and the release checker accepts distributions built from it.
 
 ## Phase 4 — publish 1.0.0 to PyPI
 
-- [ ] Create a GitHub Release for tag `1.0.0`, using the `1.0.0` changelog
+**Done 2026-08-15.** The GitHub Release triggered `release.yml` (run
+31870322473); build passed all gates, `dprada` approved the `pypi` environment,
+and the OIDC publish job created the PyPI project on first use.
+
+- [x] Create a GitHub Release for tag `1.0.0`, using the `1.0.0` changelog
   section as release notes.
-- [ ] Observe the `Publish release to PyPI` workflow. The build job must:
+- [x] Observe the `Publish release to PyPI` workflow. The build job must:
 
   - check out the immutable release tag;
   - build one wheel and one sdist;
@@ -199,13 +209,16 @@ SHA and the release checker accepts distributions built from it.
   - install the wheel in a clean environment;
   - prove pytest autoloads `pytest_receptor.plugin`.
 
-- [ ] Review the build job and approve the protected `pypi` environment.
-- [ ] Confirm the OIDC publishing job succeeds and creates
+- [x] Review the build job and approve the protected `pypi` environment.
+- [x] Confirm the OIDC publishing job succeeds and creates
   `https://pypi.org/project/pytest-receptor/1.0.0/`.
-- [ ] Confirm PyPI shows the expected metadata, files, Python constraint,
-  `Framework :: Pytest` classifier, project links, and provenance.
+- [x] Confirm PyPI shows the expected metadata, files, Python constraint,
+  `Framework :: Pytest` classifier, project links, and provenance. Metadata is
+  `1.0.0` with `Requires-Python: <3.14,>=3.11` (packaging's equivalent
+  serialization of `>=3.11,<3.14`); provenance attestation resolves to publisher
+  GitHub `uibcdf/pytest-receptor` `release.yml`.
 
-- [ ] Verify from a clean Python 3.11, 3.12, or 3.13 environment:
+- [x] Verify from a clean Python 3.11, 3.12, or 3.13 environment:
 
   ```bash
   python -m venv /tmp/pytest-receptor-pypi
@@ -305,10 +318,12 @@ and its row resolves to the public PyPI release.
 
 ## Phase 7 — close and communicate the release
 
-- [ ] Update installation documentation from “planned” to published for both
+- [x] Update installation documentation from “planned” to published for both
   `pip install pytest-receptor` and `conda install -c uibcdf pytest-receptor`.
-- [ ] Record PyPI, Anaconda.org, GitHub Release, CI run, and pytest plugin-list
-  links in this document.
+  (`docs/installation.md` and `README.md` now describe PyPI as live.)
+- [x] Record PyPI, Anaconda.org, GitHub Release, CI run, and pytest plugin-list
+  links in this document. (See the publication record below; the pytest
+  plugin-list row stays pending until the external index refreshes — Phase 6.)
 - [ ] Mark the 1.0 readiness dashboard published and open a fresh post-1.0
   section for adoption monitoring; do not continue using this release checklist
   as the general backlog.
@@ -323,11 +338,12 @@ Fill this only after the facts exist:
 | :--- | :--- |
 | Final release commit | `4ff9666` (tag `1.0.0`) |
 | GitHub CI run | run 31793572259 — full matrix green on `4ff9666` |
-| GitHub Release 1.0.0 | pending (Phase 4; deferred with PyPI) |
-| PyPI 1.0.0 | pending (Phase 4) |
-| PyPI provenance | pending (Phase 4) |
+| GitHub Release 1.0.0 | published 2026-08-15 — <https://github.com/uibcdf/pytest-receptor/releases/tag/1.0.0> |
+| GitHub release CI run | run 31870322473 — build + OIDC publish green on tag `1.0.0` |
+| PyPI 1.0.0 | published 2026-08-15 — <https://pypi.org/project/pytest-receptor/1.0.0/> (wheel + sdist) |
+| PyPI provenance | published — publisher GitHub `uibcdf/pytest-receptor` `release.yml` (PEP 740 attestation) |
 | Anaconda.org `uibcdf` 1.0.0 | published 2026-08-14 — <https://anaconda.org/uibcdf/pytest-receptor> (`noarch/pytest-receptor-1.0.0-py_0.conda`) |
-| pytest community plugin report | pending (Phase 6, after PyPI) |
+| pytest community plugin report | pending (Phase 6, awaiting external index refresh) |
 
 ## Verified upstream mechanisms
 

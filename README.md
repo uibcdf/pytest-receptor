@@ -60,10 +60,10 @@ That is 109 tokens. Plain `pytest` spends 3,300 on the same run.
 conda install -c uibcdf pytest-receptor
 ```
 
-Version 1.0 is planned as the first PyPI release (`pip install
-pytest-receptor`). Its official `pytest11` metadata makes pytest discover it
-automatically after installation. Until then, use conda or install from source.
-See the [installation guide](https://uibcdf.github.io/pytest-receptor/installation.html).
+It is also on PyPI (`pip install pytest-receptor`). Its official `pytest11`
+metadata makes pytest discover it automatically after installation. You can also
+install from source. See the
+[installation guide](https://uibcdf.github.io/pytest-receptor/installation.html).
 
 Requires Python 3.11-3.13 and pytest 8 or later. Every combination of
 Python 3.11/3.12/3.13 with pytest 8 and 9 is exercised in CI, so the support
