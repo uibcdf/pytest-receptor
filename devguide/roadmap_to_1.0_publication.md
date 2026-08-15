@@ -324,11 +324,14 @@ and its row resolves to the public PyPI release.
 - [x] Record PyPI, Anaconda.org, GitHub Release, CI run, and pytest plugin-list
   links in this document. (See the publication record below; the pytest
   plugin-list row stays pending until the external index refreshes — Phase 6.)
-- [ ] Mark the 1.0 readiness dashboard published and open a fresh post-1.0
+- [x] Mark the 1.0 readiness dashboard published and open a fresh post-1.0
   section for adoption monitoring; do not continue using this release checklist
-  as the general backlog.
-- [ ] Publish a brief user announcement emphasizing automatic pytest discovery,
-  Python 3.11–3.13 support, and unchanged plain-pytest behavior.
+  as the general backlog. (`release_1.0_readiness.md` now records the release and
+  carries a "Post-1.0 adoption monitoring" backlog.)
+- [x] Publish a brief user announcement emphasizing automatic pytest discovery,
+  Python 3.11–3.13 support, and unchanged plain-pytest behavior. Announced on
+  LinkedIn and Twitter/X (2026-08-15). GitHub Discussions was enabled on the repo
+  as an ongoing community channel.
 
 ## Publication record
 

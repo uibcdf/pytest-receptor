@@ -1,14 +1,14 @@
 # Readiness for pytest-receptor 1.0
 
-**Recorded:** 2026-08-12
+**Recorded:** 2026-08-12 · **Released:** 2026-08-15
 
-**Status:** live dashboard derived from the accepted trust and architecture
-documents. It does not replace their scope or lower their acceptance criteria.
-
-**Pause/resume:** architecture and local release preparation are consolidated
-in commit `4535431`. The ordered operational path through CI, tag, PyPI,
-`uibcdf` conda, and pytest's automated plugin report is now
-`roadmap_to_1.0_publication.md`.
+**Status:** 1.0.0 is published. The immutable `1.0.0` source is on the `uibcdf`
+conda channel (2026-08-14) and on PyPI with a GitHub Release (2026-08-15); the
+full operational record is in `roadmap_to_1.0_publication.md`. This file is now
+a historical readiness record plus a post-1.0 monitoring section (below); it is
+no longer a live pre-release checklist and must not be reused as a general
+backlog. It does not lower the acceptance criteria of the trust and architecture
+documents it derives from.
 
 Version 1.0 means the Level 2 evidence-preserving architecture, not merely a
 stable rendering of the current plain-text report. This dashboard separates
@@ -29,7 +29,7 @@ work that is already executable from evidence that requires sustained use.
 | Security and retention policy | Complete with documented boundary | Owner-only creation, symlink refusal, conservative redaction, and an auditable hard size policy are implemented. Retention is explicitly deployment-owned; arbitrary sensitive test data cannot be guaranteed absent. |
 | Performance bounds | Locally measurable | The reproducible child-process harness measures wall time and peak RSS for green and homogeneous-failure suites, with and without JSONL. At 2,000 tests the largest local increment was 5.0 MiB RSS and 24.9% wall time. Repeat at MolSysMT scale before the clean release. |
 | Dogfooding evidence | Accepted for 1.0 | MolSysMT exposed and drove fixes for real scientific-suite failures; this repository's structurally different suite and differential corpus exercise the same plugin serially and under xdist. Adoption monitoring continues after publication. |
-| PyPI publication | Locally ready | Name, `Framework :: Pytest`, `pytest11`, project URLs, changelog, tag/distribution verifier, clean-wheel discovery, and OIDC release workflow are present. A maintainer must register the pending PyPI publisher and protected `pypi` GitHub environment before the first release. |
+| PyPI publication | Published | `pytest-receptor 1.0.0` is live on PyPI (wheel + sdist) with a PEP 740 provenance attestation to `uibcdf/pytest-receptor` `release.yml`, published through the protected `pypi` environment and OIDC Trusted Publishing (no long-lived token). A clean-venv install from PyPI autoloads the plugin. |
 
 ## Proposed release sequence
 
@@ -83,3 +83,28 @@ python -m build
 CI repeats tests across Python 3.11–3.13 and pytest 8–9 with coverage, JUnit,
 reruns, subtests, and xdist installed. Real-suite observation and the clean-tag
 release rehearsal cannot be replaced by a local unit test.
+
+## Post-1.0 adoption monitoring
+
+The release gates above are closed. What follows is the fresh backlog opened at
+publication — sustained-use evidence and additive work that 1.0 deliberately did
+not block on. None of it is a 1.0 regression; each is tracked on its own merits,
+not against this checklist.
+
+- **pytest plugin-list appearance.** The official
+  <https://docs.pytest.org/en/stable/reference/plugin_list.html> is compiled
+  automatically from eligible PyPI names on pytest's own schedule. As of
+  2026-08-15 the row has not yet appeared; treat continued absence after a
+  reasonable refresh window as a cue to inspect the generator, not a release
+  failure. This is the last open box in the roadmap (Phase 6).
+- **Scale re-measurement.** Repeat the wall-time/peak-RSS harness at MolSysMT
+  scale to confirm the local 2,000-test bounds (5.0 MiB RSS, 24.9% wall time)
+  hold on a real scientific suite.
+- **Generated mixed-state parity.** Extend the differential corpus with
+  generated mixed-state runs, the one curated-harness item left from 0.9.
+- **Configurable per-section budgets.** The reversible-grouping and
+  artifact-reader contracts are frozen; per-section truncation budgets remain an
+  optional, backward-compatible addition.
+- **Community channel.** GitHub Discussions is enabled as the ongoing venue for
+  user questions and adoption feedback; 1.0 was announced on LinkedIn and
+  Twitter/X (2026-08-15).
