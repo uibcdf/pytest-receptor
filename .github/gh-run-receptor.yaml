@@ -1,0 +1,11 @@
+schema_version: 1
+workflows:
+  - match:
+      path: .github/workflows/docs.yml
+    profile: docs
+  - match:
+      path: .github/workflows/release.yml
+    profile: release
+  - match:
+      path: .github/workflows/tests.yml
+    profile: ci
