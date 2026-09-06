@@ -47,7 +47,7 @@ test = [
     "pytest-xdist>=3.6,<4",
 ]
 lint = [
-    "ruff==0.16.1",
+    "ruff==0.16.5",
 ]
 docs = [
     "myst-parser>=4,<5",
@@ -70,7 +70,7 @@ dev = [
     "pytest-rerunfailures>=15,<17",
     "pytest-subtests>=0.14,<0.16",
     "pytest-xdist>=3.6,<4",
-    "ruff==0.16.1",
+    "ruff==0.16.5",
     "sphinx>=8,<10",
     "sphinx-rtd-theme>=3,<4",
     "tiktoken>=0.9,<1",

@@ -23,16 +23,12 @@ MolSysMT's `tests/conftest.py` deselects the 40 tests marked
 `peptide_parity` unless the user explicitly requests that marker:
 
 ```python
-if 'peptide_parity' not in mark_expr:
-    deselected = [
-        item for item in items
-        if item.get_closest_marker('peptide_parity')
-    ]
+if "peptide_parity" not in mark_expr:
+    deselected = [item for item in items if item.get_closest_marker("peptide_parity")]
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = [
-            item for item in items
-            if not item.get_closest_marker('peptide_parity')
+            item for item in items if not item.get_closest_marker("peptide_parity")
         ]
 ```
 
