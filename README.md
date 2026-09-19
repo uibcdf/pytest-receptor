@@ -13,20 +13,6 @@ scroll back. `pytest-receptor` renders the same run for that consumer: it says
 what happened, groups repeated failures by root cause, and tells the agent
 exactly what to re-run.
 
-## Companion tool: gh-run-receptor
-
-[`gh-run-receptor`](https://github.com/uibcdf/gh-run-receptor) extends the same
-truth-preserving token economy to the GitHub Actions run around pytest. `pytest-receptor`
-makes test output compact at its source, locally or inside CI; `gh-run-receptor` summarizes
-the complete remote run afterwards, including jobs, matrices, artifacts, failures, and
-evidence completeness.
-
-The tools are independent and neither requires MolSysSuite or the other. Both were created
-while improving MolSysSuite development workflows, but they are general-purpose tools for
-any developer, repository, or coding agent. A typical combined workflow runs
-`pytest --receptor=ci` inside GitHub Actions and later inspects the resulting run with
-`gh run-receptor --receptor=llm inspect RUN_ID`.
-
 > **1.0 release candidate.** The reliability, CLI, outcome, and
 > `pytest-receptor.events@1` compatibility contracts are frozen. The receptor
 > never reports an unsuccessful or incomplete run as a success, and a failure
@@ -384,6 +370,20 @@ your own output is unaffected.
 Reproduce the table above with `python devtools/benchmarks/run_benchmarks.py`.
 
 ---
+
+## Companion tool: gh-run-receptor
+
+[`gh-run-receptor`](https://github.com/uibcdf/gh-run-receptor) extends the same
+truth-preserving token economy to the GitHub Actions run around pytest. `pytest-receptor`
+makes test output compact at its source, locally or inside CI; `gh-run-receptor` summarizes
+the complete remote run afterwards, including jobs, matrices, artifacts, failures, and
+evidence completeness.
+
+The tools are independent and neither requires MolSysSuite or the other. Both were created
+while improving MolSysSuite development workflows, but they are general-purpose tools for
+any developer, repository, or coding agent. A typical combined workflow runs
+`pytest --receptor=ci` inside GitHub Actions and later inspects the resulting run with
+`gh run-receptor --receptor=llm inspect RUN_ID`.
 
 ## Documentation
 
