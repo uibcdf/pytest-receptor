@@ -13,7 +13,7 @@ scroll back. `pytest-receptor` renders the same run for that consumer: it says
 what happened, groups repeated failures by root cause, and tells the agent
 exactly what to re-run.
 
-> **1.0 release candidate.** The reliability, CLI, outcome, and
+> **Stable 1.x contract.** The reliability, CLI, outcome, and
 > `pytest-receptor.events@1` compatibility contracts are frozen. The receptor
 > never reports an unsuccessful or incomplete run as a success, and a failure
 > inside the receptor itself never costs you the run.

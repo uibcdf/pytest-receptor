@@ -53,6 +53,12 @@ when they feel too small to bother with:
 - **Any disagreement with pytest** about outcome or counts. That one is a bug
   and jumps the queue — file it in `../pending_bugs/` and say so directly.
 
+## Active proposals
+
+- [`python_314_support.md`](python_314_support.md) — PR-REL-008; implementation and
+  staging evidence are complete, while public 1.1.0 delivery and independent PyPI/Conda
+  Python 3.14 installation remain pending.
+
 ## Current pilots
 
 - MolSysMT — see [`../molsysmt_pilot.md`](../molsysmt_pilot.md).

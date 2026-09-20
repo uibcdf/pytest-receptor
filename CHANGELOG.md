@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-20
+
 ### Changed
 
 - Extended the tested and packaged Python support range through Python 3.14,
@@ -94,7 +96,8 @@ All notable changes to this project are recorded here. The format follows
 
 - Human, LLM, and CI output profiles.
 
-[Unreleased]: https://github.com/uibcdf/pytest-receptor/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/uibcdf/pytest-receptor/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/uibcdf/pytest-receptor/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/uibcdf/pytest-receptor/compare/0.7.0...1.0.0
 [0.7.0]: https://github.com/uibcdf/pytest-receptor/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/uibcdf/pytest-receptor/compare/0.5.0...0.6.0

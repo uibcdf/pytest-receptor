@@ -74,9 +74,10 @@ that exact staged artifact remain the final admission evidence.
 Python 3.11 remains supported. The routine development interpreter remains Python 3.13
 until the central policy decides otherwise.
 
-## Resolution
+## Promotion state
 
-**Resolved 2026-09-20 (PR-REL-008, `uibcdf/pytest-receptor#3`).** Commit
+**Implementation verified 2026-09-20 (PR-REL-008, `uibcdf/pytest-receptor#3`),
+public delivery pending.** Commit
 `f2ff0e3` added the exact-commit, staging-first noarch Conda workflow and its local
 contract tests. Ruff passed and the complete local suite passed 178 tests with 12 workers.
 
@@ -88,9 +89,13 @@ jobs and one available artifact. A separate channel query found
 staging, imported distribution and module version `1.1.0` from `site-packages`, reported
 `Requires-Python: <3.15,>=3.11`, and loaded `pytest --receptor=llm --help`.
 
-MolSysSuite commit `6e3c676` consequently changed this component's transition state from
-`authorized` to `admitted`. No public tag, GitHub Release, PyPI artifact, or Conda `main`
-artifact was created by the admission exercise.
+This establishes a promotable candidate but not delivered Python 3.14 support. MolSysSuite
+now reserves `admitted` for a public immutable release independently installed from every
+claimed package channel. The component therefore remains `authorized` until release
+`1.1.0` is published on GitHub and PyPI, the release workflow uploads the same source to
+the public `uibcdf` Conda label, and clean Python 3.14 environments verify both package
+indexes. No public tag, GitHub Release, PyPI artifact, or Conda `main` artifact was created
+by the staging exercise.
 
 **Guard:** `tests/test_packaging.py::test_supported_python_versions_are_accepted`
 protects the declared interpreter range; `tests/test_noarch_conda_publication.py`
