@@ -12,11 +12,16 @@ conda activate pytest-receptor-build
 
 ## Build and publish the conda package
 
-The recipe takes the version from the git tag, so tag the release commit first.
-Full upload flow in [`conda-build/README.md`](conda-build/README.md):
+The normal path is the `Build and upload conda packages` GitHub workflow. A
+manual dispatch takes an exact candidate commit and semantic version, builds one
+`noarch` artifact, and uploads only to the `staging` label. A GitHub Release
+from an exact tag is the separate path that uploads to `main`. See the full
+runbook in [`conda-build/README.md`](conda-build/README.md).
+
+Local builds are diagnostic only. They require an exact local tag because both
+`versioningit` and `conda-build` derive the version from Git:
 
 ```bash
-git tag 0.6.0
 conda build devtools/conda-build
 ```
 

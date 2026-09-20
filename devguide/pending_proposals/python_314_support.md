@@ -52,8 +52,24 @@ On 2026-09-20, after aligning the contract:
 
 The built development artifact carried a dirty, distance-derived version because this
 evidence intentionally preceded the commit. It proves packaging shape and interpreter
-metadata, not release identity. Hosted required CI and a clean Conda artifact remain the
-admission gates.
+metadata, not release identity. Hosted required CI subsequently passed all 11 jobs in run
+`35512512809`, including both Python 3.14 cells.
+
+An initial local Conda build then exposed a release-process gap: setting
+`GIT_DESCRIBE_TAG=1.1.0` externally did not override the Git-derived value, so the recipe
+correctly built and tested `1.0.0` rather than the intended candidate. The solver then
+rejected the requested `1.1.0`. This is useful negative evidence: the package itself
+loaded on Python 3.14, but the attempted command did not prove candidate identity.
+
+The resolution is the shared MolSysSuite noarch publication pattern already used by
+SMonitor and DepDigest. A manual workflow pins a full candidate SHA, creates an ephemeral
+runner-local semantic-version tag, verifies `python -m versioningit`, builds one artifact,
+uploads only to `staging`, and retains `events@1` producer evidence for gh-run-receptor.
+Only a later GitHub Release event may upload to `main`. The recipe also compares installed
+distribution and module versions with Conda's `PKG_VERSION` during its own tests.
+
+A successful hosted staging build plus an independent clean Python 3.14 installation of
+that exact staged artifact remain the final admission evidence.
 
 Python 3.11 remains supported. The routine development interpreter remains Python 3.13
 until the central policy decides otherwise.

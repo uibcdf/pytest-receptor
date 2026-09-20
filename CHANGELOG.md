@@ -10,6 +10,8 @@ All notable changes to this project are recorded here. The format follows
 
 - Extended the tested and packaged Python support range through Python 3.14,
   retaining Python 3.11 and the pytest 8/9 compatibility matrix.
+- Standardized Conda publication on an exact-commit, staging-first noarch
+  workflow with structured gh-run-receptor producer evidence.
 
 ## [1.0.0] - 2026-08-12
 
