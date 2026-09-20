@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Separated Conda staging builds from exact digest-verified public label promotion, so a
+  release no longer rebuilds an existing staged coordinate and fails with HTTP 409.
+
 ## [1.1.0] - 2026-09-20
 
 ### Changed

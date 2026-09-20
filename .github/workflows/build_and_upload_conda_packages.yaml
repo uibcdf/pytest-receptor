@@ -1,8 +1,6 @@
 name: Build and upload conda packages
 
 on:
-  release:
-    types: ['released', 'prereleased']
   workflow_dispatch:
     inputs:
       candidate_sha:
@@ -32,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ inputs.candidate_sha || github.event.release.tag_name }}
+          ref: ${{ inputs.candidate_sha }}
 
       - name: Validate the immutable candidate identity
         if: github.event_name == 'workflow_dispatch'
@@ -51,15 +49,6 @@ jobs:
           else
             git tag "$RELEASE_VERSION" HEAD
           fi
-
-      - name: Validate the release tag
-        if: github.event_name == 'release'
-        shell: bash
-        env:
-          RELEASE_VERSION: ${{ github.event.release.tag_name }}
-        run: |
-          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_VERSION")"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -90,13 +79,13 @@ jobs:
       - name: Verify the derived package version
         shell: bash -l {0}
         env:
-          EXPECTED_VERSION: ${{ inputs.version || github.event.release.tag_name }}
+          EXPECTED_VERSION: ${{ inputs.version }}
         run: test "$(python -m versioningit)" = "$EXPECTED_VERSION"
 
       - name: Build, test, and upload the staging candidate
         id: conda_staging
         if: github.event_name == 'workflow_dispatch'
-        uses: uibcdf/action-build-and-upload-conda-packages@v2.1.0
+        uses: uibcdf/action-build-and-upload-conda-packages@v2.2.0
         env:
           PYTEST_RECEPTOR_CONDA_BUILD_NUMBER: ${{ inputs.build_number }}
         with:
@@ -111,38 +100,11 @@ jobs:
           platform_osx-arm64: false
           platform_win-64: false
 
-      - name: Build, test, and upload the released package
-        id: conda_release
-        if: github.event_name == 'release'
-        uses: uibcdf/action-build-and-upload-conda-packages@v2.1.0
-        env:
-          PYTEST_RECEPTOR_CONDA_BUILD_NUMBER: 0
-        with:
-          meta_yaml_dir: devtools/conda-build
-          mambabuild: false
-          user: uibcdf
-          label: main
-          token: ${{ secrets.ANACONDA_UIBCDF_TOKEN }}
-          conda_build_args: --package-format tar.bz2
-          platform_linux-64: false
-          platform_osx-64: false
-          platform_osx-arm64: false
-          platform_win-64: false
-
       - name: Upload staging producer evidence
         if: ${{ always() && steps.conda_staging.outputs.evidence_path != '' }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: ${{ steps.conda_staging.outputs.evidence_artifact_name }}
           path: ${{ steps.conda_staging.outputs.evidence_path }}
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Upload release producer evidence
-        if: ${{ always() && steps.conda_release.outputs.evidence_path != '' }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: ${{ steps.conda_release.outputs.evidence_artifact_name }}
-          path: ${{ steps.conda_release.outputs.evidence_path }}
           if-no-files-found: error
           retention-days: 7

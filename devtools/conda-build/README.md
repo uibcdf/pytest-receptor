@@ -50,12 +50,26 @@ conda create -n pytest-receptor-candidate \
 conda run -n pytest-receptor-candidate pytest --receptor=llm --help
 ```
 
-## Publish a released package
+## Promote a released package
 
-The `release` event uses the same workflow and recipe, but uploads to `main`. It accepts
-only a three-part semantic-version tag and checks that the checkout resolves exactly to
-that tag. Publish the GitHub Release only after the repository's complete release gates
-pass; do not use a public release to test a candidate.
+Public publication does not rebuild or re-upload a staged coordinate. After the GitHub
+Release exists and all of its gates pass, dispatch `promote_conda_package.yaml` with the
+full release commit, version, staged build number, and SHA-256 returned by the independent
+staging query:
+
+```bash
+gh workflow run promote_conda_package.yaml \
+  -f candidate_sha=FULL_40_CHARACTER_RELEASE_SHA \
+  -f version=1.1.0 \
+  -F build_number=1 \
+  -f sha256=FULL_64_CHARACTER_STAGING_DIGEST
+```
+
+The workflow proves that the tag resolves to the requested commit, invokes the exact-file
+promotion subaction pinned to `v2.2.0`, retains its bounded receipt, and independently
+queries the public `uibcdf` label for the same digest. The source staging label is
+preserved. Never use `--force`: labels share one underlying file identity, so rebuilding
+the same coordinate either conflicts or risks replacing verified bytes.
 
 ## Why there is no platform matrix
 

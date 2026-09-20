@@ -61,12 +61,13 @@ correctly built and tested `1.0.0` rather than the intended candidate. The solve
 rejected the requested `1.1.0`. This is useful negative evidence: the package itself
 loaded on Python 3.14, but the attempted command did not prove candidate identity.
 
-The resolution is the shared MolSysSuite noarch publication pattern already used by
-SMonitor and DepDigest. A manual workflow pins a full candidate SHA, creates an ephemeral
-runner-local semantic-version tag, verifies `python -m versioningit`, builds one artifact,
-uploads only to `staging`, and retains `events@1` producer evidence for gh-run-receptor.
-Only a later GitHub Release event may upload to `main`. The recipe also compares installed
-distribution and module versions with Conda's `PKG_VERSION` during its own tests.
+The resolution begins with the shared MolSysSuite noarch publication pattern already used
+by SMonitor and DepDigest. A manual workflow pins a full candidate SHA, creates an
+ephemeral runner-local semantic-version tag, verifies `python -m versioningit`, builds one
+artifact, uploads only to `staging`, and retains `events@1` producer evidence for
+gh-run-receptor. The recipe also compares installed distribution and module versions with
+Conda's `PKG_VERSION` during its own tests. Public delivery is a separate exact-file label
+promotion, never a rebuild or overwrite.
 
 A successful hosted staging build plus an independent clean Python 3.14 installation of
 that exact staged artifact remain the final admission evidence.
@@ -96,6 +97,28 @@ claimed package channel. The component therefore remains `authorized` until rele
 the public `uibcdf` Conda label, and clean Python 3.14 environments verify both package
 indexes. No public tag, GitHub Release, PyPI artifact, or Conda `main` artifact was created
 by the staging exercise.
+
+Release candidate commit `14e996430fa2b3810ae68f8b7fed16298dc7733b` then passed the
+complete 11-job hosted matrix in run `35532366589`. Exact tag `1.1.0` built one wheel and
+one sdist; both passed strict metadata checks, and a clean CPython 3.14.7 environment
+installed the wheel with `Requires-Python: <3.15,>=3.11`. The GitHub Release and PyPI
+publication completed successfully in run `35532680937`.
+
+The simultaneous Conda run `35532680623` revealed that rebuilding the staged `py_0`
+coordinate for `main` is not promotion: Anaconda.org returned HTTP 409 because the file
+identity already existed under `staging`. The failed run and its retained producer
+evidence were preserved. Because `py_0` came from the earlier staging commit, it was not
+silently relabeled. The exact release tag was instead built additively as `py_1` in run
+`35533044229`. Independent channel metadata reports SHA-256
+`4b56e6fc7c24e3f01d771c989bd7ed4bac9cf40c05e22f831a0ffff8defcd7dc`, and a clean Conda
+environment installed that exact staged package on CPython 3.14.7 and loaded the plugin.
+
+Provider issue `uibcdf/action-build-and-upload-conda-packages#43` produced release
+`v2.2.0`: a reusable exact-file promotion subaction that verifies source identity and
+digest, adds the target label without rebuilding, overwriting, or removing staging, and
+then verifies the target postcondition. Pytest Receptor now separates staging build from
+public promotion and retains an independently checked promotion receipt. Public Conda
+promotion and clean installation from `uibcdf/main` are the remaining admission gates.
 
 **Guard:** `tests/test_packaging.py::test_supported_python_versions_are_accepted`
 protects the declared interpreter range; `tests/test_noarch_conda_publication.py`
