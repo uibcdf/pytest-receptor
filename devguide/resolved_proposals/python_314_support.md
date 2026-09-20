@@ -73,3 +73,27 @@ that exact staged artifact remain the final admission evidence.
 
 Python 3.11 remains supported. The routine development interpreter remains Python 3.13
 until the central policy decides otherwise.
+
+## Resolution
+
+**Resolved 2026-09-20 (PR-REL-008, `uibcdf/pytest-receptor#3`).** Commit
+`f2ff0e3` added the exact-commit, staging-first noarch Conda workflow and its local
+contract tests. Ruff passed and the complete local suite passed 178 tests with 12 workers.
+
+Hosted Conda run `35528151054` derived candidate version `1.1.0`, built and tested one
+noarch package, uploaded it only to `uibcdf/label/staging`, and retained producer
+evidence. gh-run-receptor independently interpreted the run as `PASS` with one of one
+jobs and one available artifact. A separate channel query found
+`pytest-receptor-1.1.0-py_0`; a clean CPython 3.14.7 environment installed it from
+staging, imported distribution and module version `1.1.0` from `site-packages`, reported
+`Requires-Python: <3.15,>=3.11`, and loaded `pytest --receptor=llm --help`.
+
+MolSysSuite commit `6e3c676` consequently changed this component's transition state from
+`authorized` to `admitted`. No public tag, GitHub Release, PyPI artifact, or Conda `main`
+artifact was created by the admission exercise.
+
+**Guard:** `tests/test_packaging.py::test_supported_python_versions_are_accepted`
+protects the declared interpreter range; `tests/test_noarch_conda_publication.py`
+protects the exact-candidate and staging-only publication contract. The hosted
+`.github/workflows/tests.yml` matrix supplies the runtime gate for Python 3.14 with both
+supported pytest majors.
