@@ -1,8 +1,14 @@
 # pytest-receptor
 
-[![Tests](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml/badge.svg)](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/)
+[![MolSysSuite: Developer Tool](https://img.shields.io/badge/MolSysSuite-developer%20tool-6f42c1?labelColor=24292f)](https://github.com/uibcdf/molsyssuite/blob/main/devguide/repository_badges.md#developer-tool)
+[![MolSysSuite policy](https://github.com/uibcdf/pytest-receptor/actions/workflows/molsyssuite-policy.yml/badge.svg?branch=main)](https://github.com/uibcdf/pytest-receptor/actions/workflows/molsyssuite-policy.yml)
+[![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)](https://github.com/uibcdf/molsyssuite/blob/main/devguide/python_policy.md)
+[![License](https://img.shields.io/github/license/uibcdf/pytest-receptor)](https://github.com/uibcdf/pytest-receptor/blob/main/LICENSE)
+[![Tests](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml)
+[![Documentation](https://github.com/uibcdf/pytest-receptor/actions/workflows/docs.yml/badge.svg?branch=main)](https://uibcdf.github.io/pytest-receptor/)
+[![GitHub release](https://img.shields.io/github/v/release/uibcdf/pytest-receptor)](https://github.com/uibcdf/pytest-receptor/releases/latest)
+[![PyPI](https://img.shields.io/pypi/v/pytest-receptor)](https://pypi.org/project/pytest-receptor/)
+[![Conda](https://img.shields.io/conda/vn/uibcdf/pytest-receptor)](https://anaconda.org/uibcdf/pytest-receptor)
 [![Pytest Version](https://img.shields.io/badge/pytest-%3E%3D8.0.0-green)](https://docs.pytest.org/)
 
 A pytest reporter for coding agents.
