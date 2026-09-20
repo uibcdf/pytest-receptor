@@ -25,12 +25,35 @@ Installation used `--ignore-requires-python` because the current published contr
 still `>=3.11,<3.14`. That override is evidence scaffolding, not an installation
 recommendation or support claim.
 
-## Accepted next step
+## Implementation
 
-Add a non-claiming Python 3.14 lane for both supported pytest majors. It remains
-`continue-on-error` and uses the explicit metadata override until hosted evidence is green
-and the central phased Python policy admits this component. Then update all support
-surfaces together and require clean wheel and Conda installation without an override.
+The first non-claiming lane passed in hosted run `35509547575`: all 11 jobs were green,
+including Python 3.14 with both pytest 8 and pytest 9. MolSysSuite policy release
+`policy-v1.2.0` then authorized this component to adopt the target range.
+
+The implementation aligns package metadata, classifiers, the eight-cell compatibility
+matrix, the release verifier, Conda recipe, public documentation, and changelog. Final
+admission still requires the hosted required lane and clean wheel/Conda installation
+without an override.
+
+## Implementation evidence
+
+On 2026-09-20, after aligning the contract:
+
+- the complete Python 3.13 suite passed: 173 tests with 12 workers;
+- a normal source installation on CPython 3.14.7, without
+  `--ignore-requires-python`, passed the same 173 tests with 12 workers;
+- Ruff lint and format checks passed;
+- Python 3.14.7 built one wheel and one source distribution successfully;
+- a separate Python 3.14 virtual environment installed the wheel and imported
+  `pytest_receptor` from its own `site-packages`, not the checkout;
+- installed metadata reported `Requires-Python: <3.15,>=3.11`; and
+- the installed plugin exposed `pytest --receptor=llm --help` successfully.
+
+The built development artifact carried a dirty, distance-derived version because this
+evidence intentionally preceded the commit. It proves packaging shape and interpreter
+metadata, not release identity. Hosted required CI and a clean Conda artifact remain the
+admission gates.
 
 Python 3.11 remains supported. The routine development interpreter remains Python 3.13
 until the central policy decides otherwise.

@@ -24,8 +24,8 @@ conda build devtools/conda-build
 
 The recipe is `noarch: python`: because the plugin is pure Python with no compiled
 extensions, a single `conda build` produces one architecture-independent package
-that installs on **linux, osx and win**, and the `python >=3.11,<3.14` run
-constraint makes that same package valid on **Python 3.11, 3.12 and 3.13**. There
+that installs on **linux, osx and win**, and the `python >=3.11,<3.15` run
+constraint makes that same package valid on **Python 3.11 through 3.14**. There
 is no build matrix and nothing per-platform to publish.
 
 ## Versioning

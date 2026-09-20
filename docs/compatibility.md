@@ -5,8 +5,8 @@ every character of presentation forever.
 
 ## Supported runtime
 
-The 1.x series supports exactly Python 3.11, 3.12, and 3.13, with pytest 8 or
-9. The wheel metadata enforces `Python >=3.11,<3.14`; CI exercises all six
+The 1.x series supports exactly Python 3.11, 3.12, 3.13, and 3.14, with pytest 8
+or 9. The wheel metadata enforces `Python >=3.11,<3.15`; CI exercises all eight
 Python/pytest combinations both serially and with xdist.
 
 ## Stable 1.x contracts

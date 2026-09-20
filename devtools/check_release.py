@@ -16,9 +16,9 @@ from packaging.utils import (
 
 # The supported interpreter range, compared as a version set rather than a
 # string: packaging serializes an equivalent `SpecifierSet` in whatever order
-# it likes (26.2 emits `<3.14,>=3.11`), so an exact-text match rejected a wheel
+# it likes (26.2 emits `<3.15,>=3.11`), so an exact-text match rejected a wheel
 # whose constraint was in fact identical.
-REQUIRED_PYTHON = SpecifierSet(">=3.11,<3.14")
+REQUIRED_PYTHON = SpecifierSet(">=3.11,<3.15")
 
 
 def validate_release(dist: Path, tag: str) -> str:
@@ -55,7 +55,7 @@ def validate_release(dist: Path, tag: str) -> str:
         declared = None
     if declared != REQUIRED_PYTHON:
         raise ValueError(
-            "release must support exactly Python 3.11-3.13; got "
+            "release must support exactly Python 3.11-3.14; got "
             f"Requires-Python: {requires_python}"
         )
     return expected

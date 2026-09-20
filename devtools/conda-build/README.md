@@ -59,8 +59,8 @@ conda build devtools/conda-build
 ```
 
 The output is one **noarch** package — architecture-independent, so a single
-build serves linux, osx and win, and the `python >=3.11,<3.14` run constraint
-makes it valid on Python 3.11, 3.12 and 3.13. There is no build matrix. The
+build serves linux, osx and win, and the `python >=3.11,<3.15` run constraint
+makes it valid on Python 3.11 through 3.14. There is no build matrix. The
 artifact path:
 
 ```bash

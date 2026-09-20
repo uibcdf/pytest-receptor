@@ -79,7 +79,7 @@ an instruction and never suggests a command that mutates your environment.
 
 ## Untested combinations
 
-Covered by CI: Python 3.11–3.13, pytest 8 and 9, serial and distributed,
+Covered by CI: Python 3.11–3.14, pytest 8 and 9, serial and distributed,
 `pytest-cov`, `pytest-rerunfailures`, `pytest-subtests`, and JUnit XML.
 
 Everything else in your plugin stack is unknown territory. If a plugin you rely

@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml/badge.svg)](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/)
 [![Pytest Version](https://img.shields.io/badge/pytest-%3E%3D8.0.0-green)](https://docs.pytest.org/)
 
 A pytest reporter for coding agents.
@@ -65,8 +65,8 @@ metadata makes pytest discover it automatically after installation. You can also
 install from source. See the
 [installation guide](https://uibcdf.github.io/pytest-receptor/installation.html).
 
-Requires Python 3.11-3.13 and pytest 8 or later. Every combination of
-Python 3.11/3.12/3.13 with pytest 8 and 9 is exercised in CI, so the support
+Requires Python 3.11-3.14 and pytest 8 or later. Every combination of
+Python 3.11/3.12/3.13/3.14 with pytest 8 and 9 is exercised in CI, so the support
 claim is evidence rather than intent.
 
 ## Use

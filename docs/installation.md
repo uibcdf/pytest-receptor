@@ -4,7 +4,7 @@
 
 | | |
 | :--- | :--- |
-| Python | 3.11, 3.12, or 3.13 |
+| Python | 3.11, 3.12, 3.13, or 3.14 |
 | pytest | 8.0 or later |
 | Anything else | Nothing. The plugin has no dependency beyond pytest. |
 

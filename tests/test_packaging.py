@@ -17,8 +17,17 @@ PYPROJECT = REPO_ROOT / "pyproject.toml"
 CONDA_RECIPE = REPO_ROOT / "devtools" / "conda-build" / "meta.yaml"
 RELEASE_CHECK = REPO_ROOT / "devtools" / "check_release.py"
 
-SUPPORTED = ["3.11.0", "3.11.9", "3.12.0", "3.12.10", "3.13.0", "3.13.1", "3.13.14"]
-UNSUPPORTED = ["3.9.18", "3.10.14", "3.14.0"]
+SUPPORTED = [
+    "3.11.0",
+    "3.11.9",
+    "3.12.0",
+    "3.12.10",
+    "3.13.0",
+    "3.13.14",
+    "3.14.0",
+    "3.14.7",
+]
+UNSUPPORTED = ["3.9.18", "3.10.14", "3.15.0"]
 
 
 def _requires_python():
@@ -52,7 +61,7 @@ def test_unsupported_python_versions_are_rejected(version):
 def test_conda_recipe_matches_pyproject_bound():
     # The recipe carries the same range in conda syntax; drift here reintroduces
     # PR-OPS-001 for conda users only.
-    assert "python >=3.11,<3.14" in CONDA_RECIPE.read_text()
+    assert "python >=3.11,<3.15" in CONDA_RECIPE.read_text()
 
 
 def test_conda_recipe_version_is_git_derived():
@@ -77,7 +86,7 @@ def test_pypi_metadata_identifies_an_autoloaded_pytest_plugin():
     assert project["license"] == "MIT"
 
 
-def _release_files(tmp_path, requires_python=">=3.11,<3.14"):
+def _release_files(tmp_path, requires_python=">=3.11,<3.15"):
     wheel = tmp_path / "pytest_receptor-1.0.0-py3-none-any.whl"
     metadata = EmailMessage()
     metadata["Metadata-Version"] = "2.4"
@@ -98,10 +107,10 @@ def test_release_checker_accepts_exact_tag_and_python_support(tmp_path):
 
 def test_release_checker_accepts_reordered_python_specifier(tmp_path):
     # packaging serializes an equivalent SpecifierSet in its own order; 26.2
-    # emits `<3.14,>=3.11` from a `>=3.11,<3.14` declaration. The constraint is
+    # emits `<3.15,>=3.11` from a `>=3.11,<3.15` declaration. The constraint is
     # identical, so the checker must accept it. An exact-text match did not, and
     # failed the real 1.0.0 release build.
-    _release_files(tmp_path, requires_python="<3.14,>=3.11")
+    _release_files(tmp_path, requires_python="<3.15,>=3.11")
 
     assert _release_module().validate_release(tmp_path, "1.0.0") == "1.0.0"
 
@@ -114,8 +123,8 @@ def test_release_checker_rejects_wrong_or_non_public_tag(tmp_path, tag):
         _release_module().validate_release(tmp_path, tag)
 
 
-def test_release_checker_rejects_python_314_support_drift(tmp_path):
+def test_release_checker_rejects_python_support_drift(tmp_path):
     _release_files(tmp_path, requires_python=">=3.11")
 
-    with pytest.raises(ValueError, match="exactly Python 3.11-3.13"):
+    with pytest.raises(ValueError, match="exactly Python 3.11-3.14"):
         _release_module().validate_release(tmp_path, "1.0.0")
