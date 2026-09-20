@@ -32,12 +32,15 @@ jobs:
   test:
     name: py${{ matrix.python }} / pytest ${{ matrix.pytest }}
     runs-on: ubuntu-latest
+    # Python 3.14 is an evidence lane for uibcdf/pytest-receptor#3. It does not
+    # become a support claim until metadata and the MolSysSuite policy admit it.
+    continue-on-error: ${{ matrix.python == '3.14' }}
     strategy:
       fail-fast: false
       matrix:
-        # The supported range, at both pytest majors. Claiming 3.12 without
-        # testing it would repeat the mistake this workflow exists to prevent.
-        python: ["3.11", "3.12", "3.13"]
+        # The supported range, at both pytest majors, plus one non-claiming
+        # compatibility probe for the proposed next interpreter.
+        python: ["3.11", "3.12", "3.13", "3.14"]
         pytest: ["8", "9"]
     steps:
       - uses: actions/checkout@v5
@@ -49,7 +52,11 @@ jobs:
       - name: Install pinned pytest and the integration matrix
         run: |
           python -m pip install --upgrade pip
-          pip install "pytest~=${{ matrix.pytest }}.0" -e ".[test]"
+          if [[ "${{ matrix.python }}" == "3.14" ]]; then
+            pip install --ignore-requires-python "pytest~=${{ matrix.pytest }}.0" -e ".[test]"
+          else
+            pip install "pytest~=${{ matrix.pytest }}.0" -e ".[test]"
+          fi
 
       - name: Record what is installed, and prove the pytest pin took
         env:
@@ -60,12 +67,12 @@ jobs:
           python -c "import os, pytest; got = pytest.__version__.split('.')[0]; want = os.environ['WANT']; raise SystemExit(0 if got == want else f'wanted pytest {want}, got {pytest.__version__}')"
 
       - name: Run the suite
-        run: pytest tests/ -q
+        run: pytest tests/ --receptor=llm
 
       - name: Run the suite distributed
         # MolSysMT runs twelve workers, so the plugin has to survive being run
         # under the thing it is expected to report on.
-        run: pytest tests/ -q -n 2
+        run: pytest tests/ -n 2 --receptor=llm
 
   benchmarks:
     # The published figures are a claim about behaviour, so the harness that
