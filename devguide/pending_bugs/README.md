@@ -2,6 +2,8 @@
 
 Reported defects that have not been triaged yet.
 
+Current report: [#4 — the late-terminal discard stream remains unclosed](discard_stream_remains_unclosed_after_pytest.md).
+
 The distinction from [`../pending_proposals/`](../pending_proposals/README.md)
 is intent, not severity:
 
