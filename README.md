@@ -2,7 +2,7 @@
 
 [![MolSysSuite: Developer Tool](https://img.shields.io/badge/MolSysSuite-developer%20tool-6f42c1?labelColor=24292f)](https://github.com/uibcdf/molsyssuite/blob/main/devguide/repository_badges.md#developer-tool)
 [![MolSysSuite policy](https://github.com/uibcdf/pytest-receptor/actions/workflows/molsyssuite-policy.yml/badge.svg?branch=main)](https://github.com/uibcdf/pytest-receptor/actions/workflows/molsyssuite-policy.yml)
-[![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)](https://github.com/uibcdf/molsyssuite/blob/main/devguide/python_policy.md)
+[![Python 3.11 | 3.12 | 3.13 | 3.14](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-3776AB?logo=python&logoColor=white)](https://github.com/uibcdf/molsyssuite/blob/main/devguide/python_policy.md)
 [![License](https://img.shields.io/github/license/uibcdf/pytest-receptor)](https://github.com/uibcdf/pytest-receptor/blob/main/LICENSE)
 [![Tests](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml)
 [![Documentation](https://github.com/uibcdf/pytest-receptor/actions/workflows/docs.yml/badge.svg?branch=main)](https://uibcdf.github.io/pytest-receptor/)
