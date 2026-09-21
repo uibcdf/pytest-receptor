@@ -51,7 +51,7 @@ def test_publication_promotes_one_exact_staged_digest_without_rebuilding():
     assert "build_number:" in workflow
     assert "sha256:" in workflow
     assert "git rev-list -n 1" in workflow
-    assert "action-build-and-upload-conda-packages/promote@v2.2.0" in workflow
+    assert "action-build-and-upload-conda-packages/promote@v2.2.1" in workflow
     assert "from-label: staging" in workflow
     assert "to-label: main" in workflow
     assert "--force" not in workflow
