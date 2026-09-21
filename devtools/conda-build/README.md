@@ -66,7 +66,7 @@ gh workflow run promote_conda_package.yaml \
 ```
 
 The workflow proves that the tag resolves to the requested commit, invokes the exact-file
-promotion subaction pinned to `v2.2.1`, retains its bounded receipt, and independently
+promotion subaction pinned to `v2.2.2`, retains its bounded receipt, and independently
 queries the public `uibcdf` label for the same digest. The source staging label is
 preserved. Never use `--force`: labels share one underlying file identity, so rebuilding
 the same coordinate either conflicts or risks replacing verified bytes.
