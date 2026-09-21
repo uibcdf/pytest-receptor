@@ -55,9 +55,9 @@ when they feel too small to bother with:
 
 ## Active proposals
 
-- [`python_314_support.md`](python_314_support.md) — PR-REL-008; implementation and
-  staging evidence are complete, while public 1.1.0 delivery and independent PyPI/Conda
-  Python 3.14 installation remain pending.
+There are currently no pending proposals. Python 3.14 support moved to
+[`../resolved_proposals/python_314_support.md`](../resolved_proposals/python_314_support.md)
+after public 1.1.0 delivery and clean installation from PyPI and Conda.
 
 ## Current pilots
 

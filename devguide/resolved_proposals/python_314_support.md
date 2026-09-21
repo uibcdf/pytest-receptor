@@ -69,16 +69,15 @@ gh-run-receptor. The recipe also compares installed distribution and module vers
 Conda's `PKG_VERSION` during its own tests. Public delivery is a separate exact-file label
 promotion, never a rebuild or overwrite.
 
-A successful hosted staging build plus an independent clean Python 3.14 installation of
-that exact staged artifact remain the final admission evidence.
+The initial staging build established the candidate; delivery additionally required an
+immutable public release and independent clean installation from every claimed channel.
 
 Python 3.11 remains supported. The routine development interpreter remains Python 3.13
 until the central policy decides otherwise.
 
 ## Promotion state
 
-**Implementation verified 2026-09-20 (PR-REL-008, `uibcdf/pytest-receptor#3`),
-public delivery pending.** Commit
+**Delivered 2026-09-21 (PR-REL-008, `uibcdf/pytest-receptor#3`).** Commit
 `f2ff0e3` added the exact-commit, staging-first noarch Conda workflow and its local
 contract tests. Ruff passed and the complete local suite passed 178 tests with 12 workers.
 
@@ -113,12 +112,29 @@ silently relabeled. The exact release tag was instead built additively as `py_1`
 `4b56e6fc7c24e3f01d771c989bd7ed4bac9cf40c05e22f831a0ffff8defcd7dc`, and a clean Conda
 environment installed that exact staged package on CPython 3.14.7 and loaded the plugin.
 
-Provider issue `uibcdf/action-build-and-upload-conda-packages#43` produced release
-`v2.2.0`: a reusable exact-file promotion subaction that verifies source identity and
-digest, adds the target label without rebuilding, overwriting, or removing staging, and
-then verifies the target postcondition. Pytest Receptor now separates staging build from
-public promotion and retains an independently checked promotion receipt. Public Conda
-promotion and clean installation from `uibcdf/main` are the remaining admission gates.
+Provider issue `uibcdf/action-build-and-upload-conda-packages#43` produced the reusable
+exact-file promotion subaction. Its initial `v2.2.0` attempt failed safely because
+authenticated channel reads required `api:read`. Release `v2.2.1` still failed safely:
+channel reads required that scope even with an anonymous client. Version `v2.2.2` reads
+the public release metadata instead, discards ambient client credentials, verifies the
+exact source file, label, and SHA-256, writes only the target label with the upload token,
+and verifies the target postcondition. Its hosted matrix passed 3/3 in run `35570832180`.
+
+Pytest Receptor promotion run `35571349099` passed and retained its bounded receipt.
+Independent `conda search --override-channels -c uibcdf` found exactly
+`pytest-receptor-1.1.0-py_1.tar.bz2` in the public `uibcdf/noarch` channel with the
+unchanged SHA-256
+`4b56e6fc7c24e3f01d771c989bd7ed4bac9cf40c05e22f831a0ffff8defcd7dc`.
+A new environment created with only `uibcdf` and `conda-forge` and an exact
+`pytest-receptor=1.1.0=py_1` request resolved `pytest-receptor` from `uibcdf`, Python
+3.14.7 from conda-forge, imported both distribution and module version `1.1.0` from the
+installed `site-packages`, reported `Requires-Python: <3.15,>=3.11`, and exposed
+`pytest --receptor=llm --help`. The initial CLI probe from the MolSysMT checkout loaded
+that checkout's unrelated `conftest.py`; repeating the probe from `/tmp` with
+`python -I -m pytest` succeeded. This was test-harness contamination, not a defect in
+the public package. GitHub Release and public PyPI wheel/sdist are already published,
+with an independent clean Python 3.14 wheel installation reported above. All delivery
+gates for this component are satisfied.
 
 **Guard:** `tests/test_packaging.py::test_supported_python_versions_are_accepted`
 protects the declared interpreter range; `tests/test_noarch_conda_publication.py`
