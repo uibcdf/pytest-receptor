@@ -1,5 +1,5 @@
 <!--
-SYNCHRONIZED PYTEST-RECEPTOR GUIDE — DO NOT EDIT CONSUMER COPIES.
+SYNCHRONIZED MOLSYSSUITE GUIDE — DO NOT EDIT COMPONENT COPIES.
 Canonical source: https://github.com/uibcdf/pytest-receptor/blob/main/standards/PYTEST_RECEPTOR_GUIDE.md
 Report changes in: https://github.com/uibcdf/pytest-receptor/issues
 -->

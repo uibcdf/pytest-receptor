@@ -10,7 +10,7 @@ def test_consumer_guide_has_owner_marker_and_operational_contract():
     text = GUIDE.read_text(encoding="utf-8")
 
     assert text.startswith(
-        "<!--\nSYNCHRONIZED PYTEST-RECEPTOR GUIDE — DO NOT EDIT CONSUMER COPIES.\n"
+        "<!--\nSYNCHRONIZED MOLSYSSUITE GUIDE — DO NOT EDIT COMPONENT COPIES.\n"
     )
     for expected in (
         "Canonical source: https://github.com/uibcdf/pytest-receptor/",

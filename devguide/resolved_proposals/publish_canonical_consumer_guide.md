@@ -88,3 +88,15 @@ and supporting checks. Hosted MolSysSuite policy run `35719841348` passed its si
 GH Run Receptor independently summarized both as complete successes. The provider issue
 also carries the nine measured `component:<consumer>` relationships; central registry and
 copy adoption remain independently owned by `uibcdf/molsyssuite#37`.
+
+## Correction — 2026-09-22 — synchronized marker interoperability
+
+The original closure said the source had a valid synchronized-copy marker. Its first
+provider-specific wording passed the new owner test but did not satisfy MolSysSuite's
+existing general synchronizer, which deliberately requires one literal marker across all
+guide owners. The first central dry run rejected all nine relationships before writing.
+
+The source and guard now use `SYNCHRONIZED MOLSYSSUITE GUIDE — DO NOT EDIT COMPONENT
+COPIES.` while retaining the Pytest Receptor canonical URL on the next line. Provider
+issue #5 was reopened until the corrected source passed owner and central preflight. This
+correction appends to the archived record; it does not erase the original evidence.
