@@ -1,9 +1,9 @@
 ---
 summary: Publish a canonical Pytest Receptor guide for MolSysSuite consumers.
 issue: uibcdf/pytest-receptor#5
-status: active
+status: resolved
 opened: 2026-09-22
-closed:
+closed: 2026-09-22
 verification: measured
 area: [documentation, governance, integration]
 guard: tests/test_consumer_guide.py
@@ -16,8 +16,8 @@ supersedes: []
 
 **Reported:** 2026-09-22 from the central rollout request in
 `uibcdf/molsyssuite#37`.
-**Status:** Active. The canonical source and owner-side guard are implemented; provider CI
-and central consumer registration remain pending.
+**Status:** Resolved on 2026-09-22. The canonical source, owner-side guard and hosted
+provider verification are complete. Central rollout continues in `uibcdf/molsyssuite#37`.
 
 ## What
 
@@ -76,3 +76,15 @@ artifact schema. Central registry and consumer-copy rollout belong to
 `docs/installation.md`, `docs/usage.md`, `docs/artifacts.md`, `docs/limitations.md`,
 `docs/reference.md`, provider source/tests, and a live search of registered MolSysSuite
 consumer repositories on 2026-09-22.
+
+## Resolution evidence
+
+Commit `5765e6c` published the canonical marked source, its focused contract guard, the
+owner route in `AGENTS.md`, and this record. The local provider suite passed 172 tests with
+9 dependency-based skips; Ruff check and format checks passed 80 files.
+
+Hosted test run `35719841057` passed all 11 jobs across lint, serial/distributed test roles
+and supporting checks. Hosted MolSysSuite policy run `35719841348` passed its single job.
+GH Run Receptor independently summarized both as complete successes. The provider issue
+also carries the nine measured `component:<consumer>` relationships; central registry and
+copy adoption remain independently owned by `uibcdf/molsyssuite#37`.

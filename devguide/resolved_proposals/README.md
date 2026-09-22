@@ -27,3 +27,4 @@ Nothing is closed by deletion.
 | `built_in_normalizers_for_warning_variants.md` | PR-PILOT-007 | 2026-07-18 |
 | `configurable_rerun_command.md` | PR-UX-004 | 2026-07-21 |
 | `python_314_support.md` | PR-REL-008 | 2026-09-21 |
+| `publish_canonical_consumer_guide.md` | `uibcdf/pytest-receptor#5` | 2026-09-22 |
