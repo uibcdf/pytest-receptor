@@ -10,6 +10,10 @@ external tools must be used here.
 - `MOLSYSSUITE_GUIDE.md` — Required suite-governance guide; this synchronized copy must
   not be edited locally.
 
+The canonical consumer contract owned by this repository is
+`standards/PYTEST_RECEPTOR_GUIDE.md`. Change and validate it here; root copies in consumer
+repositories are synchronized, read-only files and must never be repaired locally.
+
 ## MolSysSuite coordination
 
 pytest-receptor is governed by MolSysSuite policy 1.0. Policies, compatibility contracts

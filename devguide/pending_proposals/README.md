@@ -55,7 +55,11 @@ when they feel too small to bother with:
 
 ## Active proposals
 
-There are currently no pending proposals. Python 3.14 support moved to
+- [`publish_canonical_consumer_guide.md`](publish_canonical_consumer_guide.md) —
+  `uibcdf/pytest-receptor#5` — canonical synchronized usage contract for MolSysSuite
+  consumers.
+
+Python 3.14 support moved to
 [`../resolved_proposals/python_314_support.md`](../resolved_proposals/python_314_support.md)
 after public 1.1.0 delivery and clean installation from PyPI and Conda.
 
