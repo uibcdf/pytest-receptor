@@ -11,12 +11,14 @@ split is intent, not severity: a bug is the plugin doing something wrong, a
 proposal is the plugin doing something you would rather it did differently. If
 unsure, file it as a bug.
 
-## Why a directory and not an issue tracker
+## Issues and the project queue
 
-Every task in this project has an identifier in
-[`audit_action_register_2026-07-17.md`](../audit_action_register_2026-07-17.md),
-which is the single complete work queue. A proposal that exists only in a
-conversation is untracked work, and untracked work is how the original audit
+Under the MolSysSuite reporting protocol, open the owning GitHub issue before
+adding a queued proposal. Keep detailed analysis here and the state and settled
+facts in the issue. The historical
+[`audit_action_register_2026-07-17.md`](../audit_action_register_2026-07-17.md)
+continues to track the project's release work. A proposal that exists only in
+a conversation is untracked work, and untracked work is how the original audit
 found sixteen proposals that had been written down somewhere and then quietly
 forgotten.
 
@@ -55,7 +57,8 @@ when they feel too small to bother with:
 
 ## Active proposals
 
-There are currently no pending proposals.
+- [Review inherited Python ecosystem policy](review_python_ecosystem_policy_adoption.md)
+  (`uibcdf/pytest-receptor#6`)
 
 Python 3.14 support moved to
 [`../resolved_proposals/python_314_support.md`](../resolved_proposals/python_314_support.md)

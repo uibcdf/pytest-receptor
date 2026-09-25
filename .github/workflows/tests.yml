@@ -60,12 +60,12 @@ jobs:
           python -c "import os, pytest; got = pytest.__version__.split('.')[0]; want = os.environ['WANT']; raise SystemExit(0 if got == want else f'wanted pytest {want}, got {pytest.__version__}')"
 
       - name: Run the suite
-        run: pytest tests/ --receptor=llm
+        run: pytest tests/ --receptor=ci
 
       - name: Run the suite distributed
         # MolSysMT runs twelve workers, so the plugin has to survive being run
         # under the thing it is expected to report on.
-        run: pytest tests/ -n 2 --receptor=llm
+        run: pytest tests/ -n 2 --receptor=ci
 
   benchmarks:
     # The published figures are a claim about behaviour, so the harness that
