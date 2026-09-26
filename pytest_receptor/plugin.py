@@ -33,6 +33,7 @@ from pathlib import Path
 
 import pytest
 
+from . import extensions
 from .artifact import (
     DEFAULT_MAX_BYTES,
     MIN_MAX_BYTES,
@@ -48,6 +49,8 @@ from .model import (
     SubtestIdentity,
     WarningEvent,
 )
+
+_PLUGIN_FILE = Path(__file__).resolve()
 
 # A native extension that writes to stdout through C stdio (fprintf(stdout, ...))
 # is fully buffered when pytest has redirected fd 1 to a capture file, so its
@@ -392,6 +395,17 @@ class ReceptorPlugin:
         # controller speaks.
         self._is_worker = hasattr(config, "workerinput")
         self._project_normalizers = _compile_normalizers(config)
+        self._extension_pending = {}
+        self._extension_session = []
+        self._extension_attempts = {}
+        self._extension_recorded = 0
+        self._extension_accepted = 0
+        self._extension_dropped = 0
+        self._extension_incomplete = False
+        self._extension_finalized = False
+        self._extension_worker_id = str(
+            getattr(config, "workerinput", {}).get("workerid", "")
+        )
 
     # ------------------------------------------------------------------ hooks
 
@@ -620,6 +634,73 @@ class ReceptorPlugin:
         if report.failed:
             self._record_report(report)
 
+    def _emit_extension(self, namespace, payload, relationships):
+        if not self._artifact_option or self._extension_finalized:
+            return None
+        if self._extension_accepted >= 10000:
+            self._extension_dropped += 1
+            self._extension_incomplete = True
+            return None
+        try:
+            prepared = extensions._prepare(namespace, payload, relationships, _sanitize)
+        except Exception:
+            # A producer-controlled mapping may execute code while traversed.
+            # Its failure is extension loss, never a changed pytest outcome.
+            self._extension_dropped += 1
+            self._extension_incomplete = True
+            return None
+        context = extensions.current_context()
+        if context is None:
+            if len(self._extension_session) >= 128:
+                self._extension_dropped += 1
+                self._extension_incomplete = True
+                return None
+            self._extension_session.append(prepared)
+        else:
+            key = (context.nodeid, context.phase, context.attempt)
+            pending = self._extension_pending.setdefault(key, [])
+            if len(pending) >= 128:
+                self._extension_dropped += 1
+                self._extension_incomplete = True
+                return None
+            pending.append(prepared)
+        self._extension_accepted += 1
+        return prepared["producer_ref"]
+
+    def _mark_extension_incomplete(self):
+        self._extension_dropped += 1
+        self._extension_incomplete = True
+
+    def _enter_extension_phase(self, item, phase):
+        nodeid = item.nodeid
+        if phase == "setup":
+            self._extension_attempts[nodeid] = (
+                self._extension_attempts.get(nodeid, 0) + 1
+            )
+        context = extensions.ExecutionContext(
+            nodeid=nodeid,
+            phase=phase,
+            worker_id=self._extension_worker_id,
+            attempt=self._extension_attempts.get(nodeid, 1),
+        )
+        return extensions._CURRENT.set(context)
+
+    @pytest.hookimpl(wrapper=True, tryfirst=True)
+    def pytest_runtest_setup(self, item):
+        token = self._enter_extension_phase(item, "setup")
+        try:
+            return (yield)
+        finally:
+            extensions._CURRENT.reset(token)
+
+    @pytest.hookimpl(wrapper=True, tryfirst=True)
+    def pytest_runtest_call(self, item):
+        token = self._enter_extension_phase(item, "call")
+        try:
+            return (yield)
+        finally:
+            extensions._CURRENT.reset(token)
+
     @pytest.hookimpl(wrapper=True)
     def pytest_runtest_makereport(self, item, call):
         """Attach structured exception identity before xdist serializes reports."""
@@ -631,13 +712,24 @@ class ReceptorPlugin:
                 f"{exception_type.__module__}.{exception_type.__qualname__}"
             )
             report.receptor_exception_type_source = "structured"
+        key = (
+            item.nodeid,
+            call.when,
+            self._extension_attempts.get(item.nodeid, 1),
+        )
+        queued = self._extension_pending.pop(key, ())
+        if queued:
+            report.receptor_extension_events = list(queued)
         return report
 
     @pytest.hookimpl(wrapper=True, trylast=True)
     def pytest_runtest_teardown(self, item, nextitem):
-        result = yield
-        self._flush_native_streams()
-        return result
+        token = self._enter_extension_phase(item, "teardown")
+        try:
+            return (yield)
+        finally:
+            self._flush_native_streams()
+            extensions._CURRENT.reset(token)
 
     def _flush_native_streams(self):
         if _LIBC is None:
@@ -701,6 +793,80 @@ class ReceptorPlugin:
         )
         self._evidence.add_phase(event)
         self._write_artifact_phase(event)
+        if not self._is_worker:
+            self._record_extensions(
+                getattr(report, "receptor_extension_events", ()),
+                nodeid=nodeid,
+                phase=phase,
+                worker_id=event.worker_id,
+                attempt=attempt,
+                emitted_during=f"{self._run_id}:{event.sequence}",
+            )
+
+    def _record_extensions(
+        self, events, *, nodeid="", phase="session", worker_id="", attempt=0,
+        emitted_during=None,
+    ):
+        if self._artifact is None:
+            if events:
+                self._extension_incomplete = True
+            return
+        for event in events:
+            try:
+                record = {
+                    key: event[key]
+                    for key in (
+                        "namespace", "payload", "relationships", "producer_ref",
+                        "trust", "redaction",
+                    )
+                }
+                record.update(
+                    schema=SCHEMA,
+                    type="extension",
+                    run_id=self._run_id,
+                    event_id=f"{self._run_id}:{self._evidence.next_sequence()}",
+                    nodeid=nodeid,
+                    phase=phase,
+                    worker_id=worker_id,
+                    attempt=attempt,
+                    emitted_during=emitted_during,
+                )
+                written = self._artifact.write(record)
+            except ArtifactError as exc:
+                self._artifact.close()
+                self._artifact_issue = _sanitize(str(exc))
+                self._artifact = None
+                self._extension_incomplete = True
+                return
+            except Exception:
+                self._extension_dropped += 1
+                self._extension_incomplete = True
+                continue
+            if written:
+                self._extension_recorded += 1
+            else:
+                self._extension_dropped += 1
+                self._extension_incomplete = True
+
+    @pytest.hookimpl(optionalhook=True)
+    def pytest_testnodedown(self, node, error):
+        """Bring worker session events into the controller-owned artifact."""
+        if self._is_worker:
+            return
+        output = getattr(node, "workeroutput", {}) or {}
+        extension = output.get("receptor_extensions")
+        if error is not None or not isinstance(extension, dict):
+            self._extension_incomplete = True
+            return
+        worker_id = str(extension.get("worker_id", "") or "")
+        try:
+            self._extension_dropped += max(int(extension.get("dropped", 0)), 0)
+        except (TypeError, ValueError):
+            self._extension_incomplete = True
+        self._extension_incomplete |= bool(extension.get("incomplete", False))
+        self._record_extensions(
+            extension.get("session", ()), worker_id=worker_id
+        )
 
     def _subtest_identity(self, report, nodeid, attempt):
         """Normalize pytest-subtests without importing its optional package."""
@@ -762,6 +928,15 @@ class ReceptorPlugin:
 
     @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self, session, exitstatus):
+        if self._is_worker:
+            self.config.workeroutput["receptor_extensions"] = {
+                "session": self._extension_session,
+                "worker_id": self._extension_worker_id,
+                "dropped": self._extension_dropped,
+                "incomplete": self._extension_incomplete,
+            }
+            self._extension_finalized = True
+            return
         # Every longrepr has been built by now, so switching the traceback style
         # off here suppresses the reporter's failure sections without having
         # impoverished the evidence while it was being collected. Doing it at
@@ -770,6 +945,8 @@ class ReceptorPlugin:
             self.config.option.tbstyle = "no"
         tw = self._terminal or self.config.get_terminal_writer()
         try:
+            self._record_extensions(self._extension_session)
+            self._extension_finalized = True
             groups = self._build_groups()
             selection_errors = (
                 self._invalid_selections
@@ -880,6 +1057,11 @@ class ReceptorPlugin:
                     "counts": counts,
                     "root_causes": len(groups),
                     "invalid_selections": list(selection_errors),
+                    "extensions": {
+                        "recorded": self._extension_recorded,
+                        "dropped": self._extension_dropped,
+                        "incomplete": self._extension_incomplete,
+                    },
                 }
             )
         except ArtifactError as exc:
@@ -1056,6 +1238,8 @@ class ReceptorPlugin:
             if loc is None:
                 continue
             path = str(loc.path)
+            if Path(path).resolve() == _PLUGIN_FILE:
+                continue
             external = "site-packages" in path or "lib/python" in path
             raw.append((self._display_path(path), loc.lineno, external))
 

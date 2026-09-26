@@ -6,10 +6,21 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-26
+
+### Added
+
+- Added a producer-neutral, versioned extension-event service with phase context,
+  xdist transport, artifact relationships, bounded redaction, and explicit
+  incomplete-evidence accounting. A dummy producer exercises the contract
+  independently of SMonitor.
+
 ### Fixed
 
 - Separated Conda staging builds from exact digest-verified public label promotion, so a
   release no longer rebuilds an existing staged coordinate and fails with HTTP 409.
+- Omitted receptor's own phase-wrapper frames from compact failure summaries,
+  preserving serial/xdist report parity.
 
 ## [1.1.0] - 2026-09-20
 

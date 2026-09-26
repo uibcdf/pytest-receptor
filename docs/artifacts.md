@@ -78,6 +78,57 @@ Minor evolution within `events@1` may add fields and record types. Consumers
 must ignore unknown fields and retain unknown records when rewriting an
 artifact. An incompatible change requires a new schema major.
 
+## Extension producer API
+
+The receptor owns namespaced extension records in the same JSONL stream as
+pytest evidence. A producer can opt in without importing another diagnostic
+library:
+
+```python
+from pytest_receptor.extensions import current_context, emit
+
+def test_timed_operation(pytestconfig):
+    context = current_context()  # active node, phase, worker, and attempt
+    reference = emit(
+        pytestconfig,
+        "org.example.timer@1",
+        {"operation": "example", "elapsed_ms": 3.2},
+    )
+```
+
+`emit` returns an opaque producer reference when accepted, or `None` when the
+receptor is inactive or the event is rejected. It never changes the pytest
+outcome. A namespace must include a major version. The optional
+`relationships` argument accepts a list or tuple of producer references; it
+does not deduplicate events or reinterpret pytest outcomes. `current_context`
+returns an immutable phase snapshot inside setup, call, or teardown and `None`
+outside those phases. Background threads and subprocesses need explicit
+context propagation; the service never assigns the last test's node ID to a
+session event.
+If a producer catches its own recording failure, it can call
+`mark_incomplete(config)` so the final artifact declares the evidence gap
+without changing pytest's result.
+
+The service is active only with `--receptor=llm` or `--receptor=ci` **and**
+`--receptor-events=PATH`. The human profile installs no collector. Events are
+bounded to 16 KiB each, 128 per phase or session, and 10,000 per process.
+Payloads must be JSON-compatible objects with string keys, at most six nested
+levels, 128 entries per container, and strings no longer than 2,048
+characters. Invalid or excess events are counted as dropped, with
+`session_finish.extensions.incomplete=true`; they do not fail the test.
+
+The receptor strips control characters and applies its conservative secret
+pattern redaction **before** worker transport and artifact persistence. Each
+`extension` record declares `trust=producer_untrusted` and
+`redaction=pattern`. Producers must exclude sensitive values that do not match
+those patterns. The record carries `nodeid`, `phase`, `worker_id`, `attempt`,
+`producer_ref`, `relationships`, and an `emitted_during` reference to the
+receptor's phase record where applicable. Xdist workers transport phase events
+through the corresponding pytest report; worker session events arrive through
+worker shutdown metadata. The controller assigns final event IDs and writes
+the sole canonical artifact. If a worker is lost, extension evidence is marked
+incomplete while already received records remain in the artifact.
+
 Terminal message and captured-section budgets do not mutate the normalized
 events. A compact omission marker states original and retained character counts
 plus a SHA-256 prefix; `.pytest_cache/d/receptor/last-run.txt` retains the full

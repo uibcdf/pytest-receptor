@@ -82,7 +82,7 @@ limitation`.
 | PR-UX-003 | Medium | Output provides no rerun target | Emit a literal rerun command per failure group that actually selects it | 0.6 | 0 | **done 2026-07-18** |
 | PR-ARCH-003 | High | Renderer replaces the private `TerminalReporter` | Rebuild on public hooks with the standard reporter silenced through public options | 0.6 | 0 | **done 2026-07-18** |
 | PR-ARCH-001 | High | Renderer formats reporter text instead of owning structured evidence | Normalized event model populated from pytest hooks; stop inferring exception type from formatted text | post | 1 | **done 2026-08-12** |
-| PR-ARCH-002 | Medium | No neutral extension-event protocol for third-party producers | Namespaced extension events, correlation service, unknown-namespace preservation, dummy-producer tests | post | 2 | open (gated) |
+| PR-ARCH-002 | Medium | No neutral extension-event protocol for third-party producers | Namespaced extension events, correlation service, unknown-namespace preservation, dummy-producer tests | post | 2 | **done 2026-09-26** |
 | PR-API-001 | Medium | No programmatic consumer interface | Supported artifact reader and session/event API | post | 2 | in progress 2026-08-12 (reader shipped locally; real consumer validation remains) |
 | PR-OPS-001 | High | Python range rejects 3.13 patch releases | Change to `>=3.11,<3.14`; test representative versions | 0.6 | 0 | **done 2026-07-18** |
 | PR-OPS-002 | Medium | Heartbeat is not periodic | Delete the heartbeat feature and its claims; revisit only with lifecycle evidence | 0.6 | 0 | **done 2026-07-18** |

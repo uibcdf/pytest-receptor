@@ -1,9 +1,20 @@
 # SMonitor and MolSysSuite Integration Boundary
 
-**Status:** exploratory integration proposal; input to a later cross-repository
-proposal digestion, not an accepted contract
+**Status:** neutral provider extension boundary implemented in 1.2.0;
+broader policy extraction remains exploratory
 
 **Recorded:** 2026-07-17
+
+## 2026-09-26 provider checkpoint
+
+The receptor now owns a versioned, producer-neutral `extension` record in its
+existing JSONL artifact. `pytest_receptor.extensions.emit` and
+`current_context` provide bounded producer input and phase context without a
+SMonitor dependency. The unrelated dummy producer passes serial, xdist,
+rerun, redaction, overflow, worker-loss, and artifact-integrity tests. The
+canonical consumer guide and `docs/artifacts.md` define this accepted provider
+contract. The later SMonitor adapter and a possible suite policy package have
+separate ownership; the 2026-07-17 text below remains design history.
 
 **Companion SMonitor proposal:**
 `smonitor/devguide/pending_proposals/pytest_diagnostics_bridge_and_molsyssuite_policy.md`

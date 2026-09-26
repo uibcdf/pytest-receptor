@@ -21,6 +21,7 @@ _KNOWN_TYPES = {
     "warning",
     "root_cause",
     "evidence_limit",
+    "extension",
     "session_finish",
 }
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
