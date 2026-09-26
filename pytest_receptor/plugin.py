@@ -1677,6 +1677,7 @@ class ReceptorPlugin:
         except ValueError:
             return path
 
+    @pytest.hookimpl(wrapper=True, tryfirst=True)
     def pytest_unconfigure(self, config):
         """Emit statistics only once pytest has finished writing the baseline.
 
@@ -1710,6 +1711,15 @@ class ReceptorPlugin:
         if self._session_context_token is not None:
             extensions._CURRENT.reset(self._session_context_token)
             self._session_context_token = None
+        try:
+            yield
+        finally:
+            # A first-entered hook wrapper exits after every unconfigure
+            # implementation, including pytest's late Exit banner. The
+            # reporter can write safely until then; afterwards we own and
+            # close the discard stream rather than leaking it at shutdown.
+            if self._sink is not None:
+                self._sink.close()
 
     def _silence_late_terminal(self, reporter):
         if reporter is None:

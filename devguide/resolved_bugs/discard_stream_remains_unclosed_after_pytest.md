@@ -1,13 +1,13 @@
 ---
 summary: Close the late-terminal discard stream without leaking ResourceWarning
 issue: uibcdf/pytest-receptor#4
-status: open
+status: resolved
 opened: 2026-09-21
-closed:
+closed: 2026-09-26
 severity: low
 verification: reproduced
 area: [output, lifecycle, xdist]
-guard:
+guard: tests/test_plugin.py::test_late_terminal_discard_stream_is_closed
 normative:
 blocked_by: []
 supersedes: []
@@ -82,4 +82,15 @@ code and counts are correct.
 
 ## Resolution
 
-Pending.
+Fixed 2026-09-26 (PR-PILOT-016). `pytest_unconfigure` is now a first-entered
+hook wrapper. It redirects pytest's terminal writer before the other
+unconfigure implementations run, preserving the controlled-exit behavior of
+PR-PILOT-011, and closes the discard stream after all of them finish. The
+cleanup also runs if another implementation raises.
+
+The subprocess guard checks serial and two-worker xdist runs, each with and
+without `--receptor-stats`. An atexit check showed `self._sink.closed` was
+false in all four modes before the fix and true after it. It also checks the
+verdict, exit status and absence of trailing `ResourceWarning` text. The
+existing controlled-incomplete regression still checks the zero exit code,
+`INCOMPLETE` verdict, and absence of a late Exit banner or closed-writer error.

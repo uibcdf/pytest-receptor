@@ -5,7 +5,9 @@ safety, and compatibility. Each test names the register identifier it protects.
 """
 
 import importlib.util
+import os
 import re
+from pathlib import Path
 from xml.etree import ElementTree
 
 import pytest
@@ -219,6 +221,44 @@ def test_incomplete_run_with_stats_does_not_change_exit_code(pytester):
         combined = out + result.stderr.str()
         assert "I/O operation on closed file" not in combined
         assert "Traceback" not in result.stderr.str()
+
+
+@pytest.mark.parametrize("stats", [False, True])
+@pytest.mark.parametrize("xdist", [False, True])
+def test_late_terminal_discard_stream_is_closed(pytester, monkeypatch, stats, xdist):
+    if xdist and importlib.util.find_spec("xdist") is None:
+        pytest.skip("pytest-xdist is not installed")
+    monkeypatch.setenv("PYTHONWARNINGS", "always::ResourceWarning")
+    source_root = Path(__file__).resolve().parents[1]
+    monkeypatch.setenv(
+        "PYTHONPATH",
+        os.pathsep.join([str(source_root), os.environ.get("PYTHONPATH", "")]),
+    )
+    pytester.makeconftest(
+        "import atexit, sys\n"
+        "def pytest_configure(config):\n"
+        "    def check_sink():\n"
+        "        plugin = config.pluginmanager.getplugin('receptor-renderer')\n"
+        "        sink = plugin._sink if plugin is not None else None\n"
+        "        print(f'RECEPTOR_SINK_CLOSED={sink is not None and sink.closed}', file=sys.stderr)\n"
+        "    atexit.register(check_sink)\n"
+    )
+    pytester.makepyfile("def test_ok(): assert 1\n")
+    options = ["--receptor=llm", "-p", "no:cacheprovider"]
+    if stats:
+        options.append("--receptor-stats")
+    if xdist:
+        options.extend(["-n", "2"])
+
+    result = pytester.runpytest_subprocess(*options)
+
+    assert result.ret == 0
+    assert result.stdout.str().lstrip().startswith("PASS exit=0")
+    combined = result.stdout.str() + result.stderr.str()
+    assert "RECEPTOR_SINK_CLOSED=True" in combined
+    assert "RECEPTOR_SINK_CLOSED=False" not in combined
+    assert "ResourceWarning" not in combined
+    assert "unclosed file" not in combined
 
 
 @pytest.mark.parametrize(

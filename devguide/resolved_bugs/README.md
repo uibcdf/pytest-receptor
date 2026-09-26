@@ -35,3 +35,4 @@ stays an inbox. Nothing is closed by deletion.
 | `deselected_tests_reported_incomplete.md` | PR-PILOT-013 | 2026-07-28 |
 | `full_suite_empty_success_output_molsysviewer.md` | PR-PILOT-013, PR-PILOT-014 | 2026-08-02 |
 | `xdist_mixed_valid_and_missing_paths_hide_the_usage_error.md` | PR-PILOT-015 | 2026-08-12 |
+| `discard_stream_remains_unclosed_after_pytest.md` | PR-PILOT-016 | 2026-09-26 |
