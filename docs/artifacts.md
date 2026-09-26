@@ -87,6 +87,7 @@ library:
 ```python
 from pytest_receptor.extensions import current_context, emit
 
+
 def test_timed_operation(pytestconfig):
     context = current_context()  # active node, phase, worker, and attempt
     reference = emit(
