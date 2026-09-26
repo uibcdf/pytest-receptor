@@ -257,8 +257,7 @@ def test_late_terminal_discard_stream_is_closed(pytester, monkeypatch, stats, xd
     combined = result.stdout.str() + result.stderr.str()
     assert "RECEPTOR_SINK_CLOSED=True" in combined
     assert "RECEPTOR_SINK_CLOSED=False" not in combined
-    assert "ResourceWarning" not in combined
-    assert "unclosed file" not in combined
+    assert not re.search(r"ResourceWarning: unclosed file[^\n]*/dev/null", combined)
 
 
 @pytest.mark.parametrize(

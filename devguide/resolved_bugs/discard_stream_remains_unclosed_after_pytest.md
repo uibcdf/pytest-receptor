@@ -94,3 +94,10 @@ false in all four modes before the fix and true after it. It also checks the
 verdict, exit status and absence of trailing `ResourceWarning` text. The
 existing controlled-incomplete regression still checks the zero exit code,
 `INCOMPLETE` verdict, and absence of a late Exit banner or closed-writer error.
+
+### Correction, 2026-09-26
+
+The first hosted matrix run exposed unrelated `ResourceWarning` lines for
+unclosed xdist sockets on Python 3.11. The guard now matches only an unclosed
+`/dev/null` file, the resource owned by this issue. It still checks explicitly
+at process exit that every receptor discard stream was closed.
