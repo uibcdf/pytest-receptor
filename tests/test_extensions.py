@@ -53,15 +53,26 @@ def test_dummy_producer_correlates_phase_events_and_preserves_namespace(
     assert artifact.complete and artifact.integrity_valid
     extensions = [event.data for event in artifact.events if event.type == "extension"]
     assert len([event for event in extensions if event["phase"] != "session"]) == 6
-    assert any(event["phase"] == "session" and not event["nodeid"] for event in extensions)
+    assert any(
+        event["phase"] == "session" and not event["nodeid"] for event in extensions
+    )
     if distributed:
-        assert len({
-            event["worker_id"] for event in extensions
-            if event["phase"] == "session" and event["worker_id"]
-        }) == 2
+        assert (
+            len(
+                {
+                    event["worker_id"]
+                    for event in extensions
+                    if event["phase"] == "session" and event["worker_id"]
+                }
+            )
+            == 2
+        )
     assert {event["namespace"] for event in extensions} == {"org.example.clock@1"}
     assert {event["payload"]["kind"] for event in extensions} >= {
-        "setup", "call", "teardown", "session"
+        "setup",
+        "call",
+        "teardown",
+        "session",
     }
     phases = {
         event.data["event_id"]: event.data
@@ -74,7 +85,9 @@ def test_dummy_producer_correlates_phase_events_and_preserves_namespace(
             continue
         phase = phases[event["emitted_during"]]
         assert (event["nodeid"], event["phase"], event["attempt"]) == (
-            phase["nodeid"], phase["phase"], phase["attempt"]
+            phase["nodeid"],
+            phase["phase"],
+            phase["attempt"],
         )
         assert event["worker_id"] == phase["worker_id"]
     assert artifact.final.data["extensions"]["recorded"] == len(extensions)
@@ -104,7 +117,9 @@ def test_dummy_producer_redacts_and_bounds_without_changing_outcome(pytester):
     assert len(extensions) == 1
     assert extensions[0]["payload"]["token"] == "token=[REDACTED]"
     assert artifact.final.data["extensions"] == {
-        "recorded": 1, "dropped": 2, "incomplete": True
+        "recorded": 1,
+        "dropped": 2,
+        "incomplete": True,
     }
 
 
@@ -144,11 +159,13 @@ def test_dummy_producer_preserves_rerun_attempt(pytester):
     assert result.ret == pytest.ExitCode.OK
     artifact = read_artifact(pytester.path / "events.jsonl")
     calls = [
-        event.data for event in artifact.events
+        event.data
+        for event in artifact.events
         if event.type == "extension" and event.data["phase"] == "call"
     ]
     assert [(event["attempt"], event["payload"]["attempt"]) for event in calls] == [
-        (1, 1), (2, 2)
+        (1, 1),
+        (2, 2),
     ]
 
 
@@ -195,8 +212,11 @@ def test_worker_loss_keeps_received_extensions_and_marks_gap(pytester):
         """
     )
     result = pytester.runpytest(
-        "--receptor=llm", "--receptor-events=events.jsonl",
-        "-n", "2", "--max-worker-restart=0",
+        "--receptor=llm",
+        "--receptor-events=events.jsonl",
+        "-n",
+        "2",
+        "--max-worker-restart=0",
     )
 
     assert result.ret != pytest.ExitCode.OK
@@ -222,5 +242,7 @@ def test_producer_failure_marker_preserves_native_success(pytester):
     assert result.ret == pytest.ExitCode.OK
     artifact = read_artifact(pytester.path / "events.jsonl")
     assert artifact.final.data["extensions"] == {
-        "recorded": 0, "dropped": 1, "incomplete": True
+        "recorded": 0,
+        "dropped": 1,
+        "incomplete": True,
     }

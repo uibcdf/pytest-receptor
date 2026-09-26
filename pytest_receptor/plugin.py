@@ -403,6 +403,7 @@ class ReceptorPlugin:
         self._extension_dropped = 0
         self._extension_incomplete = False
         self._extension_finalized = False
+        self._session_context_token = None
         self._extension_worker_id = str(
             getattr(config, "workerinput", {}).get("workerid", "")
         )
@@ -445,6 +446,10 @@ class ReceptorPlugin:
         (`trylast`) session start brings the nodes up; see
         `_silence_xdist_startup`.
         """
+        # pytester can run another pytest session inside an active outer test.
+        # An explicit session boundary prevents the inner session from seeing
+        # the outer call's ContextVar until that session is unconfigured.
+        self._session_context_token = extensions._CURRENT.set(None)
         if self._is_worker:
             return
         if not self.stats:
@@ -804,7 +809,13 @@ class ReceptorPlugin:
             )
 
     def _record_extensions(
-        self, events, *, nodeid="", phase="session", worker_id="", attempt=0,
+        self,
+        events,
+        *,
+        nodeid="",
+        phase="session",
+        worker_id="",
+        attempt=0,
         emitted_during=None,
     ):
         if self._artifact is None:
@@ -816,8 +827,12 @@ class ReceptorPlugin:
                 record = {
                     key: event[key]
                     for key in (
-                        "namespace", "payload", "relationships", "producer_ref",
-                        "trust", "redaction",
+                        "namespace",
+                        "payload",
+                        "relationships",
+                        "producer_ref",
+                        "trust",
+                        "redaction",
                     )
                 }
                 record.update(
@@ -864,9 +879,7 @@ class ReceptorPlugin:
         except (TypeError, ValueError):
             self._extension_incomplete = True
         self._extension_incomplete |= bool(extension.get("incomplete", False))
-        self._record_extensions(
-            extension.get("session", ()), worker_id=worker_id
-        )
+        self._record_extensions(extension.get("session", ()), worker_id=worker_id)
 
     def _subtest_identity(self, report, nodeid, attempt):
         """Normalize pytest-subtests without importing its optional package."""
@@ -1694,6 +1707,9 @@ class ReceptorPlugin:
         self._silence_late_terminal(reporter)
         if line and self._terminal is not None:
             self._terminal.write(line)
+        if self._session_context_token is not None:
+            extensions._CURRENT.reset(self._session_context_token)
+            self._session_context_token = None
 
     def _silence_late_terminal(self, reporter):
         if reporter is None:
