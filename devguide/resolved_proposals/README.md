@@ -28,3 +28,4 @@ Nothing is closed by deletion.
 | `configurable_rerun_command.md` | PR-UX-004 | 2026-07-21 |
 | `python_314_support.md` | PR-REL-008 | 2026-09-21 |
 | `publish_canonical_consumer_guide.md` | `uibcdf/pytest-receptor#5` | 2026-09-22 |
+| `review_python_ecosystem_policy_adoption.md` | `uibcdf/pytest-receptor#6` | 2026-09-27 |

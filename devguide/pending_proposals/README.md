@@ -57,8 +57,8 @@ when they feel too small to bother with:
 
 ## Active proposals
 
-- [Review inherited Python ecosystem policy](review_python_ecosystem_policy_adoption.md)
-  (`uibcdf/pytest-receptor#6`)
+None at present. The MolSysSuite ecosystem review is archived in
+[`resolved_proposals/`](../resolved_proposals/review_python_ecosystem_policy_adoption.md).
 
 Python 3.14 support moved to
 [`../resolved_proposals/python_314_support.md`](../resolved_proposals/python_314_support.md)

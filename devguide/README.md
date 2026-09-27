@@ -36,6 +36,7 @@ Everything else is reference material for work that comes later.
 | `trust_and_adoption_criteria.md` | Criteria | Post-0.6 reference. Adoption levels, trust invariants, promotion gates, and the MolSysMT dogfooding program. |
 | `release_1.0_readiness.md` | Dashboard | **Live.** Maps the accepted 1.0 criteria to executable evidence. Publication execution now lives in `roadmap_to_1.0_publication.md`. |
 | `pypi_release.md` | Runbook | **Current.** Official pytest discovery/listing rules, Trusted Publishing setup, immutable-release checks, and the exact 1.0 PyPI procedure. |
+| `python_ecosystem_policy_adoption.md` | Local decision | **Current.** Provider self-test and support-library applicability decisions under MolSysSuite policy. |
 | `smonitor_and_molsyssuite_integration.md` | Exploration | Post-0.6, gated. Not an accepted contract. Nothing in it may be implemented before the extension protocol is designed against a neutral dummy producer. |
 | `molsysmt_pilot.md` | Brief | **Active.** What the MolSysMT team needs in order to run the receptor on their suite, what we need back from them, and what the plugin does not do yet. |
 | `for_collaborators.md` | Onboarding | **Active.** A short, portable note for a new collaborator in a consumer repo: how to run the receptor, that it is pre-1.0, and how to report anomalies and proposals. Meant to be copied into or linked from a consumer repo's devguide. |
