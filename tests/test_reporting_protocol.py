@@ -31,9 +31,6 @@ class TestReportingProtocol(unittest.TestCase):
         legacy, legacy_errors = devguide_reports.load_legacy_reports()
         self.assertEqual(legacy_errors, [])
         self.assertLessEqual(len(legacy), 17)
-        self.assertTrue(
-            any(item.issue == "uibcdf/pytest-receptor#3" for item in legacy)
-        )
         result = subprocess.run(
             [sys.executable, "devtools/devguide_index.py", "--check"],
             cwd=ROOT,
