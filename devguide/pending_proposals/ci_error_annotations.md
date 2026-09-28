@@ -1,3 +1,17 @@
+---
+summary: Decide whether to emit CI error annotations from the ci profile.
+issue: uibcdf/pytest-receptor#9
+status: open
+opened: 2026-09-28
+closed:
+verification: inspected
+area: [ci, output]
+guard:
+normative:
+blocked_by: []
+supersedes: []
+---
+
 # Proposal: CI error annotations
 
 **Recorded:** 2026-07-18

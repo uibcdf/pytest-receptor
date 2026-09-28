@@ -1,0 +1,23 @@
+name: Reporting governance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reporting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Check reports and generated indexes
+        run: |
+          python devtools/devguide_index.py --check
+          python -m unittest discover -s tests -p test_reporting_protocol.py

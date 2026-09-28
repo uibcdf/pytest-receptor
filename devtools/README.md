@@ -53,3 +53,11 @@ python devtools/benchmarks/run_performance.py
 The performance harness uses a unique temporary directory, disables unrelated
 third-party plugins, and removes it after the run, so concurrent invocations do
 not interfere.
+
+## Reporting records
+
+The issue-backed reporting validator is `devguide_reports.py`; regenerate or
+check the developer-guide indexes with `python devtools/devguide_index.py` or
+`python devtools/devguide_index.py --check` from the repository root. See
+`devguide/reporting_protocol.md` for filing, closure and the bounded legacy
+archive exception.

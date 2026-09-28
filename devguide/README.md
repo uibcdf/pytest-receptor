@@ -41,9 +41,9 @@ Everything else is reference material for work that comes later.
 | `molsysmt_pilot.md` | Brief | **Active.** What the MolSysMT team needs in order to run the receptor on their suite, what we need back from them, and what the plugin does not do yet. |
 | `for_collaborators.md` | Onboarding | **Active.** A short, portable note for a new collaborator in a consumer repo: how to run the receptor, that it is pre-1.0, and how to report anomalies and proposals. Meant to be copied into or linked from a consumer repo's devguide. |
 | `pending_bugs/` | Inbox | **Active.** Untriaged defect reports. A disagreement with pytest about a run's outcome jumps the queue. |
-| `resolved_bugs/` | History | Field reports that have been fixed, kept with their resolution and reproducer. Moved out of the inbox rather than deleted. |
+| `resolved_bugs/` | History | Issue-backed fixes and indexed pre-protocol register evidence, kept with their resolution and reproducer. |
 | `pending_proposals/` | Inbox | **Active.** Untriaged design input from pilots and other projects. Everything here is either given a register identifier or moved to `superseded_proposals.md`. |
-| `resolved_proposals/` | History | Accepted proposals that have shipped, kept with their resolution. The counterpart to `resolved_bugs/`. |
+| `resolved_proposals/` | History | Issue-backed decisions and indexed pre-protocol register evidence. The counterpart to `resolved_bugs/`. |
 | `superseded_proposals.md` | History | Rejected and replaced proposals, preserved with the reason each was dropped. Includes the original development guide verbatim. |
 | `prior_art_2026-07-19.md` | Survey | **Current.** The two other plugins with the same thesis, what they do and do not do, measured rather than read. Includes where we are *not* better, and the decision not to publish a comparative benchmark. |
 | `original_issue_in_pytest.md` | History | The upstream pytest feature request that started the project. See the header note for which parts no longer hold. |
@@ -70,8 +70,10 @@ full from 0.6.
 
 ## Conventions
 
-- Every proposal must have an identifier in the register. A proposal that exists
-  only in prose is untracked work.
+- Open the owning GitHub issue before a bug or proposal report and use
+  [`reporting_protocol.md`](reporting_protocol.md) for the template, offline
+  validation and generated indexes. The register remains a complementary
+  release work tracker, not the issue identity.
 - Superseded proposals move to `superseded_proposals.md`. They are not deleted;
   knowing why an idea was rejected is worth keeping.
 - Input from outside the project lands in `pending_bugs/` (defects) or

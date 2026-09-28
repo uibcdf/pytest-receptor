@@ -5,6 +5,14 @@ Reported defects that have not been triaged yet.
 There are no pending bug reports. The late-terminal discard-stream defect
 (`uibcdf/pytest-receptor#4`) is archived in `resolved_bugs/`.
 
+See the [local reporting protocol](../reporting_protocol.md).
+
+<!-- generated: devguide_index -->
+
+*No entries.*
+
+<!-- /generated -->
+
 The distinction from [`../pending_proposals/`](../pending_proposals/README.md)
 is intent, not severity:
 

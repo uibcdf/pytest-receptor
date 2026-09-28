@@ -17,7 +17,9 @@ Under the MolSysSuite reporting protocol, open the owning GitHub issue before
 adding a queued proposal. Keep detailed analysis here and the state and settled
 facts in the issue. The historical
 [`audit_action_register_2026-07-17.md`](../audit_action_register_2026-07-17.md)
-continues to track the project's release work. A proposal that exists only in
+continues to track the project's release work. See the
+[local reporting protocol](../reporting_protocol.md) for the template, indexes,
+offline checks and bounded historical exception. A proposal that exists only in
 a conversation is untracked work, and untracked work is how the original audit
 found sixteen proposals that had been written down somewhere and then quietly
 forgotten.
@@ -31,7 +33,8 @@ with its resolution attached. Nothing is deleted.
 
 ## Conventions
 
-Deliberately light. Do not let formatting stop you writing something down.
+Keep analysis rough when needed, but use the common front matter and owning
+issue for every queued report. Do not let prose polish stop an observation.
 
 - One file per topic. Name it for the topic, not the date:
   `grouping_misses_numpy_shape_mismatch.md`, not `notes_july.md`.
@@ -57,12 +60,18 @@ when they feel too small to bother with:
 
 ## Active proposals
 
-None at present. The MolSysSuite ecosystem review is archived in
-[`resolved_proposals/`](../resolved_proposals/review_python_ecosystem_policy_adoption.md).
+<!-- generated: devguide_index -->
 
-Python 3.14 support moved to
-[`../resolved_proposals/python_314_support.md`](../resolved_proposals/python_314_support.md)
-after public 1.1.0 delivery and clean installation from PyPI and Conda.
+### Active (2)
+
+- [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(active, inspected)*
+- [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(active, inspected)*
+
+### Open (1)
+
+- [`ci_error_annotations.md`](ci_error_annotations.md) — [#9](https://github.com/uibcdf/pytest-receptor/issues/9) — Decide whether to emit CI error annotations from the ci profile. *(open, inspected)*
+
+<!-- /generated -->
 
 ## Current pilots
 

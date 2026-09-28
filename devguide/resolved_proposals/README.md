@@ -22,10 +22,20 @@ Nothing is closed by deletion.
 
 ## Contents
 
-| Proposal | Register | Resolved |
-| :--- | :--- | :--- |
-| `built_in_normalizers_for_warning_variants.md` | PR-PILOT-007 | 2026-07-18 |
-| `configurable_rerun_command.md` | PR-UX-004 | 2026-07-21 |
-| `python_314_support.md` | PR-REL-008 | 2026-09-21 |
-| `publish_canonical_consumer_guide.md` | `uibcdf/pytest-receptor#5` | 2026-09-22 |
-| `review_python_ecosystem_policy_adoption.md` | `uibcdf/pytest-receptor#6` | 2026-09-27 |
+Modern issue-backed records and pre-protocol register evidence are listed
+below. The legacy identity exception is owned by `uibcdf/pytest-receptor#10`.
+
+<!-- generated: devguide_index -->
+
+### Resolved (2)
+
+- [`publish_canonical_consumer_guide.md`](publish_canonical_consumer_guide.md) — [#5](https://github.com/uibcdf/pytest-receptor/issues/5) — Publish a canonical Pytest Receptor guide for MolSysSuite consumers. *(resolved, measured)*
+- [`review_python_ecosystem_policy_adoption.md`](review_python_ecosystem_policy_adoption.md) — [#6](https://github.com/uibcdf/pytest-receptor/issues/6) — Review MolSysSuite Python ecosystem policy in pytest-receptor. *(resolved, measured)*
+
+### Legacy register evidence (3)
+
+- [`built_in_normalizers_for_warning_variants.md`](built_in_normalizers_for_warning_variants.md) — PR-PILOT-007 — resolved 2026-07-18; legacy identity review
+- [`configurable_rerun_command.md`](configurable_rerun_command.md) — PR-UX-004 — resolved 2026-07-21; legacy identity review
+- [`python_314_support.md`](python_314_support.md) — PR-REL-008 — [#3](https://github.com/uibcdf/pytest-receptor/issues/3) — resolved 2026-09-21; legacy identity review
+
+<!-- /generated -->
