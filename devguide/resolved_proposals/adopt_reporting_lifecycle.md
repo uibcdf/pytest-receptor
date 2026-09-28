@@ -1,12 +1,12 @@
 ---
 summary: Adopt the MolSysSuite issue-backed reporting lifecycle locally.
 issue: uibcdf/pytest-receptor#8
-status: active
+status: resolved
 opened: 2026-09-28
-closed:
+closed: 2026-09-28
 verification: inspected
 area: [governance, reporting]
-guard:
+guard: tests/test_reporting_protocol.py::TestReportingProtocol::test_existing_reports_have_valid_metadata_and_generated_indexes
 normative:
 blocked_by: []
 supersedes: []
@@ -55,3 +55,15 @@ generated indexes. The legacy records remain byte-preserved and visible in
 the generated archive index. The validator rejects new issue-less reports,
 false closure and missing guard selectors; its standalone hosted job passes.
 Close this implementation issue with an archived record and durable guard.
+
+## Resolution
+
+Commit `3226957` added the local template, generated indexes, offline
+validator, contributor guidance and standalone reporting workflow. It gave
+the active CI-annotations proposal issue `#9` and preserved all seventeen
+pre-protocol resolved documents without changing their text. Their bounded
+exception and eventual identity review are owned by still-open `#10`.
+The guard checks issue-backed metadata and generated indexes, while negative
+tests reject false closure and missing guard nodes. Local index, reporting
+tests and full repository Ruff checks passed. Hosted Reporting governance run
+`36390254679` passed on the implementation commit.

@@ -62,9 +62,8 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
-### Active (2)
+### Active (1)
 
-- [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(active, inspected)*
 - [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(active, inspected)*
 
 ### Open (1)
