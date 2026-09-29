@@ -78,5 +78,17 @@ review; the new macOS lane alone cannot certify existing releases.
 
 ## Resolution
 
-Implementation and hosted evidence are being collected. Keep this issue open
-until remaining observations and platform claims are recorded centrally.
+At `608b230`, [Tests](https://github.com/uibcdf/pytest-receptor/actions/runs/36644241696)
+passed all eleven jobs, including both suite steps in all eight Linux
+compatibility cells. [Reporting governance](https://github.com/uibcdf/pytest-receptor/actions/runs/36644241672)
+and [MolSysSuite policy](https://github.com/uibcdf/pytest-receptor/actions/runs/36644242403)
+also passed. The [initial probe](https://github.com/uibcdf/pytest-receptor/actions/runs/36644268513)
+recognized `a4ea33a` as an executed full Tests watermark, found zero debt,
+and omitted heavy jobs.
+
+The protected `main` now requires all eleven stable Tests checks with strict
+status. Required PR reviews are configured with zero mandatory approvals:
+external integration requires a PR and full checks, while administrators
+`dprada` and `LMMV` retain their direct-push bypass. Hosted skip and full
+recovery evidence is being collected. Keep this issue open until the actual
+daily trigger, hosted PR enforcement and platform claims are reviewed.
