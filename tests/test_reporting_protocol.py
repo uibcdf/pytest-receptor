@@ -26,6 +26,7 @@ class TestReportingProtocol(unittest.TestCase):
                 "uibcdf/pytest-receptor#8",
                 "uibcdf/pytest-receptor#9",
                 "uibcdf/pytest-receptor#10",
+                "uibcdf/pytest-receptor#11",
             },
         )
         legacy, legacy_errors = devguide_reports.load_legacy_reports()
