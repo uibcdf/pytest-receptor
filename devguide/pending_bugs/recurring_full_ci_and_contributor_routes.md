@@ -47,7 +47,8 @@ the plugin's pytest-major compatibility contract.
 ## What is measured and what is assumed
 
 The current hosted Tests matrix passed at the inspected commit. The new
-scheduled lanes and macOS test environment need initial manual dispatch.
+Linux and representative macOS lanes passed their initial manual dispatch;
+actual cron execution and published platform claims remain unreviewed.
 GitHub lists `macos-15` as arm64 in its
 [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners);
 the workflow also asserts the actual architecture. The
@@ -89,6 +90,14 @@ and omitted heavy jobs.
 The protected `main` now requires all eleven stable Tests checks with strict
 status. Required PR reviews are configured with zero mandatory approvals:
 external integration requires a PR and full checks, while administrators
-`dprada` and `LMMV` retain their direct-push bypass. Hosted skip and full
-recovery evidence is being collected. Keep this issue open until the actual
-daily trigger, hosted PR enforcement and platform claims are reviewed.
+`dprada` and `LMMV` retain their direct-push bypass. The documentation push
+`a7f3b0e` deliberately included `[skip ci]`; GitHub accepted it with explicit
+PR and required-check bypass notices. The [debt probe](https://github.com/uibcdf/pytest-receptor/actions/runs/36644755285)
+found exactly one skipped commit since the executed full Tests at `608b230`
+and omitted all heavy jobs. The [manual full matrix](https://github.com/uibcdf/pytest-receptor/actions/runs/36644802980)
+passed all ten compatibility cells at `a7f3b0e`, executing serial and
+distributed suites and the architecture/pytest-major assertions in each.
+The [recovery probe](https://github.com/uibcdf/pytest-receptor/actions/runs/36678939997)
+then recognized `a7f3b0e` as the watermark, found zero debt, and omitted heavy
+jobs. Keep this issue open until the actual daily trigger, hosted PR
+enforcement and platform claims are reviewed.
