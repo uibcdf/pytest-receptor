@@ -10,7 +10,7 @@ It does not claim coverage across every supported platform or interpreter.
 The XML is retained for 14 days as `coverage-xml`. A separate publisher downloads
 that exact run's artifact, grants OIDC only to the publisher job and uploads only
 for push or manual dispatch on `main`. Pull requests produce evidence without
-publishing it. Codecov action v5.5.1 is pinned to its verified commit. Missing XML
+publishing it. Codecov action v7.1.1 is pinned to its verified commit. Missing XML
 and upload failures fail the publisher; they are not reported as accepted coverage.
 
 The README percentage represents the latest accepted default-branch report, which

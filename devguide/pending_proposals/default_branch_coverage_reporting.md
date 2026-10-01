@@ -57,3 +57,11 @@ live percentage with scope and cadence. Keep this report partial until measured.
 
 2026-10-01, host nauta, Python 3.13; coverage 7.16.0. Hosted identifiers and service
 acceptance will be recorded after execution.
+
+## Hosted publisher correction (2026-10-01)
+
+The first hosted publisher failed before sending a report because v5.5.1 fetched
+an unavailable OpenPGP key. Tests and XML generation succeeded. The producer now
+uses the official v7.1.1 commit, whose wrapper fetches the current `codecovsecops`
+key. Signature checking remains enabled. Acceptance is still independently
+required; the initial failure is not counted as an upload.
