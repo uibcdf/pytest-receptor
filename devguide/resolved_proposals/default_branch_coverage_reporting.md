@@ -1,9 +1,9 @@
 ---
 summary: Publish owned default-branch coverage from the existing tool suite.
 issue: uibcdf/pytest-receptor#12
-status: partial
+status: resolved
 opened: 2026-10-01
-closed:
+closed: 2026-10-01
 verification: measured
 area: [governance, ci, coverage]
 guard:
@@ -33,8 +33,7 @@ complete default-branch report supporting a live README percentage.
 ## What is measured and what is assumed
 
 Local coverage execution passed the existing suite on Python 3.13.15 with
-coverage 7.16.0. Ruff and reporting/index guards pass. Hosted execution and
-independent Codecov acceptance remain pending; no badge is claimed yet.
+coverage 7.16.0. Ruff and reporting/index guards pass. Hosted execution and independent Codecov acceptance are measured below.
 
 ## Alternatives and refuted paths
 
@@ -65,3 +64,14 @@ an unavailable OpenPGP key. Tests and XML generation succeeded. The producer now
 uses the official v7.1.1 commit, whose wrapper fetches the current `codecovsecops`
 key. Signature checking remains enabled. Acceptance is still independently
 required; the initial failure is not counted as an upload.
+
+## Accepted hosted evidence (2026-10-01)
+
+[36935901442](https://github.com/uibcdf/pytest-receptor/actions/runs/36935901442) completed successfully for source `b75be9c46b1e5bd42994b3fad619fd8481b09896`.
+It executed 200 serial tests; all eight serial/distributed matrix cells also passed, exported and retained XML, and executed a successful OIDC
+upload. The independent public API observed `state=complete` for the same source
+at `2026-10-01T22:46:05.001344+00:00` with 79.73%
+Codecov coverage; the live SVG renders 80%.
+The source commit timestamp is separate from the upload completion time
+`2026-10-01T22:36:54Z`. The README now carries the live percentage and measured
+scope/cadence. This does not qualify any scientific consumer or a new release.

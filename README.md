@@ -5,6 +5,7 @@
 [![Python 3.11 | 3.12 | 3.13 | 3.14](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-3776AB?logo=python&logoColor=white)](https://github.com/uibcdf/molsyssuite/blob/main/devguide/python_policy.md)
 [![License](https://img.shields.io/github/license/uibcdf/pytest-receptor)](https://github.com/uibcdf/pytest-receptor/blob/main/LICENSE)
 [![Tests](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/uibcdf/pytest-receptor/actions/workflows/tests.yml)
+[![Codecov](https://codecov.io/gh/uibcdf/pytest-receptor/branch/main/graph/badge.svg)](https://app.codecov.io/gh/uibcdf/pytest-receptor)
 [![Documentation](https://github.com/uibcdf/pytest-receptor/actions/workflows/docs.yml/badge.svg?branch=main)](https://uibcdf.github.io/pytest-receptor/)
 [![GitHub release](https://img.shields.io/github/v/release/uibcdf/pytest-receptor)](https://github.com/uibcdf/pytest-receptor/releases/latest)
 [![PyPI](https://img.shields.io/pypi/v/pytest-receptor)](https://pypi.org/project/pytest-receptor/)
@@ -18,6 +19,14 @@ TDD loop, its output is read by something that pays for every token and cannot
 scroll back. `pytest-receptor` renders the same run for that consumer: it says
 what happened, groups repeated failures by root cause, and tells the agent
 exactly what to re-run.
+
+
+Coverage measures `pytest_receptor` in the parent process of the existing
+Linux/Python 3.13, pytest 9 serial test lane. Child-process and distributed-worker
+coverage is not combined. The badge shows the last accepted `main` report and
+can lag lightweight or `[skip ci]` pushes; it does not establish coverage of later
+commits or scientific consumer suites. See the [coverage reporting contract](devguide/coverage_reporting.md).
+
 
 > **Stable 1.x contract.** The reliability, CLI, outcome, and
 > `pytest-receptor.events@1` compatibility contracts are frozen. The receptor

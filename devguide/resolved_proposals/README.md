@@ -27,9 +27,10 @@ below. The legacy identity exception is owned by `uibcdf/pytest-receptor#10`.
 
 <!-- generated: devguide_index -->
 
-### Resolved (3)
+### Resolved (4)
 
 - [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(resolved, inspected)*
+- [`default_branch_coverage_reporting.md`](default_branch_coverage_reporting.md) — [#12](https://github.com/uibcdf/pytest-receptor/issues/12) — Publish owned default-branch coverage from the existing tool suite. *(resolved, measured)*
 - [`publish_canonical_consumer_guide.md`](publish_canonical_consumer_guide.md) — [#5](https://github.com/uibcdf/pytest-receptor/issues/5) — Publish a canonical Pytest Receptor guide for MolSysSuite consumers. *(resolved, measured)*
 - [`review_python_ecosystem_policy_adoption.md`](review_python_ecosystem_policy_adoption.md) — [#6](https://github.com/uibcdf/pytest-receptor/issues/6) — Review MolSysSuite Python ecosystem policy in pytest-receptor. *(resolved, measured)*
 
