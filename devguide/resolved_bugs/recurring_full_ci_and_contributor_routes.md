@@ -1,11 +1,11 @@
 ---
-summary: Recurring full CI and protected contributor routes are missing.
+summary: Verify recurring full CI, skipped-push recovery and protected contributor routes.
 issue: uibcdf/pytest-receptor#11
-status: partial
+status: resolved
 opened: 2026-09-29
-closed:
+closed: 2026-10-03
 severity: medium
-verification: inspected
+verification: measured
 area: [ci, governance]
 guard: tests/test_ci_backlog.py
 normative:
@@ -101,3 +101,67 @@ The [recovery probe](https://github.com/uibcdf/pytest-receptor/actions/runs/3667
 then recognized `a7f3b0e` as the watermark, found zero debt, and omitted heavy
 jobs. Keep this issue open until the actual daily trigger, hosted PR
 enforcement and platform claims are reviewed.
+
+### 2026-10-03 — scheduled recovery and platform review
+
+The [2026-10-02 scheduled run](https://github.com/uibcdf/pytest-receptor/actions/runs/37015450064)
+completed successfully on `3b0e07c3afff7b283efa7254bc251a3b8670005c`.
+Its decision job found one skipped commit after the executed full Tests
+watermark `b75be9c46b1e5bd42994b3fad619fd8481b09896` and selected the full
+matrix. Native job metadata confirms that all eight Linux cells and both
+macOS cells executed their serial and distributed suite steps successfully;
+none of those steps was skipped. The macOS / pytest 8 job printed
+`3.13.15 arm64 8.4.2` during the architecture/interpreter assertion.
+Additional real scheduled runs on
+[2026-09-30](https://github.com/uibcdf/pytest-receptor/actions/runs/36722924337)
+and [2026-10-01](https://github.com/uibcdf/pytest-receptor/actions/runs/36876146300)
+also completed successfully. Scheduled delivery was delayed relative to the
+cron time; no exact-time guarantee is claimed.
+
+A fresh branch-protection API response retains strict, up-to-date status
+checks for lint, benchmarks, packaging and all eight Python/pytest pairs,
+with zero mandatory review approvals and administrator enforcement disabled.
+The collaborator API identifies `dprada` and `LMMV` as administrators. This
+confirms the intended direct-push exception without changing the protection.
+The final hosted PR-route review is still pending.
+
+`docs/compatibility.md` now distinguishes the full Linux version matrix,
+representative macOS arm64 source installations, and qualification of a
+particular released wheel or Conda artifact. The Conda runbook no longer
+treats noarch packaging as proof of all-platform installation. Current CI
+does not provide Windows runtime evidence; Intel macOS is outside the suite
+support boundary. No existing release gains a platform claim from this review.
+
+`tests/test_ci_backlog.py` protects the recovery mechanism: every Linux pair
+must execute both suites, a skipped commit stays due through ordinary commits,
+probes/PRs/other branches cannot clear debt, and uncertain acquisition runs
+the full matrix. Its four tests passed locally during this review.
+
+### 2026-10-03 — hosted PR gate review and closure
+
+[PR #13](https://github.com/uibcdf/pytest-receptor/pull/13) exercises the
+ordinary pull-request route for this closing change. On head
+`919ee0db62fa47222e544addd0d8629cebf5e4de`, GitHub reported
+`isDraft=false`, `mergeable=MERGEABLE`, `mergeStateStatus=BLOCKED` and
+`statusCheckRollup.state=PENDING`. All eleven required Tests contexts were
+present and pending or executing; reporting governance had already passed.
+The blocked state therefore was neither a draft nor a merge conflict.
+The protection snapshot requires those exact contexts from GitHub Actions
+(app ID 15368) with strict up-to-date status checks.
+
+This is an observed hosted merge gate under the available administrator
+account, together with inspection of the protection and collaborator APIs.
+It does not impersonate a non-administrator or claim an attempted external
+merge. Administrator bypass remains available, and is not used to integrate
+this change while checks are pending. Final PR checks and merge evidence
+are retained in the owning issue and PR.
+
+The daily route has now executed real skipped-debt recovery, the manual
+matrix has executed all compatibility cells, and the ordinary PR exposes
+the expected required-check gate. Weekly scheduling is source-inspected;
+the first Tuesday after introduction has not yet occurred at this review.
+Manual and daily executions verify the same full-matrix job graph without
+claiming an already executed weekly trigger. Platform wording now states
+only the tested Linux matrix and representative macOS arm64 source lanes.
+The issue's remaining review gates are complete; the indexed report is
+archived with its recovery guard and the dated observations above.
