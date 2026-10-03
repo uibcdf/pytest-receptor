@@ -2,6 +2,7 @@
   "conda": {
     "filename": "pytest-receptor-1.2.1-py_0.tar.bz2",
     "overwritten": false,
+    "promotion_provider_sha": "3350615eee8c95903aca916e42789ecbdcc1f8ef",
     "promotion_run": 37151517509,
     "public_label": "main",
     "rebuilt": false,
@@ -231,6 +232,37 @@
     "linux-64",
     "osx-arm64"
   ],
+  "post_release_provider_adoption": {
+    "accepted_sha": "c3e2b9b3dabf3d1c65349c389a23048957bea21a",
+    "caller": ".github/workflows/promote_conda_package.yaml",
+    "promotion_repeated": false,
+    "public_conda_reverification": {
+      "checked_at": "2026-10-03T21:06:06.138602+00:00",
+      "files": [
+        {
+          "filename": "pytest-receptor-1.2.1-py_0.tar.bz2",
+          "main_label": "verified",
+          "owner": "uibcdf",
+          "package": "pytest-receptor",
+          "sha256": "77bf3694bc903f606d4323b88e3bb3aea9628618036b53073f5a5dbd5dbc73cb",
+          "solver_index": "verified",
+          "subdir": "noarch",
+          "url": "https://conda.anaconda.org/uibcdf/noarch/pytest-receptor-1.2.1-py_0.tar.bz2",
+          "version": "1.2.1"
+        }
+      ],
+      "schema": "molsyssuite.public-conda@1",
+      "state": "verified"
+    },
+    "unchanged_promotion_sources": [
+      ".github/workflows/promote-noarch-conda.yaml",
+      "devtools/scripts/verify_installed_matrix.py",
+      "devtools/scripts/verify_public_conda.py",
+      "devtools/scripts/noarch_conda.py",
+      "devtools/scripts/preflight_conda_release.py",
+      "devtools/conda-envs/noarch-publisher.yaml"
+    ]
+  },
   "provider_acceptance": {
     "integration_sha": "8929a4be20b124ba33361590c990328bb0391042",
     "merged_by": "LMMV",

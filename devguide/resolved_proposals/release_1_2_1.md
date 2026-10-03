@@ -266,3 +266,20 @@ Pipeline effort improvements remain separate open work in
 `uibcdf/molsyssuite#92` / `uibcdf/moli#43`. General action v2.3.0 adoption remains
 deferred in `uibcdf/molsyssuite#87` / `uibcdf/moli#42`. Windows runtime and Zenodo
 archival are not claimed.
+
+### 2026-10-03 accepted promotion revision received after delivery
+
+The maintainer supplied accepted MolSysSuite revision
+`c3e2b9b3dabf3d1c65349c389a23048957bea21a`. The maintained promotion caller
+now pins that revision. Native promotion run `37151517509`, attempt 1, retains
+its actual provider `3350615eee8c95903aca916e42789ecbdcc1f8ef`; it is not
+retroactively attributed to the later revision. Source comparison confirms that
+the promotion workflow, installed-matrix verifier, public verifier, noarch
+descriptor, release preflight and publisher environment are unchanged between
+those revisions. The accepted revision contains the owner-integrated correction.
+
+The delivered source, file, inventory, test selection and installed qualification
+remain unchanged. No second promotion or build is needed. A fresh read-only check
+using the accepted revision's public verifier confirms the same file and SHA-256
+in the public main label and solver index. Existing clean public pip and Conda
+installation receipts remain the runtime evidence for this completed delivery.
