@@ -24,9 +24,10 @@ below. The legacy identity exception is owned by `uibcdf/pytest-receptor#10`.
 
 <!-- generated: devguide_index -->
 
-### Resolved (1)
+### Resolved (2)
 
 - [`discard_stream_remains_unclosed_after_pytest.md`](discard_stream_remains_unclosed_after_pytest.md) — [#4](https://github.com/uibcdf/pytest-receptor/issues/4) — Close the late-terminal discard stream without leaking ResourceWarning *(resolved, reproduced)*
+- [`recurring_full_ci_and_contributor_routes.md`](recurring_full_ci_and_contributor_routes.md) — [#11](https://github.com/uibcdf/pytest-receptor/issues/11) — Verify recurring full CI, skipped-push recovery and protected contributor routes. *(resolved, measured)*
 
 ### Legacy register evidence (14)
 

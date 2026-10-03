@@ -1,9 +1,9 @@
 ---
-summary: Recurring full CI and protected contributor routes are missing.
+summary: Verify recurring full CI, skipped-push recovery and protected contributor routes.
 issue: uibcdf/pytest-receptor#11
-status: partial
+status: resolved
 opened: 2026-09-29
-closed:
+closed: 2026-10-03
 severity: medium
 verification: measured
 area: [ci, governance]
@@ -136,3 +136,32 @@ support boundary. No existing release gains a platform claim from this review.
 must execute both suites, a skipped commit stays due through ordinary commits,
 probes/PRs/other branches cannot clear debt, and uncertain acquisition runs
 the full matrix. Its four tests passed locally during this review.
+
+### 2026-10-03 — hosted PR gate review and closure
+
+[PR #13](https://github.com/uibcdf/pytest-receptor/pull/13) exercises the
+ordinary pull-request route for this closing change. On head
+`919ee0db62fa47222e544addd0d8629cebf5e4de`, GitHub reported
+`isDraft=false`, `mergeable=MERGEABLE`, `mergeStateStatus=BLOCKED` and
+`statusCheckRollup.state=PENDING`. All eleven required Tests contexts were
+present and pending or executing; reporting governance had already passed.
+The blocked state therefore was neither a draft nor a merge conflict.
+The protection snapshot requires those exact contexts from GitHub Actions
+(app ID 15368) with strict up-to-date status checks.
+
+This is an observed hosted merge gate under the available administrator
+account, together with inspection of the protection and collaborator APIs.
+It does not impersonate a non-administrator or claim an attempted external
+merge. Administrator bypass remains available, and is not used to integrate
+this change while checks are pending. Final PR checks and merge evidence
+are retained in the owning issue and PR.
+
+The daily route has now executed real skipped-debt recovery, the manual
+matrix has executed all compatibility cells, and the ordinary PR exposes
+the expected required-check gate. Weekly scheduling is source-inspected;
+the first Tuesday after introduction has not yet occurred at this review.
+Manual and daily executions verify the same full-matrix job graph without
+claiming an already executed weekly trigger. Platform wording now states
+only the tested Linux matrix and representative macOS arm64 source lanes.
+The issue's remaining review gates are complete; the indexed report is
+archived with its recovery guard and the dated observations above.
