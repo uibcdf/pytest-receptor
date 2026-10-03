@@ -29,7 +29,7 @@ is retired rather than renewed indefinitely.
 
 <!-- generated: devguide_index -->
 
-### Resolved (8)
+### Resolved (9)
 
 - [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(resolved, inspected)*
 - [`built_in_normalizers_for_warning_variants.md`](built_in_normalizers_for_warning_variants.md) — [#28](https://github.com/uibcdf/pytest-receptor/issues/28) — Normalize warning sizes while preserving meaningful names. *(resolved, inspected)*
@@ -38,6 +38,7 @@ is retired rather than renewed indefinitely.
 - [`publish_canonical_consumer_guide.md`](publish_canonical_consumer_guide.md) — [#5](https://github.com/uibcdf/pytest-receptor/issues/5) — Publish a canonical Pytest Receptor guide for MolSysSuite consumers. *(resolved, measured)*
 - [`python_314_support.md`](python_314_support.md) — [#3](https://github.com/uibcdf/pytest-receptor/issues/3) — Verify Python 3.14 support and delivery. *(resolved, inspected)*
 - [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(resolved, inspected)*
+- [`release_1_2_1.md`](release_1_2_1.md) — [#32](https://github.com/uibcdf/pytest-receptor/issues/32) — Publish and independently verify pytest-receptor 1.2.1. *(resolved, reproduced)*
 - [`review_python_ecosystem_policy_adoption.md`](review_python_ecosystem_policy_adoption.md) — [#6](https://github.com/uibcdf/pytest-receptor/issues/6) — Review MolSysSuite Python ecosystem policy in pytest-receptor. *(resolved, measured)*
 
 <!-- /generated -->

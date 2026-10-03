@@ -1,14 +1,14 @@
 ---
 summary: Publish and independently verify pytest-receptor 1.2.1.
 issue: uibcdf/pytest-receptor#32
-status: blocked
+status: resolved
 opened: 2026-10-03
-closed:
+closed: 2026-10-03
 verification: reproduced
 area: [release, distribution, compatibility]
 guard: tests/test_noarch_conda_publication.py
 normative:
-blocked_by: [uibcdf/molsyssuite#88]
+blocked_by: []
 supersedes: []
 ---
 
@@ -51,18 +51,22 @@ Version 1.2.1 preserves the public API and schema contracts.
 
 The build caller adopts MolSysSuite commit
 `2fb344525ca0eea817dc24a518f4a6bf26e311cf`, selecting the qualified active
-Conda executable and exact-upload environment corrections. Other release units remain pinned to
-`5a90853d4ac147f7b831cfc37f9f5defd87c190a`. At preparation time the common installed
+Conda executable and exact-upload environment corrections. Installed qualification
+and promotion now use the owner-reviewed correction
+`3350615eee8c95903aca916e42789ecbdcc1f8ef`. At preparation time the common installed
 workflow could not declare the integration dependencies needed here; the capability
 was tracked in `uibcdf/molsyssuite#77` and has since been published at
 `baac208f3f592e00eaf99fa78a879878f98dc141`. Receiving adoption remains separate
 from qualification of the already staged file. The local manual wrapper retains the common
 job/title descriptor and calls its `installed_noarch.py` operations for matrix
 preparation, digest download, installed resource/provenance verification and
-test execution. Only the component's dependency environment differs. Replace
- this wrapper with the qualified shared caller after the installed-gate defect
-in `uibcdf/molsyssuite#88` is corrected and adopted;
-dprada reviews the interim route by 2026-12-31 under this release issue.
+test execution. The original producer inventory lacks #77's new dependency
+declaration, so this release retains its qualified local wrapper without changing
+the already built candidate. The wrapper also exposes only `component/devtools`
+to legacy administrative subprocesses under safe-path mode; runtime source stays
+excluded and before/after installed-origin checks remain active. Receiving adoption
+of the shared thin caller belongs to a later candidate and the pipeline follow-up
+`uibcdf/molsyssuite#92`; dprada reviews this interim route by 2026-12-31.
 
 ## What is measured and what is assumed
 
@@ -221,3 +225,44 @@ resolved upstream; its publication does not establish receiving adoption.
 No rebuild, overwrite, promotion, public tag or PyPI publication is performed.
 Release completion waits for a qualified correction of the installed gate;
 the already successful build/upload correction remains adopted.
+
+### 2026-10-03 completed public delivery
+
+GitHub tag and release `1.2.1` resolve to original producer source
+`6c4686c55ee5e004160ba4c36a499ff7e5c8a64b`. Local wheel/sdist payload checks,
+tag policy `37151454684` and publication governance `37151454596` pass.
+Provider PR `uibcdf/molsyssuite#91` is accepted by LMMV and integrated at
+`8929a4be20b124ba33361590c990328bb0391042`. Receiving qualification uses its
+independently reviewed immutable source `3350615eee8c95903aca916e42789ecbdcc1f8ef`.
+
+Installed run `37148738757` at qualification commit
+`98e2cf35b24896891b3d95a684facb5c0212c48d` passes all 211 unchanged tests in
+each of eight Linux/macOS arm64 × Python 3.11–3.14 cells. Native run/job/attempt,
+all required steps, dependency closures and source/file binding are independently
+verified. The binding distinguishes corrected administrative workflow source from
+the original producer; no archive is rebuilt or replaced.
+
+Conda promotion `37151517509` adds `main` to that same staged archive and retains
+a verified `uibcdf.conda-promotion@1` receipt. Anonymous registry metadata and public
+repodata independently match the registered filename and SHA-256
+`77bf3694bc903f606d4323b88e3bb3aea9628618036b53073f5a5dbd5dbc73cb`.
+PyPI run `37151516951` passes strict metadata/tag/runtime checks, installed discovery
+and protected Trusted Publishing. Public wheel and sdist downloads, hashes,
+supported Python range, runtime payload and publisher provenance are independently
+checked. Separate fresh Python 3.14.7 public pip and Conda environments discover
+the non-editable installed plugin and pass one real smoke test each. Those public
+smoke tests are separate from the complete exact-file installed matrix.
+
+Final facts and PyPI file hashes are committed in
+`devguide/release_evidence/1.2.1.json`. Public delivery is announced in
+`uibcdf/molsyssuite#93` and linked to `uibcdf/molsyssuite#78`; release owner
+`uibcdf/pytest-receptor#32` can close. Guard `tests/test_noarch_conda_publication.py`
+protects the exact immutable caller/file selection, complete declared matrix,
+separate source/qualification binding, source-import exclusion and no-rebuild
+promotion controls. Public registry and runtime evidence qualify the actual
+release; that static guard alone does not claim publication.
+
+Pipeline effort improvements remain separate open work in
+`uibcdf/molsyssuite#92` / `uibcdf/moli#43`. General action v2.3.0 adoption remains
+deferred in `uibcdf/molsyssuite#87` / `uibcdf/moli#42`. Windows runtime and Zenodo
+archival are not claimed.
