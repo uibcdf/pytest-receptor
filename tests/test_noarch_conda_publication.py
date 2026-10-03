@@ -51,8 +51,13 @@ def test_installed_gate_declares_the_complete_reviewed_matrix_and_test_selection
     assert gate["platforms"] == plan["test_platforms"]
     assert gate["python_versions"] == plan["python_versions"]
     assert inventory["installed_tests"]["paths"] == ["tests"]
-    assert 'test "$RUN_HEAD_SHA" = "$CANDIDATE_SHA"' in workflow
+    assert "ref: ${{ inputs.candidate_sha }}" in workflow
+    assert '--candidate-sha "$CANDIDATE_SHA"' in workflow
+    assert '--qualification-sha "$QUALIFICATION_SHA"' in workflow
+    assert "installed-source-binding-${{ github.run_id }}-${{ github.run_attempt }}" in workflow
     assert "PYTHONSAFEPATH: '1'" in workflow
+    assert "PYTHONPATH: ${{ github.workspace }}/component/devtools" in workflow
+    assert "PYTHONPATH: ${{ github.workspace }}/component\n" not in workflow
     for requirement in project["project"]["optional-dependencies"]["test"]:
         assert requirement in workflow
 
@@ -63,6 +68,7 @@ def test_publication_promotes_one_exact_staged_digest_without_rebuilding():
     assert "candidate_sha:" in workflow
     assert "sha256:" in workflow
     assert "installed_run_id: ${{ inputs.installed_run_id }}" in workflow
+    assert "qualification_sha: ${{ inputs.qualification_sha }}" in workflow
     assert re.search(r"promote-noarch-conda.yaml@[0-9a-f]{40}\b", workflow)
     assert "--force" not in workflow
     assert "python -m build" not in workflow

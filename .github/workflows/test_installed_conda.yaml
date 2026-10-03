@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: uibcdf/molsyssuite
-          ref: 5a90853d4ac147f7b831cfc37f9f5defd87c190a
+          ref: 3350615eee8c95903aca916e42789ecbdcc1f8ef
           path: .molsyssuite
           persist-credentials: false
       - uses: actions/setup-python@v5
@@ -48,11 +48,20 @@ jobs:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           FILENAME: ${{ inputs.filename }}
           SHA256: ${{ inputs.sha256 }}
-          RUN_HEAD_SHA: ${{ github.sha }}
+          QUALIFICATION_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
-          test "$RUN_HEAD_SHA" = "$CANDIDATE_SHA"
           python .molsyssuite/devtools/scripts/installed_noarch.py prepare --root component \
-            --candidate-sha "$CANDIDATE_SHA" --filename "$FILENAME" --sha256 "$SHA256" --github-output "$GITHUB_OUTPUT"
+            --candidate-sha "$CANDIDATE_SHA" --filename "$FILENAME" --sha256 "$SHA256" --github-output "$GITHUB_OUTPUT" \
+            --qualification-sha "$QUALIFICATION_SHA" --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
+            --output "$RUNNER_TEMP/installed-source-binding.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installed-source-binding-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/installed-source-binding.json
+          if-no-files-found: error
+          retention-days: 30
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -78,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: uibcdf/molsyssuite
-          ref: 5a90853d4ac147f7b831cfc37f9f5defd87c190a
+          ref: 3350615eee8c95903aca916e42789ecbdcc1f8ef
           path: .molsyssuite
           persist-credentials: false
       - uses: conda-incubator/setup-miniconda@v3
@@ -101,11 +110,14 @@ jobs:
           PACKAGE: ${{ needs.prepare.outputs.package }}
           VERSION: ${{ needs.prepare.outputs.version }}
           BUILD: ${{ needs.prepare.outputs.build_number }}
+          FILENAME: ${{ inputs.filename }}
+          PYTHON_MINOR: ${{ matrix.python }}
         run: |
           python .molsyssuite/devtools/scripts/installed_noarch.py download --root component \
             --sha256 "$SHA256" --directory "$RUNNER_TEMP/noarch-artifact"
-          conda install --yes --override-channels --strict-channel-priority -c uibcdf -c conda-forge \
-            "uibcdf/label/staging::$PACKAGE=$VERSION=py_$BUILD"
+          python .molsyssuite/devtools/scripts/installed_noarch.py install --root component \
+            --sha256 "$SHA256" --filename "$FILENAME" --python "$PYTHON_MINOR" \
+            --directory "$RUNNER_TEMP/noarch-artifact"
       - name: Validate installed files
         working-directory: ${{ runner.temp }}
         env:
@@ -129,6 +141,9 @@ jobs:
           COMPONENT_ROOT: ${{ github.workspace }}/component
           TOOL_ROOT: ${{ github.workspace }}/.molsyssuite
           PYTHONSAFEPATH: '1'
+          # Legacy reporting CLI imports its adjacent administrative helper.
+          # Expose only devtools, keeping component runtime source off the path.
+          PYTHONPATH: ${{ github.workspace }}/component/devtools
         run: python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" tests --root "$COMPONENT_ROOT"
       - name: Recheck installed provenance after scientific tests
         working-directory: ${{ runner.temp }}
