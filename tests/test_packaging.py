@@ -3,6 +3,8 @@ intended patch release. ``>=3.11,<=3.13`` silently rejected 3.13.1 and later
 because, under PEP 440, ``3.13.1 > 3.13``.
 """
 
+import io
+import tarfile
 import tomllib
 from email.message import EmailMessage
 from importlib import util
@@ -128,3 +130,54 @@ def test_release_checker_rejects_python_support_drift(tmp_path):
 
     with pytest.raises(ValueError, match="exactly Python 3.11-3.14"):
         _release_module().validate_release(tmp_path, "1.0.0")
+
+
+def _runtime_archives(tmp_path, broken_route=None, defect=None):
+    module = _release_module()
+    inventory = tomllib.loads(
+        (REPO_ROOT / "devtools/conda-build/resources.toml").read_text()
+    )
+    names = [p.removeprefix("site-packages/") for p in inventory["required_paths"]]
+    version_path = inventory["version_file"].removeprefix("site-packages/")
+    for route in ("wheel", "sdist"):
+        payload = {
+            name: b'__version__ = "1.0.0"\n'
+            if name == version_path
+            else (REPO_ROOT / name).read_bytes()
+            for name in names
+        }
+        if route == broken_route:
+            if defect == "missing":
+                del payload["pytest_receptor/plugin.py"]
+            else:
+                payload[version_path] = b'__version__ = "0.9.0"\n'
+        if route == "wheel":
+            with ZipFile(
+                tmp_path / "pytest_receptor-1.0.0-py3-none-any.whl", "w"
+            ) as archive:
+                for name, contents in payload.items():
+                    archive.writestr(name, contents)
+        else:
+            payload["PKG-INFO"] = b"Metadata-Version: 2.4\nVersion: 1.0.0\n"
+            with tarfile.open(
+                tmp_path / "pytest_receptor-1.0.0.tar.gz", "w:gz"
+            ) as archive:
+                for name, contents in payload.items():
+                    member = tarfile.TarInfo(f"pytest_receptor-1.0.0/{name}")
+                    member.size = len(contents)
+                    archive.addfile(member, io.BytesIO(contents))
+    return module
+
+
+def test_both_pypi_archives_preserve_runtime_resources_and_embedded_version(tmp_path):
+    _runtime_archives(tmp_path).validate_runtime_payload(tmp_path, "1.0.0")
+
+
+@pytest.mark.parametrize("route", ["wheel", "sdist"])
+@pytest.mark.parametrize("defect", ["missing", "stale"])
+def test_either_broken_pypi_payload_blocks_release_despite_other_valid_route(
+    tmp_path, route, defect
+):
+    module = _runtime_archives(tmp_path, route, defect)
+    with pytest.raises(ValueError, match=f"{route}.*(resource|version)"):
+        module.validate_runtime_payload(tmp_path, "1.0.0")

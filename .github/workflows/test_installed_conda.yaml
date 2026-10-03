@@ -119,6 +119,10 @@ jobs:
           python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" verify --root "$COMPONENT_ROOT" \
             --filename "$FILENAME" --sha256 "$SHA256" --directory "$RUNNER_TEMP/noarch-artifact" \
             --platform "$PLATFORM" --python "$PYTHON"
+      - name: Record installed dependency closure
+        run: |
+          conda list --json > "$RUNNER_TEMP/conda-closure.json"
+          python -m pip list --format=json > "$RUNNER_TEMP/python-closure.json"
       - name: Run installed tests
         working-directory: ${{ runner.temp }}
         env:
@@ -139,3 +143,13 @@ jobs:
           python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" verify --root "$COMPONENT_ROOT" \
             --filename "$FILENAME" --sha256 "$SHA256" --directory "$RUNNER_TEMP/noarch-artifact" \
             --platform "$PLATFORM" --python "$PYTHON"
+      - name: Retain installed closure and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-${{ matrix.platform }}-py${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/conda-closure.json
+            ${{ runner.temp }}/python-closure.json
+            component/.pytest_cache/d/receptor/last-run.txt
+          if-no-files-found: warn
