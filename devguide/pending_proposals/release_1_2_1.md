@@ -1,14 +1,14 @@
 ---
 summary: Publish and independently verify pytest-receptor 1.2.1.
 issue: uibcdf/pytest-receptor#32
-status: blocked
+status: active
 opened: 2026-10-03
 closed:
 verification: reproduced
 area: [release, distribution, compatibility]
 guard: tests/test_noarch_conda_publication.py
 normative:
-blocked_by: [uibcdf/action-build-and-upload-conda-packages#48]
+blocked_by: []
 supersedes: []
 ---
 
@@ -50,8 +50,8 @@ Version 1.2.1 preserves the public API and schema contracts.
 ## Shared-tool boundary
 
 The build caller adopts MolSysSuite commit
-`2a2a459cc3795bb92766fffa0fe28f4d80f01ad4`, selecting the qualified active
-Conda executable correction. Other release units remain pinned to
+`2fb344525ca0eea817dc24a518f4a6bf26e311cf`, selecting the qualified active
+Conda executable and exact-upload environment corrections. Other release units remain pinned to
 `5a90853d4ac147f7b831cfc37f9f5defd87c190a`. The common installed workflow
 cannot declare the integration dependencies needed here; this capability is
 tracked in `uibcdf/molsyssuite#77`. The local manual wrapper retains the common
@@ -164,3 +164,23 @@ observed natively as `--noprofile --norc`. This is a source/route difference
 supporting the missing active-client hypothesis, not proof of the specific
 exception hidden by the receipt. Reverting to the older uploader would not
 preserve the current exact-file controls and is not an accepted correction.
+
+### 2026-10-03 resumed delivery after qualified upload adoption
+
+The maintained publisher is now adopted in component commit
+`718e96c782a24fc45a009317325645988fa5c8a4`, selecting shared source
+`2fb344525ca0eea817dc24a518f4a6bf26e311cf` and upload provider
+`1aa2011f902a1a9d533564572245bb29f6862e86`. The provider's hosted actual
+composite qualification `37129463375` and central governance `37130795870`
+pass. The identified shell/client defect in provider #48 is corrected;
+these simulated provider checks do not establish actual registry delivery.
+
+The maintainer explicitly requests completion of 1.2.1 under
+`uibcdf/pytest-receptor#32`, with fresh exact-source gates, actual staging,
+the same file's complete installed matrix and independent PyPI/Conda public
+verification. General action v2.3.0 adoption remains separate deferred work in
+`uibcdf/molsyssuite#87` and `uibcdf/moli#42`; withdrawal is outside this release.
+The final source will be preserved at a new candidate reference, leaving
+the earlier failed candidate and its evidence unchanged. Shared failures must
+be reported with their native execution and receipts to the owning issue;
+no unverified upload is repeated without a fresh public-state inspection.
