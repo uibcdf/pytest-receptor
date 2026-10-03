@@ -1,14 +1,14 @@
 ---
 summary: Publish and independently verify pytest-receptor 1.2.1.
 issue: uibcdf/pytest-receptor#32
-status: active
+status: blocked
 opened: 2026-10-03
 closed:
 verification: reproduced
 area: [release, distribution, compatibility]
 guard: tests/test_noarch_conda_publication.py
 normative:
-blocked_by: []
+blocked_by: [uibcdf/molsyssuite#88]
 supersedes: []
 ---
 
@@ -52,13 +52,16 @@ Version 1.2.1 preserves the public API and schema contracts.
 The build caller adopts MolSysSuite commit
 `2fb344525ca0eea817dc24a518f4a6bf26e311cf`, selecting the qualified active
 Conda executable and exact-upload environment corrections. Other release units remain pinned to
-`5a90853d4ac147f7b831cfc37f9f5defd87c190a`. The common installed workflow
-cannot declare the integration dependencies needed here; this capability is
-tracked in `uibcdf/molsyssuite#77`. The local manual wrapper retains the common
+`5a90853d4ac147f7b831cfc37f9f5defd87c190a`. At preparation time the common installed
+workflow could not declare the integration dependencies needed here; the capability
+was tracked in `uibcdf/molsyssuite#77` and has since been published at
+`baac208f3f592e00eaf99fa78a879878f98dc141`. Receiving adoption remains separate
+from qualification of the already staged file. The local manual wrapper retains the common
 job/title descriptor and calls its `installed_noarch.py` operations for matrix
 preparation, digest download, installed resource/provenance verification and
 test execution. Only the component's dependency environment differs. Replace
-this wrapper with the shared caller when #77 supports the required environment;
+ this wrapper with the qualified shared caller after the installed-gate defect
+in `uibcdf/molsyssuite#88` is corrected and adopted;
 dprada reviews the interim route by 2026-12-31 under this release issue.
 
 ## What is measured and what is assumed
@@ -184,3 +187,37 @@ The final source will be preserved at a new candidate reference, leaving
 the earlier failed candidate and its evidence unchanged. Shared failures must
 be reported with their native execution and receipts to the owning issue;
 no unverified upload is repeated without a fresh public-state inspection.
+
+### 2026-10-03 staging verified; installed qualification blocked
+
+Frozen candidate `6c4686c55ee5e004160ba4c36a499ff7e5c8a64b` is retained at
+`release/1.2.1-publication`. Source Tests `37133656874` and full matrix
+`37133868138` pass with every required serial/distributed step verified
+natively. Sphinx builds at that candidate in `37133870196`; its branch
+deployment is rejected by the main-only Pages environment. Separate main
+run `37136023643` at guide-only successor
+`21524e3f44701ab194ff8a15eddd35494f1b1450` passes build and deployment.
+
+Staging `37136074225` succeeds at the frozen candidate under the qualified
+publisher. Its upload receipt is `uibcdf.conda-upload@1`, `state=verified`.
+Independent anonymous Anaconda metadata, archive SHA-256 and resource/version
+inspection verify `noarch/pytest-receptor-1.2.1-py_0.tar.bz2` with digest
+`77bf3694bc903f606d4323b88e3bb3aea9628618036b53073f5a5dbd5dbc73cb`.
+
+Installed run `37136496168`, attempt 1 at the same candidate, fails in all
+eight Linux/macOS arm64 × Python 3.11–3.14 cells at `Install exact artifact`.
+The exact archive download and digest verification pass, but Conda reports
+that the staged package is excluded by strict repository priority. Installed
+verification and scientific tests do not pass; a complete installed matrix
+is not claimed. GH Run Receptor development `1.2.0+3.g6fe2cc5` in the required
+Python 3.14 environment groups the eight failures; bounded native logs retain
+the actual solver cause.
+
+The shared installed-workflow defect and qualification path for these already
+registered immutable bytes are handed off in `uibcdf/molsyssuite#88`, with
+receiving evidence in `uibcdf/pytest-receptor#32` and coordination in
+`uibcdf/molsyssuite#78`. The separate test-dependency capability #77 is now
+resolved upstream; its publication does not establish receiving adoption.
+No rebuild, overwrite, promotion, public tag or PyPI publication is performed.
+Release completion waits for a qualified correction of the installed gate;
+the already successful build/upload correction remains adopted.
