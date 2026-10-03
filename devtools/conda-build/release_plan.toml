@@ -34,5 +34,5 @@ dependencies_public = true
 "Full ubuntu-latest / py3.13 / pytest 9" = ["Run the suite", "Run the suite distributed"]
 "Full ubuntu-latest / py3.14 / pytest 8" = ["Run the suite", "Run the suite distributed"]
 "Full ubuntu-latest / py3.14 / pytest 9" = ["Run the suite", "Run the suite distributed"]
-"Full macos-15 / py3.13 / pytest 8" = ["Run the suite", "Run the suite distributed"]
-"Full macos-15 / py3.13 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"Full macos-15 / py3.14 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"Full macos-15 / py3.14 / pytest 9" = ["Run the suite", "Run the suite distributed"]

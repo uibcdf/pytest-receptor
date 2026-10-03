@@ -26,7 +26,7 @@ The committed `devtools/conda-build/release_plan.toml` chooses staging with
 build zero. The final candidate SHA and receipts are recorded in
 `uibcdf/pytest-receptor#32` after this commit exists. Native source gates must
 pass at that SHA, including every declared serial/distributed step. The
-manual full matrix adds the two macOS arm64 Python 3.13 / pytest 8 and 9
+manual full matrix adds the two macOS arm64 Python 3.14 / pytest 8 and 9
 source cells to the eight Linux cells. Lint, package, benchmarks, documentation,
 reporting and policy results remain separate exact-candidate evidence.
 
@@ -49,7 +49,9 @@ Version 1.2.1 preserves the public API and schema contracts.
 
 ## Shared-tool boundary
 
-The release units are pinned to MolSysSuite commit
+The build caller adopts MolSysSuite commit
+`2a2a459cc3795bb92766fffa0fe28f4d80f01ad4`, selecting the qualified active
+Conda executable correction. Other release units remain pinned to
 `5a90853d4ac147f7b831cfc37f9f5defd87c190a`. The common installed workflow
 cannot declare the integration dependencies needed here; this capability is
 tracked in `uibcdf/molsyssuite#77`. The local manual wrapper retains the common
@@ -97,6 +99,24 @@ Windows runtime support is not claimed by this release. No Zenodo DOI or
 archival claim is made.
 
 ## Acceptance criteria
+
+### 2026-10-03 shared correction adoption
+
+The handoff in `uibcdf/pytest-receptor#32` identifies the published shared
+correction at `2a2a459cc3795bb92766fffa0fe28f4d80f01ad4`, selecting build
+action `8da628d9b393e184c3bf3722708b19dcfbf7ef0a`. Review confirms that the
+shared publisher changes only its build reference; the separately qualified
+upload/promote references and all source, recipe/resource and installed gates
+are retained. Provider runs `37115921728` and `37115921702` and shared
+governance run `37125099269` establish provider qualification, not component
+artifact delivery. `uibcdf/molsyssuite#78` stays open for our adoption and
+actual staging evidence; its closure is not a prerequisite to using the fix.
+
+The adopted policy 1.5.4 source lane now uses Python 3.14 for the representative
+macOS arm64 source cells. The committed release plan requires those actual
+job names. Its installed matrix still requires all Python 3.11–3.14 cells on
+Linux and macOS arm64 for one exact file. Fresh final-candidate receipts remain
+required before tagging or public delivery.
 
 One exact clean source commit supplies tag, PyPI archives and the Conda file.
 Native gates and every installed cell execute and pass; receipts identify the

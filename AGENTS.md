@@ -1,5 +1,11 @@
 # Repository agent guide
 
+## Local development environment
+
+Use the Conda environment `molsyssuite@uibcdf_3.14` for local development and
+validation. Activate it or select it explicitly for each command; verify the
+interpreter before running development tools.
+
 ## External Tooling Guides (Required for Development)
 
 These guides are required reading for anyone developing this package. They describe how

@@ -9,7 +9,7 @@ The 1.x series supports exactly Python 3.11, 3.12, 3.13, and 3.14, with pytest 8
 or 9. The wheel metadata enforces `Python >=3.11,<3.15`; Linux CI exercises
 all eight Python/pytest combinations both serially and with xdist.
 
-The recurring full matrix also exercises macOS arm64 with Python 3.13 and
+The recurring full matrix also exercises macOS arm64 with Python 3.14 and
 both pytest majors, serially and with xdist. Intel macOS is outside the
 supported platform boundary. These jobs install the checkout in editable
 mode; they do not qualify every Python version on macOS or a particular
