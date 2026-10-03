@@ -15,7 +15,7 @@ permissions:
   actions: read
 jobs:
   publish:
-    uses: uibcdf/molsyssuite/.github/workflows/publish-noarch-conda.yaml@5a90853d4ac147f7b831cfc37f9f5defd87c190a
+    uses: uibcdf/molsyssuite/.github/workflows/publish-noarch-conda.yaml@2a2a459cc3795bb92766fffa0fe28f4d80f01ad4
     with:
       candidate_sha: ${{ inputs.candidate_sha }}
       version: ${{ inputs.version }}
