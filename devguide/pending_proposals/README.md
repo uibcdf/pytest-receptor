@@ -62,9 +62,9 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
-### Active (1)
+### Blocked (1)
 
-- [`release_1_2_1.md`](release_1_2_1.md) — [#32](https://github.com/uibcdf/pytest-receptor/issues/32) — Publish and independently verify pytest-receptor 1.2.1. *(active, reproduced)*
+- [`release_1_2_1.md`](release_1_2_1.md) — [#32](https://github.com/uibcdf/pytest-receptor/issues/32) — Publish and independently verify pytest-receptor 1.2.1. *(blocked, reproduced)*
 
 ### Open (1)
 

@@ -1,14 +1,14 @@
 ---
 summary: Publish and independently verify pytest-receptor 1.2.1.
 issue: uibcdf/pytest-receptor#32
-status: active
+status: blocked
 opened: 2026-10-03
 closed:
 verification: reproduced
 area: [release, distribution, compatibility]
 guard: tests/test_noarch_conda_publication.py
 normative:
-blocked_by: []
+blocked_by: [uibcdf/action-build-and-upload-conda-packages#48]
 supersedes: []
 ---
 
@@ -124,3 +124,43 @@ candidate, recipe/resources, dependency closure and artifact digest. Public
 PyPI metadata/files and Conda main-label/index records match the tested bytes.
 Clean public-channel installs discover the pytest plugin and run a real test.
 The release notification is filed in MolSysSuite after those facts exist.
+
+### 2026-10-03 actual build and separate upload failure
+
+Adoption PR `uibcdf/pytest-receptor#37` is merged at candidate
+`52a61a2b8adcf377b717d00b9da8dbf91a2d391e`. Tests `37126704791` passes
+the eight required Linux cells and all sixteen serial/distributed steps;
+full matrix `37126758321` passes ten cells and twenty required test steps,
+including macOS arm64 Python 3.14 / pytest 8 and 9. Documentation
+`37126704742`, reporting `37126704736`, policy `37126705065` and publication
+governance `37126705033` also pass at that candidate. The source is preserved
+at `release/1.2.1-candidate`; the later main commit synchronizes the GH Run
+Receptor guide and does not change the measured runtime modules.
+
+Actual staging `37127152850` successfully builds one noarch file, runs the
+recipe tests and checks its version and resource inventory. The inspected
+filename is `pytest-receptor-1.2.1-py_0.tar.bz2`, SHA-256
+`12367aa706ab5aad512794a6bffddd9f21eddd6fc51f1b4989ab969efb39ea7c`.
+The separate exact-file uploader then fails; its retained receipt says only
+`unverified`. Receipt artifact `noarch-publication-37127152850-1` (ID
+`11275019229`) retains preflight, artifact, producer and upload evidence.
+Independent post-failure anonymous all-label Conda release and PyPI queries
+for 1.2.1 both return 404. No installed matrix, public tag or delivered package
+is claimed, and upload has not been blindly repeated.
+
+Ackredit independently reproduces the separate upload failure in run
+`37127293886`. `uibcdf/action-build-and-upload-conda-packages#48` owns the
+provider correction; the simultaneous report #49 retains our original
+evidence and is consolidated into #48. Provider build bugs #46/#47 are
+resolved. MolSysSuite #78 and MOLI #38 now contain the shared upload handoff.
+
+The maintainer-requested comparison with MolSysMT uses successful historical
+run `36113593257` at `e28ceb9ea0de0cc86bc370e5aff1e96c4cc71c69` on
+2026-09-25. Its named micromamba build environment includes anaconda-client;
+combined action v2.1.0 (`482d4decb71634d9fa4f81551c69ba958dff3f86`) uploads
+with `bash -l {0}`. Our separate uploader at
+`932fbef84440efbc97eb2275360fd3a767fdb47c` explicitly uses plain `bash`,
+observed natively as `--noprofile --norc`. This is a source/route difference
+supporting the missing active-client hypothesis, not proof of the specific
+exception hidden by the receipt. Reverting to the older uploader would not
+preserve the current exact-file controls and is not an accepted correction.
