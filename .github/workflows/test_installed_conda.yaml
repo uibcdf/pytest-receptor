@@ -1,0 +1,141 @@
+name: Qualify installed Conda package
+run-name: Installed ${{ inputs.filename }} ${{ inputs.sha256 }}
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full immutable source candidate SHA
+        required: true
+        type: string
+      filename:
+        description: Exact staged filename from the artifact receipt
+        required: true
+        type: string
+      sha256:
+        description: Independently verified staging digest
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  prepare:
+    name: installed / prepare
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.prepare.outputs.matrix }}
+      package: ${{ steps.prepare.outputs.package }}
+      version: ${{ steps.prepare.outputs.version }}
+      build_number: ${{ steps.prepare.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          path: component
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: uibcdf/molsyssuite
+          ref: 5a90853d4ac147f7b831cfc37f9f5defd87c190a
+          path: .molsyssuite
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install 'PyYAML>=6,<7' 'Jinja2>=3,<4' 'packaging>=24'
+      - name: Bind exact file, source and complete installed matrix
+        id: prepare
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          FILENAME: ${{ inputs.filename }}
+          SHA256: ${{ inputs.sha256 }}
+          RUN_HEAD_SHA: ${{ github.sha }}
+        run: |
+          test "$RUN_HEAD_SHA" = "$CANDIDATE_SHA"
+          python .molsyssuite/devtools/scripts/installed_noarch.py prepare --root component \
+            --candidate-sha "$CANDIDATE_SHA" --filename "$FILENAME" --sha256 "$SHA256" --github-output "$GITHUB_OUTPUT"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-noarch-descriptor-${{ github.run_id }}-${{ github.run_attempt }}
+          path: component/devtools/conda-build/*.toml
+  test:
+    needs: prepare
+    name: installed / ${{ matrix.platform }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          path: component
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: uibcdf/molsyssuite
+          ref: 5a90853d4ac147f7b831cfc37f9f5defd87c190a
+          path: .molsyssuite
+          persist-credentials: false
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: installed
+          auto-activate-base: false
+          python-version: ${{ matrix.python }}
+          channels: uibcdf,conda-forge
+          channel-priority: strict
+      - name: Install qualification tools
+        run: |
+          conda install --yes --override-channels --strict-channel-priority -c uibcdf -c conda-forge \
+            'pyyaml>=6,<7' 'jinja2>=3,<4' 'packaging>=24' 'pytest>=8,<10' \
+            'pytest-cov>=6,<8' 'pytest-rerunfailures>=15,<17' \
+            'pytest-subtests>=0.14,<0.16' 'pytest-xdist>=3.6,<4'
+      - name: Install exact artifact
+        env:
+          SHA256: ${{ inputs.sha256 }}
+          PACKAGE: ${{ needs.prepare.outputs.package }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          BUILD: ${{ needs.prepare.outputs.build_number }}
+        run: |
+          python .molsyssuite/devtools/scripts/installed_noarch.py download --root component \
+            --sha256 "$SHA256" --directory "$RUNNER_TEMP/noarch-artifact"
+          conda install --yes --override-channels --strict-channel-priority -c uibcdf -c conda-forge \
+            "uibcdf/label/staging::$PACKAGE=$VERSION=py_$BUILD"
+      - name: Validate installed files
+        working-directory: ${{ runner.temp }}
+        env:
+          COMPONENT_ROOT: ${{ github.workspace }}/component
+          TOOL_ROOT: ${{ github.workspace }}/.molsyssuite
+          FILENAME: ${{ inputs.filename }}
+          SHA256: ${{ inputs.sha256 }}
+          PLATFORM: ${{ matrix.platform }}
+          PYTHON: ${{ matrix.python }}
+        run: |
+          python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" verify --root "$COMPONENT_ROOT" \
+            --filename "$FILENAME" --sha256 "$SHA256" --directory "$RUNNER_TEMP/noarch-artifact" \
+            --platform "$PLATFORM" --python "$PYTHON"
+      - name: Run installed tests
+        working-directory: ${{ runner.temp }}
+        env:
+          COMPONENT_ROOT: ${{ github.workspace }}/component
+          TOOL_ROOT: ${{ github.workspace }}/.molsyssuite
+          PYTHONSAFEPATH: '1'
+        run: python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" tests --root "$COMPONENT_ROOT"
+      - name: Recheck installed provenance after scientific tests
+        working-directory: ${{ runner.temp }}
+        env:
+          COMPONENT_ROOT: ${{ github.workspace }}/component
+          TOOL_ROOT: ${{ github.workspace }}/.molsyssuite
+          FILENAME: ${{ inputs.filename }}
+          SHA256: ${{ inputs.sha256 }}
+          PLATFORM: ${{ matrix.platform }}
+          PYTHON: ${{ matrix.python }}
+        run: |
+          python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" verify --root "$COMPONENT_ROOT" \
+            --filename "$FILENAME" --sha256 "$SHA256" --directory "$RUNNER_TEMP/noarch-artifact" \
+            --platform "$PLATFORM" --python "$PYTHON"

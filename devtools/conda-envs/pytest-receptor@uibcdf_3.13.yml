@@ -1,7 +1,7 @@
 name: pytest-receptor@uibcdf_3.13
 channels:
+  - uibcdf
   - conda-forge
-  - defaults
 dependencies:
   - python=3.13
   - pytest>=8.0.0

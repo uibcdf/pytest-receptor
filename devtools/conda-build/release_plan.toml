@@ -1,0 +1,38 @@
+schema = "molsyssuite.conda-plan@1"
+version = "1.2.1"
+package = "pytest-receptor"
+build_number = 0
+route = "staged"
+profile = "noarch-python"
+reason = "Qualify the exact installed file before publishing through the official Conda channel."
+decision_by = "dprada; 2026-10-03; uibcdf/pytest-receptor#32"
+artifact_subdirs = ["noarch"]
+test_platforms = ["linux-64", "osx-arm64"]
+python_versions = ["3.11", "3.12", "3.13", "3.14"]
+required_workflows = [".github/workflows/tests.yml", ".github/workflows/full-tests.yml"]
+requires_installed_gate = true
+new_compatibility_surface = false
+coupled_release = false
+dependencies_public = true
+
+[gate_jobs.".github/workflows/tests.yml"]
+"py3.11 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"py3.11 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"py3.12 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"py3.12 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"py3.13 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"py3.13 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"py3.14 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"py3.14 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+
+[gate_jobs.".github/workflows/full-tests.yml"]
+"Full ubuntu-latest / py3.11 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.11 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.12 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.12 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.13 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.13 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.14 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"Full ubuntu-latest / py3.14 / pytest 9" = ["Run the suite", "Run the suite distributed"]
+"Full macos-15 / py3.13 / pytest 8" = ["Run the suite", "Run the suite distributed"]
+"Full macos-15 / py3.13 / pytest 9" = ["Run the suite", "Run the suite distributed"]

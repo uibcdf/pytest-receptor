@@ -1,0 +1,12 @@
+name: Conda publication governance
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publication:
+    uses: uibcdf/molsyssuite/.github/workflows/check-conda-publication.yaml@5a90853d4ac147f7b831cfc37f9f5defd87c190a
