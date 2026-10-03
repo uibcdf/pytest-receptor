@@ -11,7 +11,7 @@ See the [local reporting protocol](../reporting_protocol.md).
 
 ### Partial (1)
 
-- [`recurring_full_ci_and_contributor_routes.md`](recurring_full_ci_and_contributor_routes.md) — [#11](https://github.com/uibcdf/pytest-receptor/issues/11) — Recurring full CI and protected contributor routes are missing. *(partial, inspected)*
+- [`recurring_full_ci_and_contributor_routes.md`](recurring_full_ci_and_contributor_routes.md) — [#11](https://github.com/uibcdf/pytest-receptor/issues/11) — Recurring full CI and protected contributor routes are missing. *(partial, measured)*
 
 <!-- /generated -->
 

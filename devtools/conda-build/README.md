@@ -73,11 +73,15 @@ the same coordinate either conflicts or risks replacing verified bytes.
 
 ## Why there is no platform matrix
 
-The package is pure Python. One `noarch: python` artifact installs on Linux, macOS, and
-Windows. Its `python >=3.11,<3.15` runtime constraint makes that same artifact usable on
-Python 3.11 through 3.14. Creating per-platform duplicates would cost time without adding
-coverage. Cross-platform behavior belongs in the test matrix, while Conda publication
-proves the single reusable artifact.
+The package is pure Python. One `noarch: python` artifact carries a
+platform-independent payload, with a `python >=3.11,<3.15` runtime constraint.
+Creating per-platform duplicates would cost time without adding coverage.
+That package format alone does not prove installed runtime compatibility.
+The source-test matrix covers all supported Python/pytest pairs on Linux
+and representative Python 3.13 / pytest 8 and 9 runs on macOS arm64; Intel
+macOS is outside the supported boundary. Windows runtime behavior is not
+covered by the current hosted matrix. A release's actual installed-package
+checks remain separate evidence; see [`docs/compatibility.md`](../../docs/compatibility.md).
 
 ## Local diagnostic build
 

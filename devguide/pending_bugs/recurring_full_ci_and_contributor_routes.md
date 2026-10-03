@@ -5,7 +5,7 @@ status: partial
 opened: 2026-09-29
 closed:
 severity: medium
-verification: inspected
+verification: measured
 area: [ci, governance]
 guard: tests/test_ci_backlog.py
 normative:
@@ -101,3 +101,38 @@ The [recovery probe](https://github.com/uibcdf/pytest-receptor/actions/runs/3667
 then recognized `a7f3b0e` as the watermark, found zero debt, and omitted heavy
 jobs. Keep this issue open until the actual daily trigger, hosted PR
 enforcement and platform claims are reviewed.
+
+### 2026-10-03 — scheduled recovery and platform review
+
+The [2026-10-02 scheduled run](https://github.com/uibcdf/pytest-receptor/actions/runs/37015450064)
+completed successfully on `3b0e07c3afff7b283efa7254bc251a3b8670005c`.
+Its decision job found one skipped commit after the executed full Tests
+watermark `b75be9c46b1e5bd42994b3fad619fd8481b09896` and selected the full
+matrix. Native job metadata confirms that all eight Linux cells and both
+macOS cells executed their serial and distributed suite steps successfully;
+none of those steps was skipped. The macOS / pytest 8 job printed
+`3.13.15 arm64 8.4.2` during the architecture/interpreter assertion.
+Additional real scheduled runs on
+[2026-09-30](https://github.com/uibcdf/pytest-receptor/actions/runs/36722924337)
+and [2026-10-01](https://github.com/uibcdf/pytest-receptor/actions/runs/36876146300)
+also completed successfully. Scheduled delivery was delayed relative to the
+cron time; no exact-time guarantee is claimed.
+
+A fresh branch-protection API response retains strict, up-to-date status
+checks for lint, benchmarks, packaging and all eight Python/pytest pairs,
+with zero mandatory review approvals and administrator enforcement disabled.
+The collaborator API identifies `dprada` and `LMMV` as administrators. This
+confirms the intended direct-push exception without changing the protection.
+The final hosted PR-route review is still pending.
+
+`docs/compatibility.md` now distinguishes the full Linux version matrix,
+representative macOS arm64 source installations, and qualification of a
+particular released wheel or Conda artifact. The Conda runbook no longer
+treats noarch packaging as proof of all-platform installation. Current CI
+does not provide Windows runtime evidence; Intel macOS is outside the suite
+support boundary. No existing release gains a platform claim from this review.
+
+`tests/test_ci_backlog.py` protects the recovery mechanism: every Linux pair
+must execute both suites, a skipped commit stays due through ordinary commits,
+probes/PRs/other branches cannot clear debt, and uncertain acquisition runs
+the full matrix. Its four tests passed locally during this review.

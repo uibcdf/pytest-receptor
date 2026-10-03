@@ -17,3 +17,9 @@ workflows:
   - match:
       path: .github/workflows/tests.yml
     profile: ci
+  - match:
+      path: .github/workflows/full-tests.yml
+    profile: ci
+  - match:
+      path: .github/workflows/reporting-governance.yml
+    profile: ci
