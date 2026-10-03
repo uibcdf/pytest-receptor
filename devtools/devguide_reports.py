@@ -60,15 +60,22 @@ def load_legacy_reports() -> tuple[list[LegacyReport], list[str]]:
         return [], [f"legacy report manifest cannot be read: {error}"]
     if data.get("owner") != "uibcdf/pytest-receptor#10":
         errors.append("legacy report manifest needs owning issue #10")
+    entries = data.get("legacy-reports", [])
+    retired = str(data.get("retired", ""))
+    if retired and not DATE.fullmatch(retired):
+        errors.append("legacy report retirement needs an ISO date")
+    if retired and entries:
+        errors.append("retired legacy report exception cannot accept entries")
     due = str(data.get("review_due", ""))
     try:
-        if dt.date.fromisoformat(due) < dt.date.today():
+        review_due = dt.date.fromisoformat(due)
+        if entries and review_due < dt.date.today():
             errors.append("legacy report exception review is overdue")
     except ValueError:
         errors.append("legacy report exception needs an ISO review_due date")
     legacy: list[LegacyReport] = []
     seen: set[Path] = set()
-    for entry in data.get("legacy-reports", []):
+    for entry in entries:
         relative = str(entry.get("path", ""))
         path = ROOT / relative
         if (

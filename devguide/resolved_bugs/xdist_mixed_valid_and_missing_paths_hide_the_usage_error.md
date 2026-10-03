@@ -1,3 +1,20 @@
+---
+summary: Diagnose mixed valid and missing xdist selections.
+issue: uibcdf/pytest-receptor#27
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_xdist_missing_selection_is_reported_as_usage_error
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-015
+historical_resolved: 2026-08-12
+---
+
 # Xdist mixed valid and missing paths hide the usage error
 
 Observed from a real MolSysMT development cycle on 2026-08-11.
@@ -104,3 +121,20 @@ written to the full report.
 Regressions cover a mixed valid/two-missing-path xdist invocation, preservation
 of exit 5, both missing paths on stdout and disk, and a genuinely empty existing
 file remaining `NO_TESTS`.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#27`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-015`; recorded historical outcome: 2026-08-12.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The distributed guard requires the original exit 5, USAGE_ERROR only with concrete missing-path evidence, and both missing targets in stdout and the disk report. test_xdist_genuinely_empty_selection_stays_no_tests ensures an existing empty target is not misclassified.
+
+Durable guard: `tests/test_plugin.py::test_xdist_missing_selection_is_reported_as_usage_error`. Its relevance is explained above.

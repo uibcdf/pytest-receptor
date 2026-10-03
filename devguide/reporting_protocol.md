@@ -25,13 +25,17 @@ The default `guard` is a pytest selector under `tests/` or `devtools/tests/`.
 The offline validator verifies that the selected function, class method or
 module exists; a reviewer still checks relevance to the reported mechanism.
 
-Seventeen pre-protocol resolved documents remain at their original paths and
-are indexed as **legacy register evidence**. Their temporary issue-identity
-exception is enumerated in `devguide/legacy_report_manifest.toml`, owned by
-`uibcdf/pytest-receptor#10`, and due for review by 2026-12-31. A new report
-cannot enter that manifest. This exception does not make PR-PILOT or PR-UX
-identifiers equivalent to GitHub issues. `#10` remains open until each entry
-is reconciled or explicitly reclassified by the suite.
+The seventeen pre-protocol documents remain at their original paths with
+their original bodies preserved and dated issue-identity reviews appended.
+`uibcdf/pytest-receptor#10` retired their exception on 2026-10-03. The empty
+`devguide/legacy_report_manifest.toml` records that retirement and cannot
+accept entries again; its former deadline creates no debt once it is empty.
+Register references such as PR-PILOT and PR-UX remain historical evidence,
+not substitutes for GitHub identities. Reuse an existing owning issue when
+its scope matches; create a retrospective issue only after reviewing a real
+independently closable theme and its evidence. If a historical diagnosis
+cannot be established or was superseded, retain the original claim and
+append the dated disposition rather than inventing a successful fix.
 
 Run these offline checks after changing a report:
 

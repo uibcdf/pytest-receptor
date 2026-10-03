@@ -1,3 +1,19 @@
+---
+summary: Verify Python 3.14 support and delivery.
+issue: uibcdf/pytest-receptor#3
+status: resolved
+opened: 2026-09-20
+closed: 2026-09-21
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_packaging.py::test_supported_python_versions_are_accepted
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-REL-008
+historical_resolved: 2026-09-21
+---
+
 # Verified Python 3.14 support
 
 **Source:** UIBCDF development team, 2026-09-20.
@@ -141,3 +157,20 @@ protects the declared interpreter range; `tests/test_noarch_conda_publication.py
 protects the exact-candidate and staging-only publication contract. The hosted
 `.github/workflows/tests.yml` matrix supplies the runtime gate for Python 3.14 with both
 supported pytest majors.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#3`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-REL-008`; recorded historical outcome: 2026-09-21.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+Existing uibcdf/pytest-receptor#3 owns this delivery theme and closed on 2026-09-21. Its recorded full runtime matrix, published release, exact Conda digest and clean installed evidence remain historical evidence, not rerun claims. The guard checks the supported interpreter specifier; test_noarch_conda_publication.py and hosted runtime lanes protect separate publication/runtime dimensions.
+
+Durable guard: `tests/test_packaging.py::test_supported_python_versions_are_accepted`. Its relevance is explained above.

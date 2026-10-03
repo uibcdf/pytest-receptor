@@ -1,3 +1,20 @@
+---
+summary: Keep xdist progress bounded and controller-owned.
+issue: uibcdf/pytest-receptor#17
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: low
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_xdist_progress_comes_only_from_the_controller
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-004
+historical_resolved: 2026-07-18
+---
+
 # Xdist Progress Is Not Bounded by Deciles
 
 ## Status
@@ -94,3 +111,20 @@ asserting line count, format, monotonicity, uniqueness, and the absence of 100%,
 parametrized over `--receptor-stats` since the report asked for both. The point
 about our serial-only coverage was the important half of the report -- the tests
 could not have caught this, and now can.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#17`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-004`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The distributed subprocess regression, with and without stats, asserts the global denominator, at most five progress lines and strictly increasing unique percentages. Worker-local emission or a controller without collection totals violates those assertions. The historical nine-decile/no-100% presentation was replaced by the current twenty-percent contract.
+
+Durable guard: `tests/test_plugin.py::test_xdist_progress_comes_only_from_the_controller`. Its relevance is explained above.

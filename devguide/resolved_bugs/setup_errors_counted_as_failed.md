@@ -1,3 +1,20 @@
+---
+summary: Preserve setup and teardown error categories.
+issue: uibcdf/pytest-receptor#14
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: high
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_setup_and_teardown_failures_are_errors_not_failures
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-001
+historical_resolved: 2026-07-18
+---
+
 # Setup Errors Are Counted as Failed Tests
 
 **Reported:** 2026-07-18  
@@ -143,3 +160,20 @@ counts. On the reporter's own mixed fixture case, pytest says
 Regressions cover a pure setup cascade, a teardown error after a passing call,
 mixed states, and the same under xdist. One existing xdist test had encoded the
 wrong counts and was corrected.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#14`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-001`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The mixed setup/call/teardown fixture asserts separate failed, errors and passed counts; folding setup or teardown into failed breaks that assertion. The pure setup cascade regression independently asserts 20 errors and rejects 20 failed.
+
+Durable guard: `tests/test_plugin.py::test_setup_and_teardown_failures_are_errors_not_failures`. Its relevance is explained above.

@@ -1,3 +1,19 @@
+---
+summary: Configure the runner prefix in rerun commands.
+issue: uibcdf/pytest-receptor#29
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_rerun_command_is_configurable
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-UX-004
+historical_resolved: 2026-07-21
+---
+
 # Proposal: configurable rerun command
 
 **Recorded:** 2026-07-19
@@ -81,3 +97,20 @@ that looks authoritative is worse than a generic one.
 Regressions cover all three requirements: the default still says `pytest`, a
 configured `uv run pytest` still selects the same node, and an empty value emits
 no line. Documented in `docs/reference.md`.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#29`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-UX-004`; recorded historical outcome: 2026-07-21.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The guard asserts a configured uv run pytest prefix with the unchanged test selector and -q. test_each_group_carries_a_rerun_command covers the default, and test_empty_rerun_command_omits_the_line covers explicit opt-out. No runner auto-detection was accepted.
+
+Durable guard: `tests/test_plugin.py::test_rerun_command_is_configurable`. Its relevance is explained above.

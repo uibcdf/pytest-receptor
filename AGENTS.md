@@ -27,8 +27,8 @@ developer-guide paths as cross-repository identities.
 Before filing or closing a bug or proposal report, follow
 `devguide/reporting_protocol.md`: open the local GitHub issue first, use
 `devguide/templates/report.md`, and run the documented offline index and
-reporting tests. The pre-protocol register records are preserved under the
-bounded exception owned by `uibcdf/pytest-receptor#10`.
+reporting tests. Pre-protocol register references remain historical evidence;
+they do not replace the owning GitHub issue identity.
 
 ## Modular reusable tools
 

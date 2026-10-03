@@ -22,22 +22,22 @@ Nothing is closed by deletion.
 
 ## Contents
 
-Modern issue-backed records and pre-protocol register evidence are listed
-below. The legacy identity exception is owned by `uibcdf/pytest-receptor#10`.
+Every report below has an owning GitHub issue. Pre-protocol records were
+reconciled under `uibcdf/pytest-receptor#10`, preserving their original
+bodies and appending dated identity and guard reviews. The legacy exception
+is retired rather than renewed indefinitely.
 
 <!-- generated: devguide_index -->
 
-### Resolved (4)
+### Resolved (8)
 
 - [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(resolved, inspected)*
+- [`built_in_normalizers_for_warning_variants.md`](built_in_normalizers_for_warning_variants.md) — [#28](https://github.com/uibcdf/pytest-receptor/issues/28) — Normalize warning sizes while preserving meaningful names. *(resolved, inspected)*
+- [`configurable_rerun_command.md`](configurable_rerun_command.md) — [#29](https://github.com/uibcdf/pytest-receptor/issues/29) — Configure the runner prefix in rerun commands. *(resolved, inspected)*
 - [`default_branch_coverage_reporting.md`](default_branch_coverage_reporting.md) — [#12](https://github.com/uibcdf/pytest-receptor/issues/12) — Publish owned default-branch coverage from the existing tool suite. *(resolved, measured)*
 - [`publish_canonical_consumer_guide.md`](publish_canonical_consumer_guide.md) — [#5](https://github.com/uibcdf/pytest-receptor/issues/5) — Publish a canonical Pytest Receptor guide for MolSysSuite consumers. *(resolved, measured)*
+- [`python_314_support.md`](python_314_support.md) — [#3](https://github.com/uibcdf/pytest-receptor/issues/3) — Verify Python 3.14 support and delivery. *(resolved, inspected)*
+- [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(resolved, inspected)*
 - [`review_python_ecosystem_policy_adoption.md`](review_python_ecosystem_policy_adoption.md) — [#6](https://github.com/uibcdf/pytest-receptor/issues/6) — Review MolSysSuite Python ecosystem policy in pytest-receptor. *(resolved, measured)*
-
-### Legacy register evidence (3)
-
-- [`built_in_normalizers_for_warning_variants.md`](built_in_normalizers_for_warning_variants.md) — PR-PILOT-007 — resolved 2026-07-18; legacy identity review
-- [`configurable_rerun_command.md`](configurable_rerun_command.md) — PR-UX-004 — resolved 2026-07-21; legacy identity review
-- [`python_314_support.md`](python_314_support.md) — PR-REL-008 — [#3](https://github.com/uibcdf/pytest-receptor/issues/3) — resolved 2026-09-21; legacy identity review
 
 <!-- /generated -->

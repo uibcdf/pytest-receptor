@@ -1,3 +1,19 @@
+---
+summary: Normalize warning sizes while preserving meaningful names.
+issue: uibcdf/pytest-receptor#28
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_warning_sizes_are_normalized_but_names_are_not
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-007
+historical_resolved: 2026-07-18
+---
+
 # Proposal: built-in normalizers for warning variants
 
 **Recorded:** 2026-07-18
@@ -87,3 +103,20 @@ two unrelated warnings in a decorator-based stack.
 Deliberately scoped to warnings. Applying the same normalization to failure
 messages collapsed `assert 3.0 == 3.5` with `assert 3.0 == 4.5`, hiding which
 value was wrong; four tests caught it. Failures keep their numbers.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#28`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-007`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The guard merges numerical size/shape variants while retaining different attribute names; test_failure_messages_keep_their_numbers rejects applying the same normalization to assertion failures. This preserves the pilot decision to normalize numbers without collapsing scientific identities.
+
+Durable guard: `tests/test_plugin.py::test_warning_sizes_are_normalized_but_names_are_not`. Its relevance is explained above.

@@ -1,3 +1,20 @@
+---
+summary: Suppress xdist startup chatter without losing crash reporting.
+issue: uibcdf/pytest-receptor#18
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: low
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_xdist_startup_chatter_stays_off_stdout
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-005
+historical_resolved: 2026-07-18
+---
+
 # Xdist Startup Noise Leaks into Compact Stdout
 
 ## Status
@@ -71,3 +88,20 @@ would mean reaching further into another plugin than this warrants.
 Regressions: stdout is asserted for both `llm` and `ci` profiles under `-n 2`,
 checking the chatter is gone and the first line is the verdict, plus a test that
 the crash-reporting hook survives the silencing.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#18`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-005`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+Both compact profiles reject bringing-up-nodes chatter and require the verdict first. test_worker_crash_reporting_survives_the_silencing checks that the diagnostic hook on the same reporter remains installed. The later configure-order correction is preserved in the release history.
+
+Durable guard: `tests/test_plugin.py::test_xdist_startup_chatter_stays_off_stdout`. Its relevance is explained above.
