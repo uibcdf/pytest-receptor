@@ -2,13 +2,14 @@
 
 package:
   name: {{ name|lower }}
-  version: "{{ environ['GIT_DESCRIBE_TAG'] }}"
+  version: "{{ environ.get('MOLSYSSUITE_CONDA_VERSION', environ['GIT_DESCRIBE_TAG']) }}"
 
 source:
   path: ../..
 
 build:
-  number: "{{ environ.get('PYTEST_RECEPTOR_CONDA_BUILD_NUMBER', '0') }}"
+  number: {{ environ.get('MOLSYSSUITE_CONDA_BUILD_NUMBER', '0') }}
+  string: py_{{ environ.get('MOLSYSSUITE_CONDA_BUILD_NUMBER', '0') }}
   # Pure Python, no compiled extensions: one architecture-independent package
   # installs on linux, osx and win. The run/python constraint below (>=3.11,<3.15)
   # makes the same package valid on Python 3.11 through 3.14. No build matrix.

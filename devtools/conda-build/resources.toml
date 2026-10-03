@@ -1,0 +1,16 @@
+version_file = "site-packages/pytest_receptor/_version.py"
+import_name = "pytest_receptor"
+reason = "Pure Python modules and the generated version module comprise the runtime payload; no native code, bundled data, schemas or launchers are shipped."
+required_paths = ["site-packages/pytest_receptor/__init__.py", "site-packages/pytest_receptor/artifact.py", "site-packages/pytest_receptor/extensions.py", "site-packages/pytest_receptor/model.py", "site-packages/pytest_receptor/plugin.py", "site-packages/pytest_receptor/_version.py"]
+
+[installed_gate]
+workflow = ".github/workflows/test_installed_conda.yaml"
+platforms = ["linux-64", "osx-arm64"]
+python_versions = ["3.11", "3.12", "3.13", "3.14"]
+prepare_job = "installed / prepare"
+job_template = "installed / {platform} · Python {python}"
+required_steps = ["Install exact artifact", "Validate installed files", "Run installed tests"]
+
+[installed_tests]
+paths = ["tests"]
+pytest_args = ["--receptor=ci"]

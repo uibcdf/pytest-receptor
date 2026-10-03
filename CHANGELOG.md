@@ -6,6 +6,25 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-03
+
+### Fixed
+
+- Close the terminal discard stream at session finish to avoid resource warnings.
+- Correct the documented full-report publication timing and guard the report path
+  against the actual artifact produced by pytest.
+
+### Changed
+
+- Publish the canonical consumer guide and clarify the tested platform boundary.
+- Add weekly full compatibility CI, daily skipped-commit recovery and verified
+  contributor protection, including representative macOS arm64 runtime coverage.
+- Publish measured default-branch coverage through the existing test lane.
+- Reconcile historical report identities, preserve original evidence and retire
+  the legacy archive exception.
+- Qualify staged Conda artifacts with pinned shared publication and verification
+  tools before exact-file promotion.
+
 ## [1.2.0] - 2026-09-26
 
 ### Added
@@ -112,7 +131,9 @@ All notable changes to this project are recorded here. The format follows
 
 - Human, LLM, and CI output profiles.
 
-[Unreleased]: https://github.com/uibcdf/pytest-receptor/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/uibcdf/pytest-receptor/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/uibcdf/pytest-receptor/compare/1.2.0...1.2.1
+[1.2.0]: https://github.com/uibcdf/pytest-receptor/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/uibcdf/pytest-receptor/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/uibcdf/pytest-receptor/compare/0.7.0...1.0.0
 [0.7.0]: https://github.com/uibcdf/pytest-receptor/compare/0.6.0...0.7.0

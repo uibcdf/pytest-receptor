@@ -11,6 +11,11 @@ version and `conda-build` reads the same tag through `GIT_DESCRIBE_TAG`. The wor
 checks that the requested commit is exact and that the derived version equals the
 requested semantic version before it builds anything.
 
+The reviewed version/build live in `release_plan.toml`; `resources.toml`
+declares all Python modules, the generated `_version.py` and the installed
+gate. The shared publisher freezes that version only in its ephemeral build
+checkout. Source and PyPI versions continue to derive from the immutable tag.
+
 For a manual staging run, the workflow creates the requested tag only inside its runner
 checkout when that tag does not yet exist. It does not push a tag or create a GitHub
 Release. If the tag already exists, it must resolve to the requested commit.
@@ -23,12 +28,12 @@ From a clean, pushed candidate commit:
 git rev-parse HEAD
 gh workflow run build_and_upload_conda_packages.yaml \
   -f candidate_sha=FULL_40_CHARACTER_SHA \
-  -f version=1.1.0 \
-  -f build_number=0
+  -f version=1.2.1
 ```
 
 The manual path always uploads to `uibcdf/label/staging`. `build_number` starts at zero
 and changes only when a defective artifact for the same version must be superseded.
+Both values must be committed in the reviewed plan before building.
 
 Inspect the run first with gh-run-receptor and fall back to native GitHub inspection if
 the report is incomplete:
@@ -38,38 +43,44 @@ gh run-receptor inspect RUN_ID --repo uibcdf/pytest-receptor --receptor=llm
 gh run view RUN_ID --repo uibcdf/pytest-receptor --json status,conclusion,jobs
 ```
 
-Then verify registry presence independently and install the exact artifact in a clean
-environment. The producer evidence proves what the action observed; it does not prove
-Anaconda.org state.
+Then verify registry presence and digest independently. Dispatch the installed
+gate at a ref resolving to the candidate, using the exact filename and digest:
 
 ```bash
-conda search -c uibcdf/label/staging --override-channels pytest-receptor=1.1.0
-conda create -n pytest-receptor-candidate \
-  -c uibcdf/label/staging -c conda-forge \
-  python=3.14 pytest-receptor=1.1.0
-conda run -n pytest-receptor-candidate pytest --receptor=llm --help
+gh workflow run test_installed_conda.yaml --ref CANDIDATE_REF \
+  -f candidate_sha=FULL_40_CHARACTER_SHA \
+  -f filename=pytest-receptor-1.2.1-py_0.tar.bz2 \
+  -f sha256=FULL_64_CHARACTER_STAGING_DIGEST
 ```
 
 ## Promote a released package
 
 Public publication does not rebuild or re-upload a staged coordinate. After the GitHub
 Release exists and all of its gates pass, dispatch `promote_conda_package.yaml` with the
-full release commit, version, staged build number, and SHA-256 returned by the independent
-staging query:
+full release commit, version, existing installed run ID, and SHA-256 returned
+by the independent staging query:
 
 ```bash
 gh workflow run promote_conda_package.yaml \
   -f candidate_sha=FULL_40_CHARACTER_RELEASE_SHA \
-  -f version=1.1.0 \
-  -F build_number=1 \
-  -f sha256=FULL_64_CHARACTER_STAGING_DIGEST
+  -f version=1.2.1 \
+  -f sha256=FULL_64_CHARACTER_STAGING_DIGEST \
+  -f installed_run_id=EXACT_COMPLETED_INSTALLED_RUN_ID
 ```
 
-The workflow proves that the tag resolves to the requested commit, invokes the exact-file
-promotion subaction pinned to `v2.2.2`, retains its bounded receipt, and independently
-queries the public `uibcdf` label for the same digest. The source staging label is
-preserved. Never use `--force`: labels share one underlying file identity, so rebuilding
-the same coordinate either conflicts or risks replacing verified bytes.
+The pinned shared workflow binds the candidate to the committed plan and native
+CI, verifies every declared installed job/step for that exact digest, promotes
+the same file and independently checks both public registry and solver index.
+It retains all receipts and preserves staging. Never use `--force`: labels
+share one underlying file identity, so rebuilding the coordinate either
+conflicts or risks replacing verified bytes.
+
+All shared units are pinned to full MolSysSuite commits. The local installed
+wrapper calls the provider's validation tools and adds the integration-test
+dependencies absent from its common workflow, tracked in
+`uibcdf/molsyssuite#77`. The descriptor requires all Linux/macOS arm64 and
+Python 3.11–3.14 cells in the current plan. Actual run results and the release
+decision belong to `uibcdf/pytest-receptor#32`.
 
 ## Why there is no platform matrix
 

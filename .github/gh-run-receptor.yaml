@@ -23,3 +23,9 @@ workflows:
   - match:
       path: .github/workflows/reporting-governance.yml
     profile: ci
+  - match:
+      path: .github/workflows/conda-publication-governance.yaml
+    profile: ci
+  - match:
+      path: .github/workflows/test_installed_conda.yaml
+    profile: ci
