@@ -65,7 +65,8 @@ FAIL exit=1 | 38 errors, 90 passed | 12.40s | 1 root cause
     rerun: pytest tests/test_merge.py -q
 ```
 
-That is 109 tokens. Plain `pytest` spends 3,300 on the same run.
+The measured 38-failure cascade costs 105 tokens with Receptor, versus 3,283
+with plain `pytest`; the report above illustrates its format.
 
 ---
 
@@ -310,18 +311,20 @@ told it otherwise. So every test run spends tokens on a platform banner, a
 failing test — none of which the agent needs, all of which you pay for, on every
 iteration of every loop.
 
-Measured with `tiktoken` (`cl100k_base`):
+Measured on 2026-10-03 with the 1.2.1 candidate wheel in a clean Linux
+environment: CPython 3.13.14, pytest 9.1.1, tiktoken 0.14.0 (`cl100k_base`)
+and pytest-xdist 3.8.0. [Conditions and saved measurements](docs/benchmarks.md):
 
 | Scenario | `pytest` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3300 | **105** | **-96.8%** |
-| Green suite (128 tests) | 118 | **15** | -87.3% |
-| Green with warnings | 181 | **45** | -75.1% |
-| Green with many distinct warnings | 1692 | **664** | -60.8% |
-| Single assertion failure | 349 | **165** | -52.7% |
-| Five distinct causes | 405 | **211** | -47.9% |
-| Collection error | 286 | **213** | -25.5% |
-| Mixed states (skip, xfail, xpass) | 124 | **77** | -37.9% |
+| Cascade (38 failures, one cause) | 3283 | **105** | -96.8% |
+| Green suite (128 tests) | 101 | **15** | -85.1% |
+| Green with warnings | 164 | **45** | -72.6% |
+| Green with many distinct warnings | 1675 | **664** | -60.4% |
+| Single assertion failure | 332 | **165** | -50.3% |
+| Five distinct causes | 388 | **211** | -45.6% |
+| Collection error | 269 | **217** | -19.3% |
+| Mixed states (skip, xfail, xpass) | 107 | **77** | -28.0% |
 
 Every scenario is cheaper, most of them by half or better. In a TDD loop that
 runs the suite twenty times, the cascade row alone is sixty thousand tokens.
@@ -333,8 +336,8 @@ been quietened:
 | Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: |
 | Whole suite green | 812 | **17** | 97.9% |
-| One fixture breaks 200 tests | 25,681 | **107** | 99.6% |
-| Six unrelated bugs | 1,503 | **278** | 81.5% |
+| One fixture breaks 200 tests | 22,874 | **107** | 99.5% |
+| Six unrelated bugs | 1,419 | **278** | 80.4% |
 
 `-q` prints one progress character per test, so a *successful* eight-thousand
 test run costs 812 tokens of dots before anything has gone wrong.
@@ -352,7 +355,7 @@ If you are the kind of person who already runs `pytest -q --no-header
 | Five distinct causes | 316 | **211** | -33.2% |
 | Green suite (128 tests) | 23 | **15** | -34.8% |
 | Single assertion failure | 197 | **165** | -16.2% |
-| Collection error | 192 | **213** | +10.9% |
+| Collection error | 192 | **217** | +13.0% |
 | Mixed states (skip, xfail, xpass) | 31 | **77** | +148.4% |
 
 Both positive rows are scenarios of a handful of tests, where any fixed overhead
