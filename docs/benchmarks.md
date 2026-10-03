@@ -5,10 +5,22 @@ Reproduce everything here:
 ```bash
 python devtools/benchmarks/run_benchmarks.py            # the tables below
 python devtools/benchmarks/run_benchmarks.py --scale    # 8,000 tests, 12 workers
-python devtools/benchmarks/run_performance.py            # wall time and peak RSS
+python devtools/benchmarks/run_performance.py --tests 1000 --repeat 5  # wall time and peak RSS
 ```
 
-Subprocesses run with colour disabled, so figures do not change with your shell.
+Reference measurements were repeated on 2026-10-03 using an installed 1.2.1
+candidate wheel in a fresh Linux environment: CPython 3.13.14, pytest 9.1.1,
+pytest-xdist 3.8.0 and tiktoken 0.14.0. The wheel was built locally from
+`b8071ce13196b5b24d20b034676636c0a8fd8f4a`; it is measurement evidence,
+not proof of registry publication. Saved [token](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-run.json),
+[scale](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-scale.json) and
+[runtime](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-performance.json) results record versions,
+source and harness hashes, and the installed dependency closure.
+
+Subprocesses run with colour disabled. Token measurements retain normal plugin
+autoload in that clean environment; banner size can change with installed
+plugins. These conditions differ from the previous 0.6.0 token measurements,
+so the tables do not establish performance changes between releases.
 
 ## Runtime and memory
 
@@ -19,22 +31,20 @@ to the run being measured. Modes rotate order and the reported value is the
 median after an unreported warm-up.
 
 Local reference measurement on Linux, CPython 3.13.14, 1,000 tests, median of
-two runs:
+five runs:
 
 | Scenario | Mode | Wall time | Peak RSS | Time vs quiet | RSS vs quiet |
 | :--- | :--- | ---: | ---: | ---: | ---: |
-| green | pytest quiet | 1.036s | 40.0 MiB | baseline | baseline |
-| green | receptor | 1.115s | 40.8 MiB | +7.6% | +0.8 MiB |
-| green | receptor + JSONL | 1.309s | 40.8 MiB | +26.3% | +0.8 MiB |
-| setup cascade | pytest quiet | 2.288s | 41.7 MiB | baseline | baseline |
-| setup cascade | receptor | 2.588s | 43.5 MiB | +13.1% | +1.8 MiB |
-| setup cascade | receptor + JSONL | 2.767s | 44.5 MiB | +20.9% | +2.8 MiB |
+| green | pytest quiet | 0.987s | 39.2 MiB | baseline | baseline |
+| green | receptor | 1.096s | 39.9 MiB | +11.0% | +0.8 MiB |
+| green | receptor + JSONL | 1.264s | 40.1 MiB | +28.1% | +0.9 MiB |
+| setup cascade | pytest quiet | 2.243s | 41.2 MiB | baseline | baseline |
+| setup cascade | receptor | 2.634s | 43.1 MiB | +17.5% | +1.8 MiB |
+| setup cascade | receptor + JSONL | 2.738s | 43.9 MiB | +22.1% | +2.7 MiB |
 
 These are reference observations, not portable promises: CPU, filesystem,
 pytest and Python affect time and RSS. The meaningful result is that the
 measurement is reproducible and reports absolute values as well as percentages.
-At 2,000 tests in a single-run scale check, the largest observed increment was
-5.0 MiB RSS and 24.9% wall time (JSONL enabled).
 
 ## Two baselines
 
@@ -52,9 +62,9 @@ it discards the assertion diff and is not really comparable in usefulness.
 
 | Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: | ---: |
-| Whole suite green | 904 | 812 | **17** | 97.9% |
-| One fixture breaks 200 tests | 25,769 | 25,681 | **107** | 99.6% |
-| Six unrelated bugs | 1,595 | 1,503 | **278** | 81.5% |
+| Whole suite green | 887 | 812 | **17** | 97.9% |
+| One fixture breaks 200 tests | 22,952 | 22,874 | **107** | 99.5% |
+| Six unrelated bugs | 1,494 | 1,419 | **278** | 80.4% |
 
 `-q` does not save you: it still prints one progress character per test, so a
 *successful* 8,000-test run costs 812 tokens of dots.
@@ -63,14 +73,14 @@ it discards the assertion diff and is not really comparable in usefulness.
 
 | Scenario | `pytest` | tuned pytest | `--tb=line` | `--receptor=llm` | Change |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Cascade (38 failures, one cause) | 3300 | 2863 | 1989 | **105** | -96.3% |
-| Green with many distinct warnings | 1692 | 1598 | 1598 | **664** | -58.4% |
-| Green with warnings | 181 | 87 | 87 | **45** | -48.3% |
-| Five distinct causes | 405 | 316 | 213 | **211** | -33.2% |
-| Green suite (128 tests) | 118 | 23 | 23 | **15** | -34.8% |
-| Single assertion failure | 349 | 197 | 222 | **165** | -16.2% |
-| Collection error | 286 | 192 | 192 | **213** | +10.9% |
-| Mixed states (skip, xfail, xpass) | 124 | 31 | 31 | **77** | +148.4% |
+| Cascade (38 failures, one cause) | 3283 | 2863 | 1989 | **105** | -96.3% |
+| Green with many distinct warnings | 1675 | 1598 | 1598 | **664** | -58.4% |
+| Green with warnings | 164 | 87 | 87 | **45** | -48.3% |
+| Five distinct causes | 388 | 316 | 213 | **211** | -33.2% |
+| Green suite (128 tests) | 101 | 23 | 23 | **15** | -34.8% |
+| Single assertion failure | 332 | 197 | 222 | **165** | -16.2% |
+| Collection error | 269 | 192 | 192 | **217** | +13.0% |
+| Mixed states (skip, xfail, xpass) | 107 | 31 | 31 | **77** | +148.4% |
 
 `Change` compares against tuned pytest, the strict baseline.
 
@@ -82,21 +92,21 @@ vocabulary:
 | Scenario | `cl100k_base` | `o200k_base` | `p50k_base` | `r50k_base` |
 | :--- | ---: | ---: | ---: | ---: |
 | Cascade (38 failures, one cause) | -96.8% | -96.9% | -96.9% | -96.7% |
-| Green suite (128 tests) | -87.3% | -87.5% | -89.8% | -89.8% |
-| Green with warnings | -75.1% | -75.3% | -78.9% | -80.6% |
-| Green with many distinct warnings | -60.8% | -60.9% | -64.2% | -65.7% |
-| Single assertion failure | -52.7% | -53.1% | -54.2% | -59.9% |
-| Five distinct causes | -47.9% | -46.4% | -50.3% | -56.3% |
-| Collection error | -25.5% | -25.9% | -23.2% | -14.5% |
+| Green suite (128 tests) | -85.1% | -85.4% | -88.2% | -88.3% |
+| Green with warnings | -72.6% | -72.7% | -77.0% | -79.1% |
+| Green with many distinct warnings | -60.4% | -60.5% | -64.0% | -65.5% |
+| Single assertion failure | -50.3% | -50.7% | -52.1% | -58.6% |
+| Five distinct causes | -45.6% | -44.1% | -48.6% | -55.1% |
+| Collection error | -19.3% | -19.6% | -18.3% | -9.4% |
 
-The cascade sits between -96.7% and -96.9% across all four. Older encodings are
-consistently more favourable, spending more tokens on the punctuation-heavy
-decoration the receptor removes.
+The cascade sits between -96.7% and -96.9% across all four. Other rows vary with
+tokenizer vocabulary; the collection-error row is less favourable under
+`r50k_base`.
 
 ## Reading the tables
 
 **The two positive rows are real, and small.** +148% on a four-test mixed-state
-run is 46 tokens; +10.9% on a collection error is 21. At that size any fixed
+run is 46 tokens; +13.0% on a collection error is 25 tokens. At that size any fixed
 overhead looks enormous as a percentage.
 
 **They buy something.** The reason behind every skip and xfail, and the name of

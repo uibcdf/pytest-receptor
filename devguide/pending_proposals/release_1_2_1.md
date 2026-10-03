@@ -61,6 +61,30 @@ dprada reviews the interim route by 2026-12-31 under this release issue.
 
 ## What is measured and what is assumed
 
+### 2026-10-03 candidate and provider evidence
+
+Candidate `b8071ce13196b5b24d20b034676636c0a8fd8f4a` passed native source
+Tests run `37111538632`, full matrix `37111565942` and documentation
+`37111568582`. Staging run `37111808160` then failed before archive production
+or upload: the action's `conda build` resolved the base-backed shell function,
+although the named publisher environment contained conda-build 26.9.0.
+Provider correction and qualification belong to
+`uibcdf/action-build-and-upload-conda-packages#46`; shared adoption is tracked
+in `uibcdf/molsyssuite#78` and `uibcdf/moli#38`. The original consumer diagnosis
+remains `uibcdf/molsyssuite#80`. A planned temporary orchestration was examined
+under `uibcdf/pytest-receptor#34` but has not been adopted; the shared caller is
+retained while its provider correction is qualified. No public tag or artifact
+is claimed from these runs. Any changed candidate needs fresh exact-source
+gates.
+
+Fresh benchmarks use a locally built 1.2.1 wheel from that candidate, with
+runtime module and harness digests retained in the benchmark JSON receipts.
+They cover eight small scenarios, 8,000 tests with twelve workers and 1,000-test
+runtime/RSS medians over five runs. The README and documentation now state the
+clean environment and versions; this wheel is measurement evidence rather
+than a registry receipt. Publication-workflow and documentation changes do
+not alter those measured runtime modules.
+
 Before candidate CI, the shared administrative validators accept the plan,
 recipe, resource inventory and workflow controls. That does not certify
 publication or installed compatibility. Every original runtime dependency is

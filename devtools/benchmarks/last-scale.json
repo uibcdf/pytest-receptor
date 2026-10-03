@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "python": "3.13.14",
+    "pytest": "9.1.1",
+    "pytest_receptor": "1.2.1",
+    "tokenizer": "cl100k_base",
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "baseline": "pytest -q --no-header --tb=short",
+    "measured": "2026-10-03",
+    "source_sha": "b8071ce13196b5b24d20b034676636c0a8fd8f4a",
+    "runtime_wheel_sha256": "15b9215224db476ec01ee2cb51a3781816b96261b6bda5e64a7dc7f0a003632d",
+    "harness_sha256": "99724b0739e136923641e11d4286b7d0344785fc904d41ec4432cd304023d535",
+    "dependencies": [
+      {
+        "name": "certifi",
+        "version": "2026.7.22"
+      },
+      {
+        "name": "charset-normalizer",
+        "version": "3.5.2"
+      },
+      {
+        "name": "execnet",
+        "version": "2.1.2"
+      },
+      {
+        "name": "idna",
+        "version": "3.20"
+      },
+      {
+        "name": "iniconfig",
+        "version": "2.3.0"
+      },
+      {
+        "name": "packaging",
+        "version": "26.3"
+      },
+      {
+        "name": "pip",
+        "version": "26.1.2"
+      },
+      {
+        "name": "pluggy",
+        "version": "1.6.0"
+      },
+      {
+        "name": "Pygments",
+        "version": "2.21.0"
+      },
+      {
+        "name": "pytest",
+        "version": "9.1.1"
+      },
+      {
+        "name": "pytest-receptor",
+        "version": "1.2.1"
+      },
+      {
+        "name": "pytest-xdist",
+        "version": "3.8.0"
+      },
+      {
+        "name": "regex",
+        "version": "2026.9.29"
+      },
+      {
+        "name": "requests",
+        "version": "2.34.2"
+      },
+      {
+        "name": "tiktoken",
+        "version": "0.14.0"
+      },
+      {
+        "name": "urllib3",
+        "version": "2.8.0"
+      }
+    ],
+    "artifact_status": "locally built release-candidate wheel; not a registry receipt",
+    "plugin_autoload": true,
+    "runtime_sources_sha256": {
+      "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
+      "pytest_receptor/artifact.py": "1a2559f177fb8cd98a6e934afb64befef2b4559e4f174bd09d9a4568c2d1a35c",
+      "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
+      "pytest_receptor/model.py": "dfefb5188c30b825caf54a3ac3cf36955a9e6985f94864b209aea0cdce780588",
+      "pytest_receptor/plugin.py": "eefb1304c9835b3b1cafad8ac88983619db3b0ab93c021dc3b89b9ab4e88897c"
+    },
+    "tests": 8000,
+    "workers": 12
+  },
+  "results": {
+    "Whole suite green": {
+      "pytest -n 12": 887,
+      "pytest -q -n 12": 812,
+      "--receptor=llm -n 12": 17
+    },
+    "One fixture breaks 200 tests": {
+      "pytest -n 12": 22952,
+      "pytest -q -n 12": 22874,
+      "--receptor=llm -n 12": 107
+    },
+    "Six unrelated bugs": {
+      "pytest -n 12": 1494,
+      "pytest -q -n 12": 1419,
+      "--receptor=llm -n 12": 278
+    }
+  }
+}
