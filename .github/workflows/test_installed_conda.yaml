@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: uibcdf/molsyssuite
-          ref: 273b5b373df70420c3051e605976ff81017f3e60
+          ref: 3350615eee8c95903aca916e42789ecbdcc1f8ef
           path: .molsyssuite
           persist-credentials: false
       - uses: actions/setup-python@v5
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: uibcdf/molsyssuite
-          ref: 273b5b373df70420c3051e605976ff81017f3e60
+          ref: 3350615eee8c95903aca916e42789ecbdcc1f8ef
           path: .molsyssuite
           persist-credentials: false
       - uses: conda-incubator/setup-miniconda@v3
