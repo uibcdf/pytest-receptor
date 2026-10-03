@@ -1,3 +1,20 @@
+---
+summary: Preserve controlled-exit status with receptor statistics.
+issue: uibcdf/pytest-receptor#23
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: high
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_incomplete_run_with_stats_does_not_change_exit_code
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-011
+historical_resolved: 2026-07-21
+---
+
 # `--receptor-stats` changes a controlled incomplete exit from code 0 to code 1
 
 **Observed:** 2026-07-21  
@@ -138,3 +155,20 @@ Regression (subprocess, with and without `--receptor-stats`): a controlled
 `pytest.exit(returncode=0)` must return exit 0, render `INCOMPLETE exit=0`, emit
 no `!!!!` banner, and produce no `I/O operation on closed file` traceback.
 Verified against this report's exact reproducer.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#23`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-011`; recorded historical outcome: 2026-07-21.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The subprocess guard covers stats on and off, requires native exit 0 and INCOMPLETE, and rejects a late banner or closed-writer traceback. It protects redirecting the terminal writer before late pytest hooks. Later discard-stream cleanup remains independently owned by uibcdf/pytest-receptor#4.
+
+Durable guard: `tests/test_plugin.py::test_incomplete_run_with_stats_does_not_change_exit_code`. Its relevance is explained above.

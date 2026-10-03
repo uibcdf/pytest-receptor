@@ -1,3 +1,20 @@
+---
+summary: Prevent incomplete or stale sessions from appearing complete.
+issue: uibcdf/pytest-receptor#20
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: high
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-008
+historical_resolved: 2026-07-21
+---
+
 # In-progress MolSysMT xdist artifact is temporarily reported as PASS
 
 **Observed:** 2026-07-21  
@@ -114,3 +131,20 @@ run's own test asserts it is gone while that second run is still executing.
 The docs claimed the report was "written during the run"; that was never true and
 is corrected. `slowest:` no longer appears in the artifact either — it was
 removed the same day for unrelated reasons.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#20`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-008`; recorded historical outcome: 2026-07-21.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+This session-truth theme has two independent assertions in the module: test_zero_exit_with_unexecuted_tests_is_not_pass rejects PASS on a controlled zero exit with unrun items; test_stale_report_artifact_is_cleared_at_session_start seeds an old report and asserts it is absent during the next run. Both mechanisms are required; neither old mid-run observation is treated as a false final stdout verdict.
+
+Durable guard: `tests/test_plugin.py`. Its relevance is explained above.

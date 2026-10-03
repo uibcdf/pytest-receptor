@@ -1,3 +1,20 @@
+---
+summary: Review the historical missing MolSysViewer final summary.
+issue: uibcdf/pytest-receptor#26
+status: withdrawn
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard:
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-013, PR-PILOT-014
+historical_resolved: 2026-08-02
+---
+
 # Full MolSysViewer suite exits successfully without an LLM summary
 
 **Observed:** 2026-07-29
@@ -116,3 +133,25 @@ Regression: `test_progress_percent_always_matches_its_own_fraction` runs past a
 long warm-up (so several milestones pass unseen) and asserts every line's percent
 equals `finished * 100 // collected`, that no two lines share a snapshot, that
 percents strictly increase, and that the last is 100.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#26`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-013, PR-PILOT-014`; recorded historical outcome: 2026-08-02.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The original 2026-07-29 observation has no independently established failure mechanism. The 2026-08-02 re-observation records a complete final summary, but moving a completeness denominator does not by itself demonstrate why stdout was empty. Preserve the original attribution as an unverified historical claim and withdraw the unreproduced investigation rather than assert a proven repair. Its separately reproduced progress defect receives its own issue and companion report.
+
+Dated correction: the original attribution of empty stdout to the
+deselection denominator is not established by the retained evidence.
+The later PASS observation establishes that the symptom was absent
+then; it does not identify a causal repair. No current failure is
+independently reproduced, so that investigation is withdrawn.
+The concrete progress defect is resolved independently in `uibcdf/pytest-receptor#30`.

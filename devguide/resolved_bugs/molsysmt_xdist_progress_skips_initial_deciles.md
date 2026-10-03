@@ -1,3 +1,20 @@
+---
+summary: Retire misleading warm-up progress backfill.
+issue: uibcdf/pytest-receptor#21
+status: superseded
+opened: 2026-10-03
+closed: 2026-10-03
+severity: low
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_progress_percent_always_matches_its_own_fraction
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-009
+historical_resolved: 2026-07-21
+---
+
 # MolSysMT xdist progress skips the initial deciles
 
 **Observed:** 2026-07-21  
@@ -82,3 +99,23 @@ completed/total and elapsed time — the properties this report asked to preserv
 `usage.md` and `reference.md` describe the new contract. This takes the report's
 second suggested option, emitting the crossed thresholds rather than skipping
 them, with round twenty-percent milestones.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#21`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-009`; recorded historical outcome: 2026-07-21.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The 2026-07-21 backfill was intentionally replaced by PR-PILOT-014 on 2026-08-02. Its original claimed 20% 190/530 snapshot is not a truthful twenty-percent fraction. The current guard asserts percent equals finished*100//collected and forbids repeated snapshots. This older mechanism is superseded, not reintroduced.
+
+Durable guard: `tests/test_plugin.py::test_progress_percent_always_matches_its_own_fraction`. Its relevance is explained above.
+
+The replacement is owned by `uibcdf/pytest-receptor#30` and
+[the progress snapshot report](progress_snapshot_percent_matches_completed_count.md).

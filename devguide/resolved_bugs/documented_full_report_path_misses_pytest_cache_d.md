@@ -1,3 +1,20 @@
+---
+summary: Make documented full-report paths locate the written artifact.
+issue: uibcdf/pytest-receptor#19
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: low
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_consumer_guide.py::test_documented_full_report_path_matches_written_report
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-006
+historical_resolved: 2026-07-18
+---
+
 # Documented Full-Report Path Misses Pytest Cache `d` Directory
 
 ## Status
@@ -51,3 +68,20 @@ that the `d/` component belongs to pytest's cache layout rather than to us: we
 call `config.cache.mkdir("receptor")` and pytest decides where that lives. The
 usage guide now says to prefer the path the receptor prints over reconstructing
 it by hand.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#19`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-006`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The guard extracts the path from four maintained documents, runs a real pytest session and reads the resulting PASS report at each declared path. Reintroducing the missing cache d/ component in maintained guidance makes that read fail. Historical examples above retain their original spelling.
+
+Durable guard: `tests/test_consumer_guide.py::test_documented_full_report_path_matches_written_report`. Its relevance is explained above.

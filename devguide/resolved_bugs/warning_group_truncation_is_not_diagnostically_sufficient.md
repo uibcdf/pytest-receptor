@@ -1,3 +1,20 @@
+---
+summary: List every distinct warning group.
+issue: uibcdf/pytest-receptor#16
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_every_warning_group_is_listed
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-003
+historical_resolved: 2026-07-18
+---
+
 # Warning Group Truncation Is Not Diagnostically Sufficient
 
 **Reported:** 2026-07-18  
@@ -114,3 +131,20 @@ been noticed: withholding on top of grouping saves little, and the saving is
 worthless if acting on the report then requires opening a file. The section is
 bounded by how many *kinds* of warning a suite emits, not by how many tests it
 has.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#16`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-003`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The regression creates more warning groups than the old display limit and checks every group appears; restoring a frequency-based group cap loses asserted warnings.
+
+Durable guard: `tests/test_plugin.py::test_every_warning_group_is_listed`. Its relevance is explained above.

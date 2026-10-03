@@ -1,3 +1,20 @@
+---
+summary: Recover pathless external node IDs under a fixed rootdir.
+issue: uibcdf/pytest-receptor#24
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_external_single_test_rerun_keeps_its_path
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-012
+historical_resolved: 2026-07-22
+---
+
 # External single-test rerun loses its file path when rootdir is fixed
 
 **Observed:** 2026-07-22  
@@ -111,3 +128,20 @@ Verified against the reproducer: `-c <ini>` with a single failing test outside
 rootdir now yields `rerun: python -m pytest outside/test_ext.py::test_x -q`,
 executable from the invocation directory. Subprocess regressions cover the single
 and grouped external cases under a forced rootdir.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#24`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-012`; recorded historical outcome: 2026-07-22.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The subprocess forces a project config/rootdir while selecting an external single test and checks the emitted selection retains the file. test_external_grouped_tests_rerun_keeps_the_file protects the multi-occurrence branch separately; configured runner behavior is its own theme.
+
+Durable guard: `tests/test_plugin.py::test_external_single_test_rerun_keeps_its_path`. Its relevance is explained above.

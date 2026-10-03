@@ -1,3 +1,20 @@
+---
+summary: Distinguish deselection from incomplete execution.
+issue: uibcdf/pytest-receptor#25
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_deselected_tests_do_not_read_as_incomplete
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-013
+historical_resolved: 2026-07-28
+---
+
 # Deselected Tests Are Reported as an Incomplete Run
 
 ## Summary
@@ -128,3 +145,20 @@ Regression: a conftest that deselects a marked subset through `pytest_deselected
 now asserts the summary starts `PASS exit=0`, reports `2 passed, 2 deselected`,
 and contains no `incomplete`.
 
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#25`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-013`; recorded historical outcome: 2026-07-28.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The collection hook deselects a marked subset and the guard requires PASS with two passed and two deselected, without incomplete. Capturing a pre-deselection denominator breaks this assertion; genuine early-exit guards retain their separate INCOMPLETE contract.
+
+Durable guard: `tests/test_plugin.py::test_deselected_tests_do_not_read_as_incomplete`. Its relevance is explained above.

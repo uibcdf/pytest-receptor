@@ -1,3 +1,20 @@
+---
+summary: Flush native C stdout while pytest capture is active.
+issue: uibcdf/pytest-receptor#22
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_native_c_stdio_output_does_not_leak_past_the_report
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-010
+historical_resolved: 2026-07-21
+---
+
 # Native-Extension Stdout Leaks After the Final Report
 
 ## Status
@@ -80,3 +97,20 @@ The flush is best-effort: on a platform with no C library handle it is a no-op,
 and output from a library that cached the terminal fd *before* capture began, or
 that writes after the last teardown, stays outside any Python reporter's reach —
 that residue is the documented limitation, with the bounded artifact as fallback.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#22`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-010`; recorded historical outcome: 2026-07-21.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The subprocess writes through real libc.printf, then requires PASS and no trailing dcdplugin text. Removing teardown fflush reproduces the buffered native-output mechanism; a Python print test would not protect it. The best-effort platform and cached-fd limitations remain unchanged.
+
+Durable guard: `tests/test_plugin.py::test_native_c_stdio_output_does_not_leak_past_the_report`. Its relevance is explained above.

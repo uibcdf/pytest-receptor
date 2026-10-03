@@ -1,3 +1,20 @@
+---
+summary: Resolve external test paths from the invocation directory.
+issue: uibcdf/pytest-receptor#15
+status: resolved
+opened: 2026-10-03
+closed: 2026-10-03
+severity: medium
+verification: inspected
+area: [reporting, compatibility]
+guard: tests/test_plugin.py::test_paths_resolve_from_the_invocation_directory
+normative:
+blocked_by: []
+supersedes: []
+historical_register: PR-PILOT-002
+historical_resolved: 2026-07-18
+---
+
 # External Test Paths Produce an Invalid Rerun Command and Location
 
 **Reported:** 2026-07-18  
@@ -125,3 +142,20 @@ matters more than resolving a file nobody will open.
 A regression asserts the rerun command's target exists from the invocation
 directory, and another asserts a package sharing its repository's name is never
 rendered twice.
+
+
+## Identity and closure review — 2026-10-03
+
+Owning identity: `uibcdf/pytest-receptor#15`. Reconciliation: `uibcdf/pytest-receptor#10`.
+Historical register: `PR-PILOT-002`; recorded historical outcome: 2026-07-18.
+
+The metadata dates refer to the issue-backed review, except for the
+already existing Python 3.14 issue, whose original issue dates are retained.
+The pre-protocol text, including commands and historical claims, is
+preserved byte for byte above this dated addition. This review inspects
+the current implementation and relevant assertions; it does not rerun
+the historical consumer suite or certify an old release again.
+
+The subprocess regression invokes an external file from another project directory and asserts the emitted rerun target exists from that invocation directory. test_a_location_never_duplicates_a_directory separately checks the duplicated package-path symptom.
+
+Durable guard: `tests/test_plugin.py::test_paths_resolve_from_the_invocation_directory`. Its relevance is explained above.

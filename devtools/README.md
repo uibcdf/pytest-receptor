@@ -59,5 +59,5 @@ not interfere.
 The issue-backed reporting validator is `devguide_reports.py`; regenerate or
 check the developer-guide indexes with `python devtools/devguide_index.py` or
 `python devtools/devguide_index.py --check` from the repository root. See
-`devguide/reporting_protocol.md` for filing, closure and the bounded legacy
-archive exception.
+`devguide/reporting_protocol.md` for filing, closure and the retired legacy
+archive exception. The empty manifest rejects new entries and has no expiry debt.

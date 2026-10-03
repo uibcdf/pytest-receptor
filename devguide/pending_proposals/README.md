@@ -19,7 +19,7 @@ facts in the issue. The historical
 [`audit_action_register_2026-07-17.md`](../audit_action_register_2026-07-17.md)
 continues to track the project's release work. See the
 [local reporting protocol](../reporting_protocol.md) for the template, indexes,
-offline checks and bounded historical exception. A proposal that exists only in
+offline checks and retired historical exception. A proposal that exists only in
 a conversation is untracked work, and untracked work is how the original audit
 found sixteen proposals that had been written down somewhere and then quietly
 forgotten.
@@ -61,10 +61,6 @@ when they feel too small to bother with:
 ## Active proposals
 
 <!-- generated: devguide_index -->
-
-### Active (1)
-
-- [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(active, inspected)*
 
 ### Open (1)
 
