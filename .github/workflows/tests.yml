@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: pip install -e ".[lint]"
       - run: ruff check pytest_receptor tests devtools docs/conf.py
       - run: ruff format --check pytest_receptor tests devtools docs/conf.py
@@ -61,7 +61,7 @@ jobs:
 
       - name: Run the suite
         env:
-          MEASURE_COVERAGE: ${{ matrix.python == '3.13' && matrix.pytest == '9' }}
+          MEASURE_COVERAGE: ${{ matrix.python == '3.14' && matrix.pytest == '9' }}
         run: |
           if [ "$MEASURE_COVERAGE" = "true" ]; then
             python -m coverage run --branch --source=pytest_receptor -m pytest tests/ --receptor=ci
@@ -76,7 +76,7 @@ jobs:
         run: pytest tests/ -n 2 --receptor=ci
 
       - name: Retain the measured coverage XML
-        if: matrix.python == '3.13' && matrix.pytest == '9'
+        if: matrix.python == '3.14' && matrix.pytest == '9'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
@@ -92,7 +92,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: pip install -e ".[benchmark]"
       - run: python devtools/benchmarks/run_benchmarks.py
       - run: python devtools/benchmarks/run_performance.py --tests 500 --repeat 2
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: pip install build twine
       - run: python -m build
       - run: python -m twine check --strict dist/*
