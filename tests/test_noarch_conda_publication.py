@@ -56,6 +56,8 @@ def test_installed_gate_declares_the_complete_reviewed_matrix_and_test_selection
     assert '--qualification-sha "$QUALIFICATION_SHA"' in workflow
     assert "installed-source-binding-${{ github.run_id }}-${{ github.run_attempt }}" in workflow
     assert "PYTHONSAFEPATH: '1'" in workflow
+    assert "PYTHONPATH: ${{ github.workspace }}/component/devtools" in workflow
+    assert "PYTHONPATH: ${{ github.workspace }}/component\n" not in workflow
     for requirement in project["project"]["optional-dependencies"]["test"]:
         assert requirement in workflow
 

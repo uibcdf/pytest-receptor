@@ -141,6 +141,9 @@ jobs:
           COMPONENT_ROOT: ${{ github.workspace }}/component
           TOOL_ROOT: ${{ github.workspace }}/.molsyssuite
           PYTHONSAFEPATH: '1'
+          # Legacy reporting CLI imports its adjacent administrative helper.
+          # Expose only devtools, keeping component runtime source off the path.
+          PYTHONPATH: ${{ github.workspace }}/component/devtools
         run: python "$TOOL_ROOT/devtools/scripts/installed_noarch.py" tests --root "$COMPONENT_ROOT"
       - name: Recheck installed provenance after scientific tests
         working-directory: ${{ runner.temp }}
