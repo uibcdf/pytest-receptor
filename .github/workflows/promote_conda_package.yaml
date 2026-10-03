@@ -18,16 +18,21 @@ on:
         description: Successful exact-file installed matrix run
         required: true
         type: string
+      qualification_sha:
+        description: Reviewed installed-workflow commit, separate from original producer
+        required: true
+        type: string
 permissions:
   contents: read
   actions: read
 jobs:
   promote:
-    uses: uibcdf/molsyssuite/.github/workflows/promote-noarch-conda.yaml@5a90853d4ac147f7b831cfc37f9f5defd87c190a
+    uses: uibcdf/molsyssuite/.github/workflows/promote-noarch-conda.yaml@273b5b373df70420c3051e605976ff81017f3e60
     with:
       candidate_sha: ${{ inputs.candidate_sha }}
       version: ${{ inputs.version }}
       sha256: ${{ inputs.sha256 }}
       installed_run_id: ${{ inputs.installed_run_id }}
+      qualification_sha: ${{ inputs.qualification_sha }}
     secrets:
       ANACONDA_TOKEN: ${{ secrets.ANACONDA_UIBCDF_TOKEN }}
