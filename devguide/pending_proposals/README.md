@@ -62,10 +62,6 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
-### Partial (1)
-
-- [`distribution_adoption_runtime_review.md`](distribution_adoption_runtime_review.md) — [#38](https://github.com/uibcdf/pytest-receptor/issues/38) — Complete maintained dependency-route controls for distribution adoption. *(partial, measured)*
-
 ### Open (1)
 
 - [`ci_error_annotations.md`](ci_error_annotations.md) — [#9](https://github.com/uibcdf/pytest-receptor/issues/9) — Decide whether to emit CI error annotations from the ci profile. *(open, inspected)*

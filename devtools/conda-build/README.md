@@ -107,3 +107,38 @@ conda build devtools/conda-build
 The recipe imports the package, compares distribution and module versions against
 `PKG_VERSION`, and asks pytest to load its help. Local builds are evidence about the
 recipe, not permission to publish.
+
+## Maintained dependency and source-gate checks
+
+The member-owned inventory `devtools/dependency_routes.toml` covers the recipe,
+all Conda environments and all active workflows. Use a clean shared checkout at
+its recorded full commit before testing a candidate:
+
+```bash
+python devtools/check_dependency_routes.py --suite-root /path/to/pinned/molsyssuite
+```
+
+The shared operation rejects missing/weakened runtime requirements and unreviewed
+routes. Review a changed workflow before refreshing its complete hash; do not
+refresh hashes automatically. The old Python 3.13 environment is a compatibility
+profile created with strict channel priority. Routine development stays in
+`molsyssuite@uibcdf_3.14`. Required sibling-source replacements are inapplicable;
+the plugin under test retains the accepted own-source exception.
+
+The audit runs inside the existing required `lint` check before tests, benchmarks
+and package builds. Both Conda and PyPI candidate preparation require the ordinary
+and full source jobs/steps listed in `release_plan.toml` for the exact commit.
+Execute a missing full matrix through its existing workflow at the candidate ref:
+
+```bash
+gh workflow run full-tests.yml --ref CANDIDATE_REF
+```
+
+Inspect its completed source identity and jobs with GH Run Receptor before release.
+The PyPI builder binds the canonical numeric tag to its exact checkout and reuses
+the shared native gate verifier before any build. It keeps `release-source-gates`
+evidence in a separate artifact from the wheel/sdist publishing inputs. Missing,
+skipped or mismatched evidence fails; the release marker does not waive it.
+This adapter does not require a Conda upload or couple PyPI's version to the old
+Conda coordinate. Artifact metadata/resources and clean plugin installation remain
+separate subsequent gates. The completed review is uibcdf/pytest-receptor#38.

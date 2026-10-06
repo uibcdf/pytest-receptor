@@ -1,9 +1,9 @@
 ---
 summary: Complete maintained dependency-route controls for distribution adoption.
 issue: uibcdf/pytest-receptor#38
-status: partial
+status: resolved
 opened: 2026-10-06
-closed:
+closed: 2026-10-06
 verification: measured
 area: [packaging, integration, governance]
 guard: tests/test_dependency_routes.py
@@ -69,7 +69,7 @@ Local Python 3.14.7 in `molsyssuite@uibcdf_3.14`: all 13 route checks and
 45 selected dependency/publication/reporting/packaging tests pass. Required
 Ruff 0.16.5 is available in an isolated validation environment, preserving the
 shared environment's tools. Hosted qualification of the changed source is
-pending. The release event itself is not triggered by this review.
+complete at the implementation below. The release event itself is not triggered by this review.
 
 Central prior immutable evidence remains
 [the 1.2.1 receipt](https://github.com/uibcdf/molsyssuite/blob/c625ca968be63b3f208a0ac429a65a6a373e0623/devguide/rollouts/pytest_receptor_distribution_45_20261006.json):
@@ -110,3 +110,41 @@ access is confirmed only for previously observed authorized deliveries.
 - Inspect applicable hosted CI at the changed default-branch source.
 - Retain old artifacts/evidence, archive this record and hand separate adoption,
   recipe/CI readiness and bounded access results to MolSysSuite #45.
+
+## Resolution — 2026-10-06
+
+Implementation `4065003d56d15735fb2bbc5e71ced50d5d988d4c` passes all 13
+routes and [Tests 37469722488](https://github.com/uibcdf/pytest-receptor/actions/runs/37469722488),
+with 12 executed successful jobs. Every Linux Python 3.11–3.14 / pytest 8–9
+cell passes 220 tests in both serial and xdist modes, without skips. The audit
+actually executes inside the existing required `lint` check before the matrix,
+benchmarks and clean wheel build/install. Read-only GitHub protection inspection
+confirms strict protection still requires all 11 original source checks, including
+`lint`; no protection setting or maintainer bypass was changed. Codecov's dependent
+upload is accepted separately.
+
+[Reporting 37469722605](https://github.com/uibcdf/pytest-receptor/actions/runs/37469722605),
+[suite policy 37469723164](https://github.com/uibcdf/pytest-receptor/actions/runs/37469723164)
+and [publication policy 37469723461](https://github.com/uibcdf/pytest-receptor/actions/runs/37469723461)
+pass at that same source. GH Run Receptor preserves complete run/job/log identities.
+The initial `ba3488058b200843a3306745b9c24dcea5e6017e` candidate is superseded;
+its separate audit job was folded into `lint` to retain mandatory failure visibility.
+Future PyPI builds require the existing ordinary/full executed source-gate profile
+for the exact tag. This review does not trigger that release event or a new full
+matrix; actual publication still requires its own artifact qualification.
+
+The guard rejects altered provider identity, failed delegation, missing execution
+requirements, tag/source mismatch and native gate rejection, and protects pre-build
+ordering and the existing mandatory-check identity. Provider tests own native-job
+verification and omitted recipe/weakened environment/below-floor source mechanisms.
+Actual offline adapter loading confirms acquisition, HTTP and job-verification
+functions originate in the exact pinned provider checkout.
+
+The member review is complete: adopted source controls, ready CI/recipe and access
+confirmed only for observed authorized deliveries. Hand off those separate fields
+to uibcdf/molsyssuite#45, preserving its original independent public 1.2.1 receipt.
+No installed consumer migration or API/schema change is required. Registered guide
+clients are SMonitor, ArgDigest, DepDigest, PyUnitWizard, MolSysMT, MolSysViewer,
+GH Run Receptor, DockingMT, Ackredit and OpenCASTp; their installed versions and
+consumer adoption remain separate. The owning #38 and central #45 notices preceded
+publication of the source changes.
