@@ -97,12 +97,17 @@ def test_shared_failure_exit_and_consumer_root_are_retained(provider, tmp_path):
 def test_dependency_audit_precedes_expensive_tests_and_builds():
     workflows = ROOT / ".github/workflows"
     workflow = (workflows / "tests.yml").read_text()
+    lint = workflow.split("  lint:\n", 1)[1].split("  test:\n", 1)[0]
+    assert "name: Check reviewed dependency and runtime routes" in lint
+    assert lint.index(
+        "name: Check reviewed dependency and runtime routes"
+    ) < lint.index('run: pip install -e ".[lint]"')
     for name in ("test", "benchmarks", "packaging"):
-        assert re.search(rf"^  {name}:\n    needs: dependency-routes$", workflow, re.M)
+        assert re.search(rf"^  {name}:\n    needs: lint$", workflow, re.M)
     plan = tomllib.loads((ROOT / "devtools/conda-build/release_plan.toml").read_text())
-    assert plan["gate_jobs"][".github/workflows/tests.yml"][
-        "Dependency and runtime routes"
-    ] == ["Check reviewed dependency and runtime routes"]
+    assert plan["gate_jobs"][".github/workflows/tests.yml"]["lint"] == [
+        "Check reviewed dependency and runtime routes"
+    ]
 
     release = (workflows / "release.yml").read_text()
     assert release.index(

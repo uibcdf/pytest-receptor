@@ -18,11 +18,10 @@ permissions:
   contents: read
 
 jobs:
-  dependency-routes:
-    name: Dependency and runtime routes
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
@@ -38,19 +37,12 @@ jobs:
       - name: Check reviewed dependency and runtime routes
         run: python devtools/check_dependency_routes.py --suite-root .molsyssuite-dependencies
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
       - run: pip install -e ".[lint]"
       - run: ruff check pytest_receptor tests devtools docs/conf.py
       - run: ruff format --check pytest_receptor tests devtools docs/conf.py
 
   test:
-    needs: dependency-routes
+    needs: lint
     name: py${{ matrix.python }} / pytest ${{ matrix.pytest }}
     runs-on: ubuntu-latest
     strategy:
@@ -106,7 +98,7 @@ jobs:
           retention-days: 14
 
   benchmarks:
-    needs: dependency-routes
+    needs: lint
     # The published figures are a claim about behaviour, so the harness that
     # produces them has to keep running.
     runs-on: ubuntu-latest
@@ -120,7 +112,7 @@ jobs:
       - run: python devtools/benchmarks/run_performance.py --tests 500 --repeat 2
 
   packaging:
-    needs: dependency-routes
+    needs: lint
     # PR-OPS-001 shipped a requires-python that rejected the very interpreter
     # the project was developed on. Build and install for real.
     runs-on: ubuntu-latest

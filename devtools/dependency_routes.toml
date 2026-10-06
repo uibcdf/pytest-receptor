@@ -73,5 +73,5 @@ reason = "Exact registered Conda file installed with normal dependency resolutio
 
 [[workflows]]
 path = ".github/workflows/tests.yml"
-sha256 = "e425bfab43b526463f51ee1e8163970e6675e027c330681a1e73b87f920146d1"
-reason = "Standalone pinned preflight precedes test, benchmark and wheel-build jobs. PyPI supplies pytest 8/9 >=8.0.0; pip installs the reviewed component and its own plugin with test/lint/benchmark extras. Serial/xdist self-tests retain the accepted #6 published-self-pin exception. Coverage upload installs no runtime."
+sha256 = "53c7449712466bcccb5ccb23d797e99067599b7a78b602bed82374f6a26a9ad5"
+reason = "Pinned preflight runs in the existing required lint job before test, benchmark and wheel-build jobs; its failure keeps that required check red. PyPI supplies pytest 8/9 >=8.0.0; pip installs the reviewed component and its own plugin with test/lint/benchmark extras. Serial/xdist self-tests retain the accepted #6 published-self-pin exception. Coverage upload installs no runtime."

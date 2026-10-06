@@ -54,7 +54,9 @@ remain provider-owned, rather than inventing an inapplicable sibling fixture.
 
 The previous artifact checks protected public payload/version and recipe parity,
 but no maintained control covered every environment and future workflow route.
-The new standalone CI job runs before tests, benchmarks and package builds.
+The pinned audit runs in the existing required lint job before tests, benchmarks
+and package builds. Keeping its existing check identity means a failed audit
+cannot disappear behind skipped matrix jobs in PR protection.
 The committed Conda source-gate contract also requires its executed audit step
 before staging. PyPI now reuses the shared `acquire_gates` operation to verify
 the already-declared ordinary/full source matrices for the exact tagged checkout
