@@ -1,0 +1,77 @@
+schema = "molsyssuite.dependency-routes@1"
+reason = "Member-owned #38 review of every maintained runtime, build, CI and publication input."
+source_routes = []
+source_reason = "The only required dependency is pytest>=8.0.0, resolved from Conda or PyPI. The component plugin under self-test is not a required sibling source provider; no below-floor sibling fixture is invented."
+
+[shared_tool]
+repository = "uibcdf/molsyssuite"
+commit = "43b9f94bf5ab0ec3f54a4b2ca5b23b791d6af0bc"
+
+[[recipes]]
+path = "devtools/conda-build/meta.yaml"
+kind = "shared-noarch"
+plan = "devtools/conda-build/release_plan.toml"
+resources = "devtools/conda-build/resources.toml"
+reason = "One noarch artifact with metadata Python/pytest bounds and inventoried generated version/runtime resources."
+
+[[environments]]
+path = "devtools/conda-envs/pytest-receptor@uibcdf_3.13.yml"
+kind = "runtime"
+channel_priority = "strict"
+python_minor = "3.13"
+reason = "Preserved legacy supported-minor compatibility environment; use strict channel priority when creating it. Routine development uses the qualified central molsyssuite@uibcdf_3.14 environment, not this historical profile."
+
+[[environments]]
+path = "devtools/conda-envs/build_env.yaml"
+kind = "build-only"
+reason = "Build/upload bootstrap only. No component is installed; recipe host/run create the separate artifact build/runtime closure."
+
+[[workflows]]
+path = ".github/workflows/build_and_upload_conda_packages.yaml"
+sha256 = "7d43725ddf9091749cdf319712f02b16e691f83f87d4adb9e10b0c3cc9bcd546"
+reason = "Manual exact-candidate noarch staging wrapper uses pinned shared publisher. Committed source gates include the dependency preflight before any build; recipe host/run supply separate build/runtime closure."
+
+[[workflows]]
+path = ".github/workflows/conda-publication-governance.yaml"
+sha256 = "a6b40047a9ecae6cc5aad7e928d18bb2a5f377d924560e5a6ae6c2cb2b4abd3e"
+reason = "Pinned shared administrative recipe/publication audit; no runtime is installed."
+
+[[workflows]]
+path = ".github/workflows/docs.yml"
+sha256 = "b0cc817938941fb843d5d45716a49ec7cf49dd1b0cf24e36194cead0bdbd5c8f"
+reason = "Sphinx uses pip-resolved required pytest and docs extras with the source plugin. Existing Python 3.11 is a supported lower-bound docs compatibility lane, separate from routine shared Python 3.14 development."
+
+[[workflows]]
+path = ".github/workflows/full-tests.yml"
+sha256 = "d44e8b806440d7c95de61489bbb14eae826cb1e4206f16b15424d50f4cf66997"
+reason = "Pip-supplied pytest 8/9 and test extras; exact component source self-tests run serial/xdist on supported Linux minors and macOS arm64 3.14. Backlog detector installs no runtime. No required sibling-source replacement."
+
+[[workflows]]
+path = ".github/workflows/molsyssuite-policy.yml"
+sha256 = "6cc62208156f765ca0456e3bc5f398934263e03afc7063c69afa692c5dafdffd"
+reason = "Pinned shared administrative policy/lint audit; no plugin runtime is installed."
+
+[[workflows]]
+path = ".github/workflows/promote_conda_package.yaml"
+sha256 = "ccefb54799756c0adf90d1fac608c22fb539dc9b62cc14081e2721adbc56de34"
+reason = "Pinned same-file/digest promotion with required exact-source and installed receipts; no runtime rebuild or source replacement."
+
+[[workflows]]
+path = ".github/workflows/release.yml"
+sha256 = "4f7c053aa0cb01e4f0bcda62263b500854223eb466ac3ebad407ee4773670a7f"
+reason = "Release checks the exact tag, pinned dependency preflight and required executed native source gates before wheel/sdist building. Pip resolves the released wheel closure in a clean venv; exact metadata/resource/plugin checks precede Trusted Publishing. Source-gate receipt is retained outside the dist directory."
+
+[[workflows]]
+path = ".github/workflows/reporting-governance.yml"
+sha256 = "2fd20bad0d6dd9dae2e387d0b70c032fff4e56da9d886063e3b6b0649821b817"
+reason = "Standalone standard-library report/index tests on supported Python 3.13; no installed plugin or required sibling-source runtime is used."
+
+[[workflows]]
+path = ".github/workflows/test_installed_conda.yaml"
+sha256 = "5338ef7e387c6cd1fd3dc42da0e963076b6a9fec7cc645f045a725bfb7ee614c"
+reason = "Exact registered Conda file installed with normal dependency resolution in eight Linux/macOS arm64 Python 3.11-3.14 cells. Independent source binding, installed version/resources and actual self-tests retain their existing checks and selection."
+
+[[workflows]]
+path = ".github/workflows/tests.yml"
+sha256 = "e425bfab43b526463f51ee1e8163970e6675e027c330681a1e73b87f920146d1"
+reason = "Standalone pinned preflight precedes test, benchmark and wheel-build jobs. PyPI supplies pytest 8/9 >=8.0.0; pip installs the reviewed component and its own plugin with test/lint/benchmark extras. Serial/xdist self-tests retain the accepted #6 published-self-pin exception. Coverage upload installs no runtime."

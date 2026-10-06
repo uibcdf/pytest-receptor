@@ -16,6 +16,7 @@ coupled_release = false
 dependencies_public = true
 
 [gate_jobs.".github/workflows/tests.yml"]
+"Dependency and runtime routes" = ["Check reviewed dependency and runtime routes"]
 "py3.11 / pytest 8" = ["Run the suite", "Run the suite distributed"]
 "py3.11 / pytest 9" = ["Run the suite", "Run the suite distributed"]
 "py3.12 / pytest 8" = ["Run the suite", "Run the suite distributed"]

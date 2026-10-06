@@ -10,6 +10,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   build:
@@ -25,6 +26,29 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+
+      - name: Checkout pinned shared publication checks
+        uses: actions/checkout@v6
+        with:
+          repository: uibcdf/molsyssuite
+          ref: 43b9f94bf5ab0ec3f54a4b2ca5b23b791d6af0bc
+          path: .molsyssuite-dependencies
+          persist-credentials: false
+
+      - name: Install shared preflight parser dependencies
+        run: python -m pip install 'PyYAML==6.0.3' 'Jinja2>=3,<4' 'packaging>=24'
+
+      - name: Check reviewed dependency and runtime routes
+        run: python devtools/check_dependency_routes.py --suite-root .molsyssuite-dependencies
+
+      - name: Verify exact-tag executed source gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python devtools/check_release_gates.py --suite-root .molsyssuite-dependencies \
+            --repository "$REPOSITORY" --tag "$RELEASE_TAG" --output release-source-gates.json
 
       - name: Build release artifacts
         run: |
@@ -44,6 +68,14 @@ jobs:
           /tmp/pytest-receptor-release/bin/pip install dist/*.whl
           cd /tmp
           /tmp/pytest-receptor-release/bin/pytest --trace-config --help 2>&1 | grep 'pytest_receptor.plugin'
+
+      - name: Retain exact-source gate receipt
+        uses: actions/upload-artifact@v5
+        with:
+          name: release-source-gates
+          path: release-source-gates.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Store distributions for the publishing job
         uses: actions/upload-artifact@v5
