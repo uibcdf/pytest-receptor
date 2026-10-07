@@ -8,6 +8,15 @@ python devtools/benchmarks/run_benchmarks.py --scale    # 8,000 tests, 12 worker
 python devtools/benchmarks/run_performance.py --tests 1000 --repeat 5  # wall time and peak RSS
 ```
 
+The token harness exclusively claims `${tempdir}/receptor-bench` so pytest's
+displayed `rootdir` stays stable across measurements. If that path is occupied,
+it refuses to run and preserves its contents. Wait for the active owner to finish;
+remove leftovers only after checking their ownership and useful lifetime. It
+removes its own scenario files after success or failure, and reports cleanup
+errors. The performance harness uses a unique managed directory with the same
+cleanup/error contract. These operations do not clean other callers' resources.
+See [uibcdf/pytest-receptor#40](https://github.com/uibcdf/pytest-receptor/issues/40).
+
 Reference measurements were repeated on 2026-10-03 using an installed 1.2.1
 candidate wheel in a fresh Linux environment: CPython 3.13.14, pytest 9.1.1,
 pytest-xdist 3.8.0 and tiktoken 0.14.0. The wheel was built locally from

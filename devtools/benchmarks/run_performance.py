@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import os
 import platform
-import shutil
 import statistics
 import subprocess
 import sys
@@ -129,9 +128,9 @@ def _write_scenario(directory: Path, name: str, tests: int) -> int:
 def measure(tests: int, repeat: int):
     # Unique so two developers or CI jobs can benchmark concurrently without
     # deleting each other's active working directory.
-    directory = Path(tempfile.mkdtemp(prefix="receptor-performance-"))
     results = {}
-    try:
+    with tempfile.TemporaryDirectory(prefix="receptor-performance-") as temporary:
+        directory = Path(temporary)
         for scenario in ("green", "setup cascade"):
             expected = _write_scenario(directory, scenario, tests)
             samples = {mode: [] for mode in MODES}
@@ -162,8 +161,6 @@ def measure(tests: int, repeat: int):
                 )
                 for mode, values in samples.items()
             }
-    finally:
-        shutil.rmtree(directory, ignore_errors=True)
     return results
 
 

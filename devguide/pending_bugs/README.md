@@ -9,7 +9,9 @@ See the [local reporting protocol](../reporting_protocol.md).
 
 <!-- generated: devguide_index -->
 
-*No entries.*
+### Active (1)
+
+- [`benchmark_resource_ownership.md`](benchmark_resource_ownership.md) — [#40](https://github.com/uibcdf/pytest-receptor/issues/40) — Protect benchmark ownership and expose cleanup failures. *(active, reproduced)*
 
 <!-- /generated -->
 

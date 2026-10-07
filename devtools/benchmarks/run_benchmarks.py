@@ -217,15 +217,21 @@ def measure(scenarios=None, baselines=None, receptor=None):
     results = {}
     encoding_name = None
     for scenario, files in scenarios.items():
-        # A *fixed* directory name, not mkdtemp's random one. pytest's default
+        # A fixed directory name, not mkdtemp's random one. pytest's default
         # header prints `rootdir: <path>`, so a random suffix lands in the
         # baseline output and tokenizes differently every run -- the whole
         # source of the couple-of-token wobble between runs. The path is an
         # accident of the harness, not part of what we are measuring, so it must
-        # be constant for the numbers to reproduce.
+        # be constant for the numbers to reproduce. Claim it exclusively: an
+        # occupied path may belong to another active run, so never remove it.
         directory = Path(tempfile.gettempdir()) / "receptor-bench"
-        shutil.rmtree(directory, ignore_errors=True)
-        directory.mkdir()
+        try:
+            directory.mkdir()
+        except FileExistsError as error:
+            raise FileExistsError(
+                f"Benchmark directory is occupied: {directory}. "
+                "Wait for its owner to finish, or review ownership before cleanup."
+            ) from error
         try:
             for name, content in files.items():
                 (directory / name).write_text(content, encoding="utf-8")
@@ -237,7 +243,7 @@ def measure(scenarios=None, baselines=None, receptor=None):
             row["--receptor=llm"] = counts
             results[scenario] = row
         finally:
-            shutil.rmtree(directory, ignore_errors=True)
+            shutil.rmtree(directory)
     return results, encoding_name
 
 
