@@ -27,8 +27,9 @@ silently rewritten.
 
 <!-- generated: devguide_index -->
 
-### Resolved (15)
+### Resolved (16)
 
+- [`benchmark_resource_ownership.md`](benchmark_resource_ownership.md) — [#40](https://github.com/uibcdf/pytest-receptor/issues/40) — Protect benchmark ownership and expose cleanup failures. *(resolved, reproduced)*
 - [`deselected_tests_reported_incomplete.md`](deselected_tests_reported_incomplete.md) — [#25](https://github.com/uibcdf/pytest-receptor/issues/25) — Distinguish deselection from incomplete execution. *(resolved, inspected)*
 - [`discard_stream_remains_unclosed_after_pytest.md`](discard_stream_remains_unclosed_after_pytest.md) — [#4](https://github.com/uibcdf/pytest-receptor/issues/4) — Close the late-terminal discard stream without leaking ResourceWarning *(resolved, reproduced)*
 - [`documented_full_report_path_misses_pytest_cache_d.md`](documented_full_report_path_misses_pytest_cache_d.md) — [#19](https://github.com/uibcdf/pytest-receptor/issues/19) — Make documented full-report paths locate the written artifact. *(resolved, inspected)*

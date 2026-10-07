@@ -1,9 +1,9 @@
 ---
 summary: Protect benchmark ownership and expose cleanup failures.
 issue: uibcdf/pytest-receptor#40
-status: active
+status: resolved
 opened: 2026-10-07
-closed:
+closed: 2026-10-07
 severity: medium
 verification: reproduced
 area: [tooling, benchmarks]
@@ -80,12 +80,28 @@ this change creates no release, publication or new CI gate.
 - Use tests/test_benchmark_resources.py as the durable regression guard and
   archive this record/index with the repair after verification.
 
-## Prepared resolution — 2026-10-07
+## Resolution — 2026-10-07
 
 The token harness claims its stable path using atomic `mkdir`, refuses an occupied
 path with an actionable diagnostic, and removes only its own directory in
 `finally`, without suppression. The performance harness uses a managed
 TemporaryDirectory; setup/teardown remain outside its timed child operation.
 The twelve regressions and affected Ruff lint/import/format checks pass locally.
-Hosted verification and publication of this prepared source are still pending;
-the owning issue remains open until that checkpoint is inspected.
+Published repair: e100d65e8f49fdb7a93edb8fe541ff296c16c6e0. Exact-source hosted
+[Tests 37686778761](https://github.com/uibcdf/pytest-receptor/actions/runs/37686778761)
+passes Python 3.11–3.14 with pytest 8 and 9, ordinary and distributed suites,
+actual token/performance benchmarks, lint, packaging/clean-wheel checks and the
+dependent coverage upload. This is existing test CI, not a public release.
+Exact source/event/workflow/jobs/required executed steps were verified, together
+with reporting (37686778742), policy (37686779765) and publication-control
+(37686779737) gates. The documentation run 37686778650 also reports success.
+
+The guard module is relevant: six new cases failed against the original source,
+then all twelve pass after repair. Reintroducing pre-claim deletion breaks owned
+sentinel/concurrency tests; suppressing removal failures breaks the controlled
+success/failure cleanup checks. Real pytest headers protect the existing stable
+rootdir constraint. No active primary clone or caller environment was changed.
+
+Remaining full local-tool/retrospective reviews belong to MolSysSuite #104 and
+are not closed by this focused repair. Archive/index closeout is a separate
+metadata checkpoint; no code or measurement changes are added here.
