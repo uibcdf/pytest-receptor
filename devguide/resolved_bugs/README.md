@@ -27,7 +27,7 @@ silently rewritten.
 
 <!-- generated: devguide_index -->
 
-### Resolved (16)
+### Resolved (17)
 
 - [`benchmark_resource_ownership.md`](benchmark_resource_ownership.md) — [#40](https://github.com/uibcdf/pytest-receptor/issues/40) — Protect benchmark ownership and expose cleanup failures. *(resolved, reproduced)*
 - [`deselected_tests_reported_incomplete.md`](deselected_tests_reported_incomplete.md) — [#25](https://github.com/uibcdf/pytest-receptor/issues/25) — Distinguish deselection from incomplete execution. *(resolved, inspected)*
@@ -39,6 +39,7 @@ silently rewritten.
 - [`molsysmt_xdist_incomplete_run_reported_pass.md`](molsysmt_xdist_incomplete_run_reported_pass.md) — [#20](https://github.com/uibcdf/pytest-receptor/issues/20) — Prevent incomplete or stale sessions from appearing complete. *(resolved, inspected)*
 - [`native_extension_stdout_leaks_after_final_report.md`](native_extension_stdout_leaks_after_final_report.md) — [#22](https://github.com/uibcdf/pytest-receptor/issues/22) — Flush native C stdout while pytest capture is active. *(resolved, inspected)*
 - [`progress_snapshot_percent_matches_completed_count.md`](progress_snapshot_percent_matches_completed_count.md) — [#30](https://github.com/uibcdf/pytest-receptor/issues/30) — Make progress snapshots agree with completed-test counts. *(resolved, inspected)*
+- [`reap_interrupted_performance_child.md`](reap_interrupted_performance_child.md) — [#41](https://github.com/uibcdf/pytest-receptor/issues/41) — Reap direct performance benchmark children after wait failure or interruption. *(resolved, reproduced)*
 - [`recurring_full_ci_and_contributor_routes.md`](recurring_full_ci_and_contributor_routes.md) — [#11](https://github.com/uibcdf/pytest-receptor/issues/11) — Verify recurring full CI, skipped-push recovery and protected contributor routes. *(resolved, measured)*
 - [`setup_errors_counted_as_failed.md`](setup_errors_counted_as_failed.md) — [#14](https://github.com/uibcdf/pytest-receptor/issues/14) — Preserve setup and teardown error categories. *(resolved, inspected)*
 - [`warning_group_truncation_is_not_diagnostically_sufficient.md`](warning_group_truncation_is_not_diagnostically_sufficient.md) — [#16](https://github.com/uibcdf/pytest-receptor/issues/16) — List every distinct warning group. *(resolved, inspected)*

@@ -74,7 +74,15 @@ def _run(directory: Path, args: tuple[str, ...]) -> Measurement:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
-    _pid, status, usage = os.wait4(process.pid, 0)
+    try:
+        _pid, status, usage = os.wait4(process.pid, 0)
+    except BaseException:
+        # Scratch cleanup must not run while our interrupted child is alive.
+        try:
+            process.kill()
+        finally:
+            process.wait()
+        raise
     process.returncode = os.waitstatus_to_exitcode(status)
     return Measurement(
         seconds=time.monotonic() - started,
