@@ -27,7 +27,7 @@ silently rewritten.
 
 <!-- generated: devguide_index -->
 
-### Resolved (17)
+### Resolved (18)
 
 - [`benchmark_resource_ownership.md`](benchmark_resource_ownership.md) — [#40](https://github.com/uibcdf/pytest-receptor/issues/40) — Protect benchmark ownership and expose cleanup failures. *(resolved, reproduced)*
 - [`deselected_tests_reported_incomplete.md`](deselected_tests_reported_incomplete.md) — [#25](https://github.com/uibcdf/pytest-receptor/issues/25) — Distinguish deselection from incomplete execution. *(resolved, inspected)*
@@ -38,6 +38,7 @@ silently rewritten.
 - [`molsysmt_incomplete_stats_closes_terminal_stream.md`](molsysmt_incomplete_stats_closes_terminal_stream.md) — [#23](https://github.com/uibcdf/pytest-receptor/issues/23) — Preserve controlled-exit status with receptor statistics. *(resolved, inspected)*
 - [`molsysmt_xdist_incomplete_run_reported_pass.md`](molsysmt_xdist_incomplete_run_reported_pass.md) — [#20](https://github.com/uibcdf/pytest-receptor/issues/20) — Prevent incomplete or stale sessions from appearing complete. *(resolved, inspected)*
 - [`native_extension_stdout_leaks_after_final_report.md`](native_extension_stdout_leaks_after_final_report.md) — [#22](https://github.com/uibcdf/pytest-receptor/issues/22) — Flush native C stdout while pytest capture is active. *(resolved, inspected)*
+- [`pathless_external_helper_rerun.md`](pathless_external_helper_rerun.md) — [#39](https://github.com/uibcdf/pytest-receptor/issues/39) — Keep pathless external tests separate from foreign crash locations. *(resolved, reproduced)*
 - [`progress_snapshot_percent_matches_completed_count.md`](progress_snapshot_percent_matches_completed_count.md) — [#30](https://github.com/uibcdf/pytest-receptor/issues/30) — Make progress snapshots agree with completed-test counts. *(resolved, inspected)*
 - [`reap_interrupted_performance_child.md`](reap_interrupted_performance_child.md) — [#41](https://github.com/uibcdf/pytest-receptor/issues/41) — Reap direct performance benchmark children after wait failure or interruption. *(resolved, reproduced)*
 - [`recurring_full_ci_and_contributor_routes.md`](recurring_full_ci_and_contributor_routes.md) — [#11](https://github.com/uibcdf/pytest-receptor/issues/11) — Verify recurring full CI, skipped-push recovery and protected contributor routes. *(resolved, measured)*

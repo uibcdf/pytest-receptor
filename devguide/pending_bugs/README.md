@@ -2,17 +2,15 @@
 
 Reported defects that have not been triaged yet.
 
-The pathless external-helper rerun defect (`uibcdf/pytest-receptor#39`) is
-under correction. The late-terminal discard-stream defect
-(`uibcdf/pytest-receptor#4`) is archived in `resolved_bugs/`.
+There are no pending bug reports. The late-terminal discard-stream defect
+(`uibcdf/pytest-receptor#4`) and pathless external-helper rerun defect
+(`uibcdf/pytest-receptor#39`) are archived in `resolved_bugs/`.
 
 See the [local reporting protocol](../reporting_protocol.md).
 
 <!-- generated: devguide_index -->
 
-### Active (1)
-
-- [`pathless_external_helper_rerun.md`](pathless_external_helper_rerun.md) — [#39](https://github.com/uibcdf/pytest-receptor/issues/39) — Keep pathless external tests separate from foreign crash locations. *(active, reproduced)*
+*No entries.*
 
 <!-- /generated -->
 

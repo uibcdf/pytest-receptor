@@ -1,9 +1,9 @@
 ---
 summary: Keep pathless external tests separate from foreign crash locations.
 issue: uibcdf/pytest-receptor#39
-status: active
+status: resolved
 opened: 2026-10-06
-closed:
+closed: 2026-10-23
 severity: medium
 verification: reproduced
 area: [reporting, rerun, compatibility]
@@ -104,3 +104,37 @@ directories are not a new public artifact.
   output-contract and integration checks.
 - Archive this record with final verification and synchronize
   `uibcdf/pytest-receptor#39`.
+
+## Resolution — 2026-10-23
+
+Implementation commit `3a633e2` corrects the selection and retains independent
+test/crash evidence. Hosted Tests run
+[40013033296](https://github.com/uibcdf/pytest-receptor/actions/runs/40013033296)
+passes all twelve jobs, including the eight Linux Python 3.11–3.14 × pytest 8/9
+cells, lint, packaging, benchmarks and coverage publication. Native job/step
+inspection independently confirms both `Run the suite` and `Run the suite
+distributed` executed successfully in every cell, for sixteen successful suite
+steps. GH Run Receptor reports the authoritative successful conclusion.
+
+Reporting governance `40013033209`, MolSysSuite policy `40013033577`, Conda
+publication governance `40013033631` and Sphinx build/deployment `40013033251`
+also pass at the implementation commit. The earlier local omitted integrations
+remain recorded as local skips; hosted compatibility is separate evidence.
+
+The guard named above protects the mechanism by forcing pathless node IDs and
+a foreign helper crash, preserving that crash in the artifact, asserting the
+original selectors and executing the actual emitted rerun. It covers single
+and grouped occurrences under serial pytest and xdist, including original
+failure counts and complete, integrity-valid JSONL. Matching text alone cannot
+satisfy it. Existing external-path regressions continue to pass.
+
+Task closeout removed only the three explicitly owned generated test directories
+`/tmp/pytest-receptor-issue39-before`, `/tmp/pytest-receptor-issue39-after` and
+`/tmp/pytest-receptor-issue39-suite`; absence was checked after successful
+removal. The reproduction, baseline distinction, implementation and CI references
+remain in this archive, the executable guard and `uibcdf/pytest-receptor#39`.
+This bounded cleanup does not close the broader review in
+`uibcdf/pytest-receptor#42`.
+
+No package or release was published by this fix. Receiving use of development
+source and a future public package remain distinct; public 1.2.1 is unchanged.
