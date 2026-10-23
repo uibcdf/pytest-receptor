@@ -1,9 +1,9 @@
 ---
 summary: Retain runtime stream ownership and expose cleanup failures.
 issue: uibcdf/pytest-receptor#43
-status: active
+status: resolved
 opened: 2026-10-23
-closed:
+closed: 2026-10-23
 severity: medium
 verification: reproduced
 area: [resources, output, lifecycle]
@@ -84,3 +84,23 @@ The guard exercises actual files/descriptors and pytest subprocesses for success
 and failure, preserves caller bytes and pytest exit status, and detects silent
 cleanup faults. Existing artifact/output/terminal checks and relevant CI pass;
 the result is archived and synchronized with #43.
+
+## Resolution — 2026-10-23
+
+Implementation `44e459655a25d4367fc2d69f59b2ad74c081fb4c` passes all 22 runtime
+resource controls and the two documentation cleanup controls. It also passes
+the complete local suite (254 passed, ten optional-integration skips).
+[Hosted Tests 40017079423](https://github.com/uibcdf/pytest-receptor/actions/runs/40017079423)
+passes all twelve jobs. Native run/attempt/source/job/step verification confirms
+eight Linux Python 3.11–3.14 × pytest 8/9 cells and all sixteen serial/distributed
+suite steps completed successfully. Lint, packaging, benchmarks and coverage
+publication pass. Reporting `40017079305`, policy `40017080274`, publication
+governance `40017079700` and Sphinx/Pages `40017079317` also pass at that source.
+
+The guard protects actual lifecycle behavior: raw descriptor/file closure,
+partial output preservation, removal/error diagnostics, original interrupt
+identity and native/compact pytest subprocess outcome parity. Failures are
+controlled injections, not claims of real OS deletion faults. The #42 review
+records caller-resource retention and removal of all eight task-owned fixture
+roots after their children completed. No public package, schema or provider pin
+is changed; shared rollout remains `uibcdf/molsyssuite#104`.

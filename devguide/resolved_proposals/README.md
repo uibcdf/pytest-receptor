@@ -29,7 +29,7 @@ is retired rather than renewed indefinitely.
 
 <!-- generated: devguide_index -->
 
-### Resolved (10)
+### Resolved (11)
 
 - [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(resolved, inspected)*
 - [`built_in_normalizers_for_warning_variants.md`](built_in_normalizers_for_warning_variants.md) — [#28](https://github.com/uibcdf/pytest-receptor/issues/28) — Normalize warning sizes while preserving meaningful names. *(resolved, inspected)*
@@ -41,5 +41,6 @@ is retired rather than renewed indefinitely.
 - [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(resolved, inspected)*
 - [`release_1_2_1.md`](release_1_2_1.md) — [#32](https://github.com/uibcdf/pytest-receptor/issues/32) — Publish and independently verify pytest-receptor 1.2.1. *(resolved, reproduced)*
 - [`review_python_ecosystem_policy_adoption.md`](review_python_ecosystem_policy_adoption.md) — [#6](https://github.com/uibcdf/pytest-receptor/issues/6) — Review MolSysSuite Python ecosystem policy in pytest-receptor. *(resolved, measured)*
+- [`review_temporary_resource_ownership.md`](review_temporary_resource_ownership.md) — [#42](https://github.com/uibcdf/pytest-receptor/issues/42) — Complete the component-owned temporary-resource lifecycle review. *(resolved, inspected)*
 
 <!-- /generated -->

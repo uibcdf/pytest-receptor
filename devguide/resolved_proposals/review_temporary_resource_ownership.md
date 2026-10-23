@@ -1,14 +1,14 @@
 ---
 summary: Complete the component-owned temporary-resource lifecycle review.
 issue: uibcdf/pytest-receptor#42
-status: active
+status: resolved
 opened: 2026-10-10
-closed:
+closed: 2026-10-23
 verification: inspected
 area: [resources, tooling, governance]
 guard:
 normative: devguide/temporary_resources.md
-blocked_by: [uibcdf/pytest-receptor#43, uibcdf/pytest-receptor#44]
+blocked_by: []
 supersedes: []
 ---
 
@@ -83,3 +83,39 @@ policy, immutable artifact, source tag or environment is changed.
   unknown historical deletion.
 - Run local component/report checks, archive the review and send its exact-source
   evidence back to `uibcdf/molsyssuite#104`.
+
+## Owner disposition — 2026-10-23
+
+The maintained operational review and implementation are published in
+`44e459655a25d4367fc2d69f59b2ad74c081fb4c`. Discovered defects #43/#44 are
+resolved with actual guards and archived evidence; existing #40/#41 remain
+resolved. No remaining implementation exception is being used to claim their
+success. Normal retained caller/workspace/consumer resources keep their explicit
+owners and next affected-change/release or 2026-11-23 review trigger.
+
+All 24 new controls pass after repair; the final unchanged guards on a managed
+baseline copy fail 22 cases and pass two controls. The local complete source
+suite passes 254 tests and skips ten optional integrations. Those local skips
+are not represented as executed coverage.
+
+[Hosted Tests 40017079423](https://github.com/uibcdf/pytest-receptor/actions/runs/40017079423)
+passes all twelve jobs. Independent native source/attempt/job/step verification
+confirms all eight Linux Python 3.11–3.14 × pytest 8/9 cells and sixteen executed
+serial/distributed suite steps. Lint, wheel packaging, benchmark harnesses and
+coverage publication pass. Reporting `40017079305`, policy `40017080274`, Conda
+publication governance `40017079700` and Sphinx/Pages `40017079317` pass too.
+This is source/tool validation, not a new public or installed package admission,
+nor physical hosted-runner teardown proof.
+
+After their subprocesses completed and durable evidence was recorded, all eight
+explicitly task-created pytest fixture roots were checked for task custody,
+removed and confirmed absent without cleanup failure. The probe and two managed
+baseline source copies also cleaned themselves after child exit. The maintained
+record lists actual removed paths separately from the nineteen historical
+absences; no earlier deletion, recovered capacity or foreign ownership is
+invented. Primary/shared/consumer resources remain preserved.
+
+Report this bounded completed owner disposition to `uibcdf/molsyssuite#104`;
+the shared rollout and `uibcdf/moli#61` retain their independent scope. No new
+central duplicate issue, package publication or sibling implementation change
+is needed.

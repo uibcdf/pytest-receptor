@@ -27,11 +27,12 @@ silently rewritten.
 
 <!-- generated: devguide_index -->
 
-### Resolved (18)
+### Resolved (20)
 
 - [`benchmark_resource_ownership.md`](benchmark_resource_ownership.md) — [#40](https://github.com/uibcdf/pytest-receptor/issues/40) — Protect benchmark ownership and expose cleanup failures. *(resolved, reproduced)*
 - [`deselected_tests_reported_incomplete.md`](deselected_tests_reported_incomplete.md) — [#25](https://github.com/uibcdf/pytest-receptor/issues/25) — Distinguish deselection from incomplete execution. *(resolved, inspected)*
 - [`discard_stream_remains_unclosed_after_pytest.md`](discard_stream_remains_unclosed_after_pytest.md) — [#4](https://github.com/uibcdf/pytest-receptor/issues/4) — Close the late-terminal discard stream without leaking ResourceWarning *(resolved, reproduced)*
+- [`docs_clean_operand_ownership.md`](docs_clean_operand_ownership.md) — [#44](https://github.com/uibcdf/pytest-receptor/issues/44) — Keep documentation cleanup within the selected build directory. *(resolved, reproduced)*
 - [`documented_full_report_path_misses_pytest_cache_d.md`](documented_full_report_path_misses_pytest_cache_d.md) — [#19](https://github.com/uibcdf/pytest-receptor/issues/19) — Make documented full-report paths locate the written artifact. *(resolved, inspected)*
 - [`external_single_test_rerun_loses_path_with_fixed_rootdir.md`](external_single_test_rerun_loses_path_with_fixed_rootdir.md) — [#24](https://github.com/uibcdf/pytest-receptor/issues/24) — Recover pathless external node IDs under a fixed rootdir. *(resolved, inspected)*
 - [`external_test_paths_produce_invalid_rerun_and_location.md`](external_test_paths_produce_invalid_rerun_and_location.md) — [#15](https://github.com/uibcdf/pytest-receptor/issues/15) — Resolve external test paths from the invocation directory. *(resolved, inspected)*
@@ -42,6 +43,7 @@ silently rewritten.
 - [`progress_snapshot_percent_matches_completed_count.md`](progress_snapshot_percent_matches_completed_count.md) — [#30](https://github.com/uibcdf/pytest-receptor/issues/30) — Make progress snapshots agree with completed-test counts. *(resolved, inspected)*
 - [`reap_interrupted_performance_child.md`](reap_interrupted_performance_child.md) — [#41](https://github.com/uibcdf/pytest-receptor/issues/41) — Reap direct performance benchmark children after wait failure or interruption. *(resolved, reproduced)*
 - [`recurring_full_ci_and_contributor_routes.md`](recurring_full_ci_and_contributor_routes.md) — [#11](https://github.com/uibcdf/pytest-receptor/issues/11) — Verify recurring full CI, skipped-push recovery and protected contributor routes. *(resolved, measured)*
+- [`runtime_evidence_resource_lifecycle.md`](runtime_evidence_resource_lifecycle.md) — [#43](https://github.com/uibcdf/pytest-receptor/issues/43) — Retain runtime stream ownership and expose cleanup failures. *(resolved, reproduced)*
 - [`setup_errors_counted_as_failed.md`](setup_errors_counted_as_failed.md) — [#14](https://github.com/uibcdf/pytest-receptor/issues/14) — Preserve setup and teardown error categories. *(resolved, inspected)*
 - [`warning_group_truncation_is_not_diagnostically_sufficient.md`](warning_group_truncation_is_not_diagnostically_sufficient.md) — [#16](https://github.com/uibcdf/pytest-receptor/issues/16) — List every distinct warning group. *(resolved, inspected)*
 - [`xdist_mixed_valid_and_missing_paths_hide_the_usage_error.md`](xdist_mixed_valid_and_missing_paths_hide_the_usage_error.md) — [#27](https://github.com/uibcdf/pytest-receptor/issues/27) — Diagnose mixed valid and missing xdist selections. *(resolved, inspected)*

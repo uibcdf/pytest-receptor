@@ -62,10 +62,6 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
-### Active (1)
-
-- [`review_temporary_resource_ownership.md`](review_temporary_resource_ownership.md) — [#42](https://github.com/uibcdf/pytest-receptor/issues/42) — Complete the component-owned temporary-resource lifecycle review. *(active, inspected)*
-
 ### Open (1)
 
 - [`ci_error_annotations.md`](ci_error_annotations.md) — [#9](https://github.com/uibcdf/pytest-receptor/issues/9) — Decide whether to emit CI error annotations from the ci profile. *(open, inspected)*

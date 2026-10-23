@@ -110,3 +110,34 @@ removed after their useful evidence is committed and synchronized. The owning
 closeout records distinguish those actual removals from historical absence.
 Retain failure evidence while useful, keep caller outputs outside disposable
 scratch, and leave cleanup failures visible with their owner if removal fails.
+
+### Executed closeout — 2026-10-23
+
+Implementation `44e4596` passes the new 24 controls, the full local source suite
+(254 passed / ten optional-integration skips) and hosted Tests `40017079423`:
+all twelve jobs, including eight Linux Python 3.11–3.14 × pytest 8/9 cells with
+both suite steps independently verified as executed successes. The component
+reporting, policy, publication-control and Sphinx/Pages runs also pass. Exact
+run identities and scope are retained in the archived #42/#43/#44 records.
+
+Following completed subprocesses, the eight task-created fixture roots below
+were checked individually as owned, non-symlink directories, removed and
+confirmed absent. No cleanup failure occurred:
+
+```text
+/tmp/pytest-receptor-issue42-before
+/tmp/pytest-receptor-issue42-after
+/tmp/pytest-receptor-issue42-runtime
+/tmp/pytest-receptor-issue42-focused
+/tmp/pytest-receptor-issue42-docs-before
+/tmp/pytest-receptor-issue42-final-focused
+/tmp/pytest-receptor-issue42-final-runtime
+/tmp/pytest-receptor-issue42-suite
+```
+
+The probe and two managed baseline source/fixture copies were automatically
+removed after their child operations; issue comment drafts last only through
+their final upload. This execution does not establish the historical absence
+attribution, reclaimed physical space, complete `/tmp` inventory or physical
+hosted-runner teardown. No primary, shared environment, pre-existing workspace
+output or foreign consumer worktree registration was a deletion operand.
