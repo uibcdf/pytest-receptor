@@ -463,9 +463,9 @@ class ReceptorPlugin:
             path = cache.mkdir("receptor") / "last-run.txt"
             if not path.is_symlink():
                 path.unlink(missing_ok=True)
-        except Exception:
+        except Exception as exc:
             # Losing this cleanup must never cost the run.
-            pass
+            self._resource_warning(f"cannot clear previous cached report: {exc}")
 
     def _start_artifact(self):
         if not self._artifact_option:
@@ -508,9 +508,8 @@ class ReceptorPlugin:
         try:
             self._artifact.write_phase(self._run_id, event)
         except ArtifactError as exc:
-            self._artifact.close()
             self._artifact_issue = _sanitize(str(exc))
-            self._artifact = None
+            self._close_artifact()
 
     def _write_artifact_warning(self, event):
         if self._artifact is None:
@@ -518,9 +517,21 @@ class ReceptorPlugin:
         try:
             self._artifact.write_warning(self._run_id, event)
         except ArtifactError as exc:
-            self._artifact.close()
             self._artifact_issue = _sanitize(str(exc))
-            self._artifact = None
+            self._close_artifact()
+
+    def _close_artifact(self):
+        artifact, self._artifact = self._artifact, None
+        if artifact is None:
+            return
+        try:
+            artifact.close()
+        except ArtifactError as exc:
+            detail = _sanitize(str(exc))
+            self._artifact_issue = "; ".join(
+                part for part in (self._artifact_issue, detail) if part
+            )
+            self._artifact_warning()
 
     def _emit_progress(self):
         """A sign of life on stdout's quieter sibling.
@@ -1085,7 +1096,7 @@ class ReceptorPlugin:
             self._artifact_issue = _sanitize(str(exc))
             self._artifact_warning()
         finally:
-            self._artifact = None
+            self._close_artifact()
 
     def _artifact_warning(self):
         try:
@@ -1697,8 +1708,7 @@ class ReceptorPlugin:
         if self._artifact is not None:
             # A hook failure before sessionfinish still leaves a flushed,
             # readable stream. Missing session_finish is its incomplete marker.
-            self._artifact.close()
-            self._artifact = None
+            self._close_artifact()
         reporter = config.pluginmanager.getplugin("terminalreporter")
         line = None
         if self.stats:
@@ -1706,6 +1716,7 @@ class ReceptorPlugin:
                 line = self._stats_line(self._shown)
             except Exception:
                 line = None
+        self._close_baseline()
         # pytest writes an Exit/interrupt banner from its own pytest_unconfigure,
         # after our report -- and in stats mode `_stats_line` has just closed the
         # temp file the reporter's writer still points at, so that late write
@@ -1727,7 +1738,12 @@ class ReceptorPlugin:
             # reporter can write safely until then; afterwards we own and
             # close the discard stream rather than leaking it at shutdown.
             if self._sink is not None:
-                self._sink.close()
+                try:
+                    self._sink.close()
+                except Exception as exc:
+                    self._resource_warning(
+                        f"cannot close terminal discard stream: {exc}"
+                    )
 
     def _silence_late_terminal(self, reporter):
         if reporter is None:
@@ -1771,8 +1787,33 @@ class ReceptorPlugin:
             self._terminal = create_terminal_writer(self.config, sys.stdout)
             reporter._tw = create_terminal_writer(self.config, handle)
         except Exception:
+            self._close_baseline()
             self._baseline = None
             self._terminal = None
+
+    def _resource_warning(self, detail):
+        try:
+            sys.stderr.write(f"receptor resource: {_sanitize(detail)}\n")
+            sys.stderr.flush()
+        except Exception:
+            pass
+
+    def _close_baseline(self):
+        baseline, self._baseline = self._baseline, None
+        if baseline is None:
+            return
+        try:
+            baseline.close()
+        except Exception as exc:
+            self._resource_warning(
+                f"cannot close stats baseline {baseline.name}: {exc}"
+            )
+        try:
+            Path(baseline.name).unlink(missing_ok=True)
+        except Exception as exc:
+            self._resource_warning(
+                f"cannot remove stats baseline {baseline.name}: {exc}"
+            )
 
     def _read_baseline(self):
         if self._baseline is None:
@@ -1783,12 +1824,7 @@ class ReceptorPlugin:
         except Exception:
             return None
         finally:
-            try:
-                self._baseline.close()
-                Path(self._baseline.name).unlink()
-            except Exception:
-                pass
-            self._baseline = None
+            self._close_baseline()
         return text
 
     def _stats_line(self, shown):

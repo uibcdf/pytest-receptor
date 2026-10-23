@@ -2,15 +2,18 @@
 
 Reported defects that have not been triaged yet.
 
-There are no pending bug reports. The late-terminal discard-stream defect
-(`uibcdf/pytest-receptor#4`) and pathless external-helper rerun defect
-(`uibcdf/pytest-receptor#39`) are archived in `resolved_bugs/`.
+The runtime stream lifecycle and documentation cleanup defects discovered during
+`uibcdf/pytest-receptor#42` are tracked in #43 and #44. Earlier repairs, including
+#4 and #39, remain archived in `resolved_bugs/`.
 
 See the [local reporting protocol](../reporting_protocol.md).
 
 <!-- generated: devguide_index -->
 
-*No entries.*
+### Active (2)
+
+- [`docs_clean_operand_ownership.md`](docs_clean_operand_ownership.md) — [#44](https://github.com/uibcdf/pytest-receptor/issues/44) — Keep documentation cleanup within the selected build directory. *(active, reproduced)*
+- [`runtime_evidence_resource_lifecycle.md`](runtime_evidence_resource_lifecycle.md) — [#43](https://github.com/uibcdf/pytest-receptor/issues/43) — Retain runtime stream ownership and expose cleanup failures. *(active, reproduced)*
 
 <!-- /generated -->
 

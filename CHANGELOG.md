@@ -8,6 +8,10 @@ All notable changes to this project are recorded here. The format follows
 
 ### Fixed
 
+- Close owned runtime evidence streams on setup/finalization failures and expose
+  cleanup errors without changing pytest outcomes (#43).
+- Keep documentation cleanup paths containing spaces or a leading dash from
+  becoming unrelated deletion operands or options (#44).
 - Keep external tests' rerun targets separate from imported helpers' crash
   locations when a fixed pytest rootdir leaves node IDs without a path (#39).
 

@@ -48,6 +48,18 @@ Evidence is streamed, so an interrupted process normally leaves useful partial
 records. `SIGKILL`, host loss, storage failure, and buffered filesystem loss can
 still prevent capture; the artifact does not claim otherwise.
 
+The requested JSONL file is retained after both success and failure; it is
+caller-owned evidence, not disposable scratch. Failures closing its stream are
+reported on stderr without changing pytest's outcome. Read the retained file to
+establish its actual completion and integrity; a close warning alone cannot
+establish either. Stats baseline files are disposable and are closed and removed
+after use, including failed preparation. Cleanup errors are reported on stderr.
+
+If startup cannot clear the previous cached text report, stderr includes a
+`receptor resource:` diagnostic. The previous file may remain: use the current
+stdout result or a fresh explicitly selected JSONL destination instead of treating
+that cached file as evidence for the active run.
+
 ## Reader API
 
 ```python

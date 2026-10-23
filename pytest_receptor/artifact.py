@@ -108,11 +108,19 @@ class JsonlArtifactWriter:
                 os.O_WRONLY | os.O_CREAT | os.O_TRUNC | _NOFOLLOW,
                 0o600,
             )
-            self._handle = os.fdopen(descriptor, "wb")
+            try:
+                self._handle = os.fdopen(descriptor, "wb")
+            except BaseException:
+                os.close(descriptor)
+                raise
             os.chmod(path, 0o600)
-        except OSError as exc:
-            raise ArtifactError(str(exc)) from exc
-        self.write(start_record)
+            self.write(start_record)
+        except BaseException as exc:
+            if hasattr(self, "_handle"):
+                self._close_after_failure(exc)
+            if isinstance(exc, OSError):
+                raise ArtifactError(str(exc)) from exc
+            raise
 
     def write(self, record: Mapping[str, Any]) -> bool:
         if self._closed:
@@ -144,7 +152,7 @@ class JsonlArtifactWriter:
             self._handle.write(payload)
             self._handle.flush()
         except OSError as exc:
-            self.close()
+            self._close_after_failure(exc)
             raise ArtifactError(str(exc)) from exc
         self._digest.update(payload)
         self._record_count += 1
@@ -175,38 +183,51 @@ class JsonlArtifactWriter:
     def finalize(self, record: Mapping[str, Any]) -> None:
         if self._closed:
             raise ArtifactError("artifact is closed")
-        final = dict(record)
-        final["artifact_policy"] = {
-            "max_bytes": self.max_bytes,
-            "truncated": self._truncated,
-            "dropped_records": self._dropped_records,
-        }
-        final["integrity"] = {
-            "algorithm": "sha256",
-            "records": self._record_count,
-            "digest": self._digest.hexdigest(),
-        }
-        payload = _encode_record(final)
-        if self._bytes_written + len(payload) > self.max_bytes:
-            raise ArtifactError("final record exceeds artifact max bytes")
         try:
+            final = dict(record)
+            final["artifact_policy"] = {
+                "max_bytes": self.max_bytes,
+                "truncated": self._truncated,
+                "dropped_records": self._dropped_records,
+            }
+            final["integrity"] = {
+                "algorithm": "sha256",
+                "records": self._record_count,
+                "digest": self._digest.hexdigest(),
+            }
+            payload = _encode_record(final)
+            if self._bytes_written + len(payload) > self.max_bytes:
+                raise ArtifactError("final record exceeds artifact max bytes")
             self._handle.write(payload)
             self._handle.flush()
             os.fsync(self._handle.fileno())
             self._bytes_written += len(payload)
-        except OSError as exc:
-            raise ArtifactError(str(exc)) from exc
-        finally:
+        except BaseException as exc:
+            self._close_after_failure(exc)
+            if isinstance(exc, OSError):
+                raise ArtifactError(str(exc)) from exc
+            raise
+        self.close()
+
+    def _close_after_failure(self, error: BaseException) -> None:
+        try:
             self.close()
+        except ArtifactError as close_error:
+            if isinstance(error, Exception):
+                raise ArtifactError(f"{error}; {close_error}") from error
+            # Never convert an interrupt/SystemExit into a recoverable artifact
+            # error that the pytest adapter would swallow. Retain both faults.
+            error.add_note(str(close_error))
 
     def close(self) -> None:
         if self._closed:
             return
-        self._closed = True
         try:
             self._handle.close()
-        except OSError:
-            pass
+        except OSError as exc:
+            self._closed = self._handle.closed
+            raise ArtifactError(f"cannot close artifact {self.path}: {exc}") from exc
+        self._closed = True
 
 
 def read_artifact(path: str | os.PathLike[str]) -> Artifact:

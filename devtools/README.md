@@ -14,8 +14,9 @@ conda activate pytest-receptor-build
 
 The normal path is the `Build and upload conda packages` GitHub workflow. A
 manual dispatch takes an exact candidate commit and semantic version, builds one
-`noarch` artifact, and uploads only to the `staging` label. A GitHub Release
-from an exact tag is the separate path that uploads to `main`. See the full
+`noarch` artifact, and uploads only to the `staging` label. Conda publication
+to `main` promotes that same tested archive through the separate promotion
+workflow. A GitHub Release triggers the PyPI publisher. See the full
 runbook in [`conda-build/README.md`](conda-build/README.md).
 
 Local builds are diagnostic only. They require an exact local tag because both
@@ -28,10 +29,11 @@ conda build devtools/conda-build
 ## Platform and Python coverage
 
 The recipe is `noarch: python`: because the plugin is pure Python with no compiled
-extensions, a single `conda build` produces one architecture-independent package
-that installs on **linux, osx and win**, and the `python >=3.11,<3.15` run
-constraint makes that same package valid on **Python 3.11 through 3.14**. There
-is no build matrix and nothing per-platform to publish.
+extensions, a single `conda build` produces one architecture-independent
+artifact. Installed qualification covers **Linux and macOS arm64** on
+**Python 3.11 through 3.14**. The metadata constraint is `python >=3.11,<3.15`;
+the noarch format alone does not establish Windows runtime support. There is
+no per-platform build matrix; the installed test matrix remains required.
 
 ## Versioning
 
@@ -53,6 +55,15 @@ python devtools/benchmarks/run_performance.py
 The performance harness uses a unique temporary directory, disables unrelated
 third-party plugins, and removes it after the run, so concurrent invocations do
 not interfere.
+
+## Resource ownership and closeout
+
+The operation-by-operation [resource review](../devguide/temporary_resources.md)
+records scratch ownership, retained outputs, cleanup/error behavior, hosted
+runner boundaries and explicit historical-path observations under
+`uibcdf/pytest-receptor#42`. Use it when reviewing task resources or changing a
+tool. Build outputs, evidence files, shared environments and other callers'
+work are not interchangeable with disposable scratch.
 
 ## Reporting records
 

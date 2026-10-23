@@ -15,7 +15,7 @@ help:
 .PHONY: help clean html
 
 clean:
-	rm -rf $(BUILDDIR)/*
+	rm -rf -- "$(BUILDDIR)"/*
 
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS)
