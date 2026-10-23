@@ -7,10 +7,14 @@ safety, and compatibility. Each test names the register identifier it protects.
 import importlib.util
 import os
 import re
+import shlex
+import sys
 from pathlib import Path
 from xml.etree import ElementTree
 
 import pytest
+
+from pytest_receptor import read_artifact
 
 # --------------------------------------------------------------------- truth
 
@@ -755,6 +759,79 @@ def test_external_grouped_tests_rerun_keeps_the_file(pytester):
     )
     result.stdout.fnmatch_lines(["*rerun: pytest outside/test_ext.py -q*"])
     assert "pytest ::" not in result.stdout.str()
+
+
+@pytest.mark.parametrize("cases", [1, 2], ids=["single", "grouped"])
+@pytest.mark.parametrize("distributed", [False, True], ids=["serial", "xdist"])
+def test_external_helper_failure_rerun_selects_original_tests(
+    pytester, cases, distributed
+):
+    """#39: a foreign crash site is not the pathless test's rerun target."""
+    if distributed:
+        pytest.importorskip("xdist")
+    project = pytester.mkdir("project")
+    config = project / "pyproject.toml"
+    config.write_text("[tool.pytest.ini_options]\n")
+    outside = pytester.mkdir("outside")
+    helper = outside / "helper.py"
+    helper.write_text(
+        "def fail_in_helper():\n"
+        "    raise AttributeError('controlled foreign helper failure')\n"
+    )
+    test_file = outside / "test_external.py"
+    test_file.write_text(
+        "import pytest\n"
+        "from helper import fail_in_helper\n"
+        f"@pytest.mark.parametrize('token', range({cases}))\n"
+        "def test_external_failure(token):\n"
+        "    fail_in_helper()\n"
+    )
+    base_args = ["-c", str(config), "-o", f"pythonpath={outside}"]
+    if distributed:
+        base_args.extend(["-n", "2"])
+    runner = shlex.join([sys.executable, "-m", "pytest", *base_args, "--receptor=llm"])
+    native = pytester.runpytest_subprocess(*base_args, str(test_file))
+    native.assert_outcomes(failed=cases)
+    assert native.ret == pytest.ExitCode.TESTS_FAILED
+
+    result = pytester.runpytest_subprocess(
+        *base_args,
+        "--receptor=llm",
+        "--receptor-events=events.jsonl",
+        "-o",
+        f"receptor_rerun_command={runner}",
+        str(test_file),
+    )
+    assert result.ret == native.ret
+    output = result.stdout.str()
+    result.stdout.fnmatch_lines([f"FAIL exit=1 | {cases} failed*"])
+    artifact = read_artifact(pytester.path / "events.jsonl")
+    assert artifact.complete and artifact.integrity_valid
+    failures = [
+        event.data
+        for event in artifact.events
+        if event.type == "phase" and event.data["outcome"] == "failed"
+    ]
+    assert len(failures) == cases
+    assert all(event["nodeid"].startswith("::") for event in failures)
+    assert all("helper.py:2" in event["exception"]["location"] for event in failures)
+
+    commands = re.findall(r"^\s+rerun: (.+)$", output, re.MULTILINE)
+    assert len(commands) == 1
+    # Execute the actual rendered command with its fixed config and Python.
+    rerun = pytester.run(*shlex.split(commands[0]), timeout=30)
+    assert rerun.ret == pytest.ExitCode.TESTS_FAILED
+    rerun.stdout.fnmatch_lines([f"FAIL exit=1 | {cases} failed*"])
+    selection = shlex.split(commands[0])[len(shlex.split(runner)) : -1]
+    assert selection == [
+        "outside/test_external.py::test_external_failure[0]"
+        if cases == 1
+        else "outside/test_external.py"
+    ]
+    assert all(event["test_path"] == "outside/test_external.py" for event in failures)
+    if cases > 1:
+        for token in range(cases):
+            assert f"outside/test_external.py::test_external_failure[{token}]" in output
 
 
 def test_ordinary_failure_counts_are_never_withheld(pytester):

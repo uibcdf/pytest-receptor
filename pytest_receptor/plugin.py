@@ -326,6 +326,7 @@ class Occurrence:
     attempts: int = 1
     subtest: str = ""
     subtest_index: int = 0
+    test_path: str = ""
 
 
 @dataclass
@@ -795,6 +796,9 @@ class ReceptorPlugin:
             exception=exception,
             sections=sections,
             subtest=subtest,
+            test_path=_sanitize(
+                self._display_path((getattr(report, "location", None) or ("",))[0])
+            ),
         )
         self._evidence.add_phase(event)
         self._write_artifact_phase(event)
@@ -1160,6 +1164,7 @@ class ReceptorPlugin:
                     nodeid=event.nodeid,
                     phase=phase,
                     location=location,
+                    test_path=event.test_path,
                     sections=self._renderable_sections(event.sections),
                     attempts=event.attempt,
                     subtest=(
@@ -1630,13 +1635,16 @@ class ReceptorPlugin:
         """The test file for an occurrence, resolvable from the invocation dir.
 
         Prefer the node ID's path. pytest can hand back a *pathless* node ID
-        (`::test_name`) for a test outside a forced `-c`/rootdir; the file is
-        still known from the failure location (`<file>:<lineno>`), so recover it
-        from there rather than emit an unusable `::test_name` selection.
+        (`::test_name`) for a test outside a forced `-c`/rootdir. Use the
+        collected test path from report.location, independently of a crash in
+        an imported helper. The crash location is only a legacy fallback for
+        reports without a collected test path.
         """
         path = occurrence.nodeid.partition("::")[0]
         if path:
             return self._display_path(path)
+        if occurrence.test_path:
+            return occurrence.test_path
         head, sep, tail = occurrence.location.rpartition(":")
         if sep and tail.isdigit():
             return head

@@ -78,6 +78,11 @@ Minor evolution within `events@1` may add fields and record types. Consumers
 must ignore unknown fields and retain unknown records when rewriting an
 artifact. An incompatible change requires a new schema major.
 
+Phase records retain the collected test file in `test_path`, resolved from the
+invocation directory. This can differ from `exception.location`, which identifies
+the crash site, for example inside an imported helper. Older `events@1` artifacts
+may omit `test_path`; their existing exception evidence retains its meaning.
+
 ## Extension producer API
 
 The receptor owns namespaced extension records in the same JSONL stream as

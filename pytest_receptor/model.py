@@ -58,6 +58,8 @@ class PhaseEvent:
     exception: ExceptionEvidence | None = None
     sections: tuple[CapturedSection, ...] = ()
     subtest: SubtestIdentity | None = None
+    #: Collected test file, independent of the exception's crash location.
+    test_path: str = ""
 
 
 @dataclass(frozen=True)
