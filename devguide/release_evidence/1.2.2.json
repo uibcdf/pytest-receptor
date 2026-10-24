@@ -1,0 +1,1715 @@
+{
+  "admin_gates": [
+    {
+      "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+      "conclusion": "success",
+      "executed_jobs": {
+        "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+        "jobs": [
+          {
+            "job_id": 120953228247,
+            "name": "reporting",
+            "required_steps": [
+              "Check reports and generated indexes"
+            ]
+          }
+        ],
+        "run_attempt": 1,
+        "run_id": 40121309163,
+        "schema": "molsyssuite.native-gate@1",
+        "state": "verified",
+        "workflow": ".github/workflows/reporting-governance.yml"
+      },
+      "run_id": 40121309163,
+      "workflow": ".github/workflows/reporting-governance.yml"
+    },
+    {
+      "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+      "conclusion": "success",
+      "executed_jobs": {
+        "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+        "jobs": [
+          {
+            "job_id": 120953228595,
+            "name": "policy / conformance",
+            "required_steps": [
+              "Check repository conformance",
+              "Check Python lint and imports",
+              "Check Python formatting"
+            ]
+          }
+        ],
+        "run_attempt": 1,
+        "run_id": 40121309333,
+        "schema": "molsyssuite.native-gate@1",
+        "state": "verified",
+        "workflow": ".github/workflows/molsyssuite-policy.yml"
+      },
+      "run_id": 40121309333,
+      "workflow": ".github/workflows/molsyssuite-policy.yml"
+    },
+    {
+      "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+      "conclusion": "success",
+      "executed_jobs": {
+        "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+        "jobs": [
+          {
+            "job_id": 120953229286,
+            "name": "publication / check",
+            "required_steps": [
+              "Check publication workflow controls",
+              "Check declared noarch recipe and resources without building"
+            ]
+          }
+        ],
+        "run_attempt": 1,
+        "run_id": 40121309530,
+        "schema": "molsyssuite.native-gate@1",
+        "state": "verified",
+        "workflow": ".github/workflows/conda-publication-governance.yaml"
+      },
+      "run_id": 40121309530,
+      "workflow": ".github/workflows/conda-publication-governance.yaml"
+    },
+    {
+      "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+      "conclusion": "success",
+      "executed_jobs": {
+        "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+        "jobs": [
+          {
+            "job_id": 120953227999,
+            "name": "build-docs",
+            "required_steps": [
+              "Build HTML Docs"
+            ]
+          },
+          {
+            "job_id": 120953306012,
+            "name": "deploy-docs",
+            "required_steps": [
+              "Deploy to GitHub Pages"
+            ]
+          }
+        ],
+        "run_attempt": 1,
+        "run_id": 40121309105,
+        "schema": "molsyssuite.native-gate@1",
+        "state": "verified",
+        "workflow": ".github/workflows/docs.yml"
+      },
+      "run_id": 40121309105,
+      "workflow": ".github/workflows/docs.yml"
+    }
+  ],
+  "benchmark_measurement_metadata": {
+    "last-performance.json": {
+      "artifact_status": "locally built patch-candidate measurement wheel; not a registry receipt",
+      "cpu_count": 20,
+      "dependencies": [
+        {
+          "name": "certifi",
+          "version": "2026.10.23"
+        },
+        {
+          "name": "charset-normalizer",
+          "version": "3.5.2"
+        },
+        {
+          "name": "execnet",
+          "version": "2.1.2"
+        },
+        {
+          "name": "idna",
+          "version": "3.20"
+        },
+        {
+          "name": "iniconfig",
+          "version": "2.3.1"
+        },
+        {
+          "name": "packaging",
+          "version": "26.3"
+        },
+        {
+          "name": "pip",
+          "version": "26.2.1"
+        },
+        {
+          "name": "pluggy",
+          "version": "1.7.0"
+        },
+        {
+          "name": "Pygments",
+          "version": "2.21.0"
+        },
+        {
+          "name": "pytest",
+          "version": "9.1.1"
+        },
+        {
+          "name": "pytest-receptor",
+          "version": "1.2.2"
+        },
+        {
+          "name": "pytest-xdist",
+          "version": "3.8.0"
+        },
+        {
+          "name": "regex",
+          "version": "2026.9.29"
+        },
+        {
+          "name": "requests",
+          "version": "2.34.2"
+        },
+        {
+          "name": "tiktoken",
+          "version": "0.14.0"
+        },
+        {
+          "name": "urllib3",
+          "version": "2.8.0"
+        }
+      ],
+      "harness_sha256": "db798b163eed919f36e0963a57cbd8cd87eb40350b3b20e59020e7932dab130c",
+      "measured": "2026-10-24",
+      "measurement_process": "fresh performance-only process; no tokenizer imports in measuring parent",
+      "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+      "plugin_autoload": false,
+      "pytest": "9.1.1",
+      "pytest_receptor": "1.2.2",
+      "python": "3.14.7",
+      "repeat": 5,
+      "runtime_sources_sha256": {
+        "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
+        "pytest_receptor/artifact.py": "fe05375dd54a9916323fd5527d062fcd8a94cbdef48814ca4ce6b78eb16900a0",
+        "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
+        "pytest_receptor/model.py": "f133056d200256423102f3a2787888aff71d2c4c4bc74cc7f471d4318c0f1b13",
+        "pytest_receptor/plugin.py": "3d671ad07bf9c99217d976ee98210357c9544be29bda505e770ef0913f4b3354"
+      },
+      "runtime_wheel_sha256": "9d670b99ce32308e7180ef1c50e10660a1e7090ee05d19bbda8c82f27751eb45",
+      "source_sha": "74631c1e4606db81a9666eeb2606d9c66157ce31",
+      "tests": 1000
+    },
+    "last-run.json": {
+      "artifact_status": "locally built patch-candidate measurement wheel; not a registry receipt",
+      "baseline": "pytest -q --no-header --tb=short",
+      "dependencies": [
+        {
+          "name": "certifi",
+          "version": "2026.10.23"
+        },
+        {
+          "name": "charset-normalizer",
+          "version": "3.5.2"
+        },
+        {
+          "name": "execnet",
+          "version": "2.1.2"
+        },
+        {
+          "name": "idna",
+          "version": "3.20"
+        },
+        {
+          "name": "iniconfig",
+          "version": "2.3.1"
+        },
+        {
+          "name": "packaging",
+          "version": "26.3"
+        },
+        {
+          "name": "pip",
+          "version": "26.2.1"
+        },
+        {
+          "name": "pluggy",
+          "version": "1.7.0"
+        },
+        {
+          "name": "Pygments",
+          "version": "2.21.0"
+        },
+        {
+          "name": "pytest",
+          "version": "9.1.1"
+        },
+        {
+          "name": "pytest-receptor",
+          "version": "1.2.2"
+        },
+        {
+          "name": "pytest-xdist",
+          "version": "3.8.0"
+        },
+        {
+          "name": "regex",
+          "version": "2026.9.29"
+        },
+        {
+          "name": "requests",
+          "version": "2.34.2"
+        },
+        {
+          "name": "tiktoken",
+          "version": "0.14.0"
+        },
+        {
+          "name": "urllib3",
+          "version": "2.8.0"
+        }
+      ],
+      "harness_sha256": "87356d63098569f9f16598f17a0a0243f18ca4c86c08dbfb18d29a764c18b2e0",
+      "measured": "2026-10-24",
+      "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+      "plugin_autoload": true,
+      "pytest": "9.1.1",
+      "pytest_receptor": "1.2.2",
+      "python": "3.14.7",
+      "runtime_sources_sha256": {
+        "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
+        "pytest_receptor/artifact.py": "fe05375dd54a9916323fd5527d062fcd8a94cbdef48814ca4ce6b78eb16900a0",
+        "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
+        "pytest_receptor/model.py": "f133056d200256423102f3a2787888aff71d2c4c4bc74cc7f471d4318c0f1b13",
+        "pytest_receptor/plugin.py": "3d671ad07bf9c99217d976ee98210357c9544be29bda505e770ef0913f4b3354"
+      },
+      "runtime_wheel_sha256": "9d670b99ce32308e7180ef1c50e10660a1e7090ee05d19bbda8c82f27751eb45",
+      "source_sha": "74631c1e4606db81a9666eeb2606d9c66157ce31",
+      "tokenizer": "cl100k_base"
+    },
+    "last-scale.json": {
+      "artifact_status": "locally built patch-candidate measurement wheel; not a registry receipt",
+      "baseline": "pytest -q -n 12",
+      "dependencies": [
+        {
+          "name": "certifi",
+          "version": "2026.10.23"
+        },
+        {
+          "name": "charset-normalizer",
+          "version": "3.5.2"
+        },
+        {
+          "name": "execnet",
+          "version": "2.1.2"
+        },
+        {
+          "name": "idna",
+          "version": "3.20"
+        },
+        {
+          "name": "iniconfig",
+          "version": "2.3.1"
+        },
+        {
+          "name": "packaging",
+          "version": "26.3"
+        },
+        {
+          "name": "pip",
+          "version": "26.2.1"
+        },
+        {
+          "name": "pluggy",
+          "version": "1.7.0"
+        },
+        {
+          "name": "Pygments",
+          "version": "2.21.0"
+        },
+        {
+          "name": "pytest",
+          "version": "9.1.1"
+        },
+        {
+          "name": "pytest-receptor",
+          "version": "1.2.2"
+        },
+        {
+          "name": "pytest-xdist",
+          "version": "3.8.0"
+        },
+        {
+          "name": "regex",
+          "version": "2026.9.29"
+        },
+        {
+          "name": "requests",
+          "version": "2.34.2"
+        },
+        {
+          "name": "tiktoken",
+          "version": "0.14.0"
+        },
+        {
+          "name": "urllib3",
+          "version": "2.8.0"
+        }
+      ],
+      "harness_sha256": "87356d63098569f9f16598f17a0a0243f18ca4c86c08dbfb18d29a764c18b2e0",
+      "measured": "2026-10-24",
+      "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+      "plugin_autoload": true,
+      "pytest": "9.1.1",
+      "pytest_receptor": "1.2.2",
+      "python": "3.14.7",
+      "runtime_sources_sha256": {
+        "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
+        "pytest_receptor/artifact.py": "fe05375dd54a9916323fd5527d062fcd8a94cbdef48814ca4ce6b78eb16900a0",
+        "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
+        "pytest_receptor/model.py": "f133056d200256423102f3a2787888aff71d2c4c4bc74cc7f471d4318c0f1b13",
+        "pytest_receptor/plugin.py": "3d671ad07bf9c99217d976ee98210357c9544be29bda505e770ef0913f4b3354"
+      },
+      "runtime_wheel_sha256": "9d670b99ce32308e7180ef1c50e10660a1e7090ee05d19bbda8c82f27751eb45",
+      "source_sha": "74631c1e4606db81a9666eeb2606d9c66157ce31",
+      "tests": 8000,
+      "tokenizer": "cl100k_base",
+      "workers": 12
+    }
+  },
+  "conda": {
+    "filename": "pytest-receptor-1.2.2-py_0.tar.bz2",
+    "overwrite": false,
+    "promotion": {
+      "package": "uibcdf/pytest-receptor/1.2.2/noarch/pytest-receptor-1.2.2-py_0.tar.bz2",
+      "schema": "uibcdf.conda-promotion@1",
+      "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+      "source_label": "staging",
+      "status": "verified",
+      "target_label": "main"
+    },
+    "public_verification": {
+      "checked_at": "2026-10-24T19:04:25.691310+00:00",
+      "files": [
+        {
+          "filename": "pytest-receptor-1.2.2-py_0.tar.bz2",
+          "main_label": "verified",
+          "owner": "uibcdf",
+          "package": "pytest-receptor",
+          "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+          "solver_index": "verified",
+          "subdir": "noarch",
+          "url": "https://conda.anaconda.org/uibcdf/noarch/pytest-receptor-1.2.2-py_0.tar.bz2",
+          "version": "1.2.2"
+        }
+      ],
+      "schema": "molsyssuite.public-conda@1",
+      "state": "verified"
+    },
+    "rebuild": false,
+    "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+    "staging_label_preserved": true,
+    "upload": {
+      "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+      "checked_at": "2026-10-24T18:42:59.820509+00:00",
+      "coordinate": {
+        "filename": "pytest-receptor-1.2.2-py_0.tar.bz2",
+        "owner": "uibcdf",
+        "package": "pytest-receptor",
+        "subdir": "noarch",
+        "version": "1.2.2"
+      },
+      "label": "staging",
+      "preflight": {
+        "scope": "all-labels",
+        "state": "absent"
+      },
+      "schema": "uibcdf.conda-upload@1",
+      "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+      "state": "verified",
+      "subject": {
+        "repository": "uibcdf/pytest-receptor",
+        "run_attempt": "1",
+        "run_id": "40121753074"
+      }
+    }
+  },
+  "date": "2026-10-24",
+  "github_release": {
+    "html_url": "https://github.com/uibcdf/pytest-receptor/releases/tag/1.2.2",
+    "id": 422924318,
+    "name": "1.2.2",
+    "published_at": "2026-10-24T19:01:54Z",
+    "tag_name": "1.2.2"
+  },
+  "installed_closure_receipt": "1.2.2-installed-closures.json",
+  "installed_matrix": {
+    "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "checked_at": "2026-10-24T18:54:38.557733+00:00",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "job_id": 120955558066,
+        "kind": "prepare",
+        "name": "installed / prepare"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783889,
+        "kind": "installed",
+        "name": "installed / osx-arm64 \u00b7 Python 3.14",
+        "platform": "osx-arm64",
+        "python": "3.14"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783908,
+        "kind": "installed",
+        "name": "installed / linux-64 \u00b7 Python 3.12",
+        "platform": "linux-64",
+        "python": "3.12"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783926,
+        "kind": "installed",
+        "name": "installed / linux-64 \u00b7 Python 3.13",
+        "platform": "linux-64",
+        "python": "3.13"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783934,
+        "kind": "installed",
+        "name": "installed / osx-arm64 \u00b7 Python 3.12",
+        "platform": "osx-arm64",
+        "python": "3.12"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783945,
+        "kind": "installed",
+        "name": "installed / osx-arm64 \u00b7 Python 3.13",
+        "platform": "osx-arm64",
+        "python": "3.13"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955784006,
+        "kind": "installed",
+        "name": "installed / linux-64 \u00b7 Python 3.14",
+        "platform": "linux-64",
+        "python": "3.14"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955784067,
+        "kind": "installed",
+        "name": "installed / osx-arm64 \u00b7 Python 3.11",
+        "platform": "osx-arm64",
+        "python": "3.11"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955784269,
+        "kind": "installed",
+        "name": "installed / linux-64 \u00b7 Python 3.11",
+        "platform": "linux-64",
+        "python": "3.11"
+      }
+    ],
+    "repository": "uibcdf/pytest-receptor",
+    "run_attempt": 1,
+    "run_id": 40122053512,
+    "schema": "molsyssuite.installed-matrix@1",
+    "state": "verified",
+    "title": "Installed pytest-receptor-1.2.2-py_0.tar.bz2 c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+    "workflow": ".github/workflows/test_installed_conda.yaml"
+  },
+  "installed_native_steps": {
+    "filename": "pytest-receptor-1.2.2-py_0.tar.bz2",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "job_id": 120955783889,
+        "name": "installed / osx-arm64 \u00b7 Python 3.14",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783908,
+        "name": "installed / linux-64 \u00b7 Python 3.12",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783926,
+        "name": "installed / linux-64 \u00b7 Python 3.13",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783934,
+        "name": "installed / osx-arm64 \u00b7 Python 3.12",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955783945,
+        "name": "installed / osx-arm64 \u00b7 Python 3.13",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955784006,
+        "name": "installed / linux-64 \u00b7 Python 3.14",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955784067,
+        "name": "installed / osx-arm64 \u00b7 Python 3.11",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "job_id": 120955784269,
+        "name": "installed / linux-64 \u00b7 Python 3.11",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Install exact artifact",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate installed files",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run installed tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Recheck installed provenance after scientific tests",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "qualification_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "repository": "uibcdf/pytest-receptor",
+    "run_attempt": 1,
+    "run_id": 40122053512,
+    "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+    "source_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "state": "verified"
+  },
+  "installed_source_binding": {
+    "build_number": 0,
+    "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "filename": "pytest-receptor-1.2.2-py_0.tar.bz2",
+    "matrix": "{\"include\": [{\"platform\": \"linux-64\", \"python\": \"3.11\", \"runner\": \"ubuntu-latest\"}, {\"platform\": \"linux-64\", \"python\": \"3.12\", \"runner\": \"ubuntu-latest\"}, {\"platform\": \"linux-64\", \"python\": \"3.13\", \"runner\": \"ubuntu-latest\"}, {\"platform\": \"linux-64\", \"python\": \"3.14\", \"runner\": \"ubuntu-latest\"}, {\"platform\": \"osx-arm64\", \"python\": \"3.11\", \"runner\": \"macos-15\"}, {\"platform\": \"osx-arm64\", \"python\": \"3.12\", \"runner\": \"macos-15\"}, {\"platform\": \"osx-arm64\", \"python\": \"3.13\", \"runner\": \"macos-15\"}, {\"platform\": \"osx-arm64\", \"python\": \"3.14\", \"runner\": \"macos-15\"}]}",
+    "package": "pytest-receptor",
+    "profile": "{\"platforms\": [\"linux-64\", \"osx-arm64\"], \"python_versions\": [\"3.11\", \"3.12\", \"3.13\", \"3.14\"], \"prepare_job\": \"installed / prepare\", \"required_steps\": [\"Install exact artifact\", \"Validate installed files\", \"Run installed tests\"], \"job_template\": \"installed / {platform} \\u00b7 Python {python}\"}",
+    "qualification_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "run_attempt": 1,
+    "run_id": 40122053512,
+    "schema": "molsyssuite.installed-source@1",
+    "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+    "title": "Installed pytest-receptor-1.2.2-py_0.tar.bz2 c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+    "version": "1.2.2",
+    "workflow": ".github/workflows/test_installed_conda.yaml"
+  },
+  "installed_test_counts": [
+    {
+      "passed": 264,
+      "platform": "osx-arm64",
+      "python": "3.14",
+      "summary": "PASS exit=0 | 264 passed | 91.85s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "linux-64",
+      "python": "3.12",
+      "summary": "PASS exit=0 | 264 passed | 60.17s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "linux-64",
+      "python": "3.13",
+      "summary": "PASS exit=0 | 264 passed | 54.22s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "osx-arm64",
+      "python": "3.12",
+      "summary": "PASS exit=0 | 264 passed | 64.00s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "osx-arm64",
+      "python": "3.13",
+      "summary": "PASS exit=0 | 264 passed | 49.48s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "linux-64",
+      "python": "3.14",
+      "summary": "PASS exit=0 | 264 passed | 64.00s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "osx-arm64",
+      "python": "3.11",
+      "summary": "PASS exit=0 | 264 passed | 43.36s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    },
+    {
+      "passed": 264,
+      "platform": "linux-64",
+      "python": "3.11",
+      "summary": "PASS exit=0 | 264 passed | 45.36s",
+      "test_tools": {
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-receptor": "1.2.2",
+        "pytest-rerunfailures": "16.6.1",
+        "pytest-subtests": "0.15.0",
+        "pytest-xdist": "3.8.0"
+      }
+    }
+  ],
+  "limits": {
+    "broad_action_rollout_and_withdrawal_deferred": [
+      "uibcdf/molsyssuite#87",
+      "uibcdf/moli#42"
+    ],
+    "fresh_public_install_scope": "pip Python 3.14.7 and Conda Python 3.14.9 on Linux; complete exact-file installed Conda matrix recorded separately",
+    "intel_macos_claim": false,
+    "new_zenodo_archival_claim": false,
+    "no_automatic_consumer_or_provider_updates": true,
+    "windows_runtime_claim": false
+  },
+  "owner_issue": "uibcdf/pytest-receptor#45",
+  "public_clean_installs": [
+    {
+      "controlled_external_failures": 2,
+      "editable": false,
+      "generated_rerun_exit": 1,
+      "generated_rerun_reproduces_original_failures": true,
+      "green_smoke_passed": 1,
+      "import_inside_prefix": true,
+      "jsonl_complete": true,
+      "jsonl_integrity_valid": true,
+      "plugin_discovered": true,
+      "public_artifact": {
+        "sha256": "48c290fba7e12d19015fa436989fdad465d5ff7bba78fa94f7825e305ccf7961",
+        "url": "https://files.pythonhosted.org/packages/51/04/7de494b23276135ebc27e1b89abbd85c588c658489e5749ff9e3ab731fd5/pytest_receptor-1.2.2-py3-none-any.whl"
+      },
+      "pytest": "9.1.1",
+      "python": "3.14.7",
+      "route": "pip",
+      "version": "1.2.2"
+    },
+    {
+      "controlled_external_failures": 2,
+      "editable": false,
+      "generated_rerun_exit": 1,
+      "generated_rerun_reproduces_original_failures": true,
+      "green_smoke_passed": 1,
+      "import_inside_prefix": true,
+      "jsonl_complete": true,
+      "jsonl_integrity_valid": true,
+      "plugin_discovered": true,
+      "public_artifact": {
+        "sha256": "c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74",
+        "url": "https://conda.anaconda.org/uibcdf/noarch/pytest-receptor-1.2.2-py_0.tar.bz2"
+      },
+      "pytest": "9.1.1",
+      "python": "3.14.9",
+      "route": "conda",
+      "version": "1.2.2"
+    }
+  ],
+  "publication_native_runs": {
+    "promotion": {
+      "conclusion": "success",
+      "event": "workflow_dispatch",
+      "jobs": [
+        {
+          "conclusion": "success",
+          "job_id": 120959665627,
+          "name": "promote / promote",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/checkout@v4",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/checkout@v4",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/setup-python@v5",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Bootstrap administrative checks",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Acquire exact-source executed CI gates",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Bind installed matrix to the planned exact file",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Verify existing installed matrix and executed steps",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run conda-incubator/setup-miniconda@v3",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Add public label to the same tested file without rebuilding",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Independently verify public label and solver index",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Retain source, installed, promotion and public receipts",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run conda-incubator/setup-miniconda@v3",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@v5",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job",
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "run_attempt": 1,
+      "run_id": 40123419141,
+      "source_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787"
+    },
+    "pypi": {
+      "conclusion": "success",
+      "event": "release",
+      "jobs": [
+        {
+          "conclusion": "success",
+          "job_id": 120959659815,
+          "name": "Build and verify distributions",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/checkout@v6",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/setup-python@v6",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Checkout pinned shared publication checks",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Install shared preflight parser dependencies",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Check reviewed dependency and runtime routes",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Verify exact-tag executed source gates",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Build release artifacts",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Verify metadata and release tag",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Install and discover the built plugin",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Retain exact-source gate receipt",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Store distributions for the publishing job",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Checkout pinned shared publication checks",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@v6",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job",
+              "status": "completed"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "job_id": 120959797075,
+          "name": "Publish to PyPI",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Download verified distributions",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Publish with PyPI Trusted Publishing",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Publish with PyPI Trusted Publishing",
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job",
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "run_attempt": 1,
+      "run_id": 40123418672,
+      "source_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787"
+    }
+  },
+  "pypi": {
+    "artifacts": [
+      {
+        "filename": "pytest_receptor-1.2.2-py3-none-any.whl",
+        "provenance": "https://pypi.org/integrity/pytest-receptor/1.2.2/pytest_receptor-1.2.2-py3-none-any.whl/provenance",
+        "sha256": "48c290fba7e12d19015fa436989fdad465d5ff7bba78fa94f7825e305ccf7961"
+      },
+      {
+        "filename": "pytest_receptor-1.2.2.tar.gz",
+        "provenance": "https://pypi.org/integrity/pytest-receptor/1.2.2/pytest_receptor-1.2.2.tar.gz/provenance",
+        "sha256": "978249bce07b49777d16c0474009e4d8b153d0c444c6adc0bfe97bf84f5bb052"
+      }
+    ],
+    "hosted_artifact_bytes_match_public": true,
+    "metadata_and_runtime_payload_verified": true,
+    "public_provenance_publisher_and_subjects_match": true,
+    "publisher": {
+      "environment": "pypi",
+      "repository": "uibcdf/pytest-receptor",
+      "workflow": "release.yml"
+    },
+    "source_gates": {
+      "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+      "gates": [
+        {
+          "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+          "conclusion": "success",
+          "executed_jobs": {
+            "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+            "jobs": [
+              {
+                "job_id": 120953227841,
+                "name": "lint",
+                "required_steps": [
+                  "Check reviewed dependency and runtime routes"
+                ]
+              },
+              {
+                "job_id": 120953295282,
+                "name": "py3.11 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295244,
+                "name": "py3.11 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295184,
+                "name": "py3.12 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295181,
+                "name": "py3.12 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295231,
+                "name": "py3.13 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295233,
+                "name": "py3.13 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295221,
+                "name": "py3.14 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953295182,
+                "name": "py3.14 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              }
+            ],
+            "run_attempt": 1,
+            "run_id": 40121309054,
+            "schema": "molsyssuite.native-gate@1",
+            "state": "verified",
+            "workflow": ".github/workflows/tests.yml"
+          },
+          "run_id": 40121309054,
+          "workflow": ".github/workflows/tests.yml"
+        },
+        {
+          "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+          "conclusion": "success",
+          "executed_jobs": {
+            "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+            "jobs": [
+              {
+                "job_id": 120953240449,
+                "name": "Full ubuntu-latest / py3.11 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240777,
+                "name": "Full ubuntu-latest / py3.11 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240683,
+                "name": "Full ubuntu-latest / py3.12 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240642,
+                "name": "Full ubuntu-latest / py3.12 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240685,
+                "name": "Full ubuntu-latest / py3.13 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240746,
+                "name": "Full ubuntu-latest / py3.13 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240744,
+                "name": "Full ubuntu-latest / py3.14 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240788,
+                "name": "Full ubuntu-latest / py3.14 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240754,
+                "name": "Full macos-15 / py3.14 / pytest 8",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              },
+              {
+                "job_id": 120953240735,
+                "name": "Full macos-15 / py3.14 / pytest 9",
+                "required_steps": [
+                  "Run the suite",
+                  "Run the suite distributed"
+                ]
+              }
+            ],
+            "run_attempt": 1,
+            "run_id": 40121311832,
+            "schema": "molsyssuite.native-gate@1",
+            "state": "verified",
+            "workflow": ".github/workflows/full-tests.yml"
+          },
+          "run_id": 40121311832,
+          "workflow": ".github/workflows/full-tests.yml"
+        }
+      ],
+      "provider_commit": "43b9f94bf5ab0ec3f54a4b2ca5b23b791d6af0bc",
+      "repository": "uibcdf/pytest-receptor",
+      "schema": "pytest-receptor.source-gates@1",
+      "tag": "1.2.2",
+      "tag_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787"
+    }
+  },
+  "qualification_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+  "release_plan": {
+    "artifact_subdirs": [
+      "noarch"
+    ],
+    "build_number": 0,
+    "coupled_release": false,
+    "decision_by": "dprada; 2026-10-24; uibcdf/pytest-receptor#45",
+    "dependencies_public": true,
+    "gate_jobs": {
+      ".github/workflows/full-tests.yml": {
+        "Full macos-15 / py3.14 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full macos-15 / py3.14 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.11 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.11 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.12 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.12 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.13 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.13 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.14 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "Full ubuntu-latest / py3.14 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ]
+      },
+      ".github/workflows/tests.yml": {
+        "lint": [
+          "Check reviewed dependency and runtime routes"
+        ],
+        "py3.11 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.11 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.12 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.12 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.13 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.13 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.14 / pytest 8": [
+          "Run the suite",
+          "Run the suite distributed"
+        ],
+        "py3.14 / pytest 9": [
+          "Run the suite",
+          "Run the suite distributed"
+        ]
+      }
+    },
+    "new_compatibility_surface": false,
+    "package": "pytest-receptor",
+    "profile": "noarch-python",
+    "python_versions": [
+      "3.11",
+      "3.12",
+      "3.13",
+      "3.14"
+    ],
+    "reason": "Qualify the exact installed file before publishing through the official Conda channel.",
+    "required_workflows": [
+      ".github/workflows/tests.yml",
+      ".github/workflows/full-tests.yml"
+    ],
+    "requires_installed_gate": true,
+    "route": "staged",
+    "schema": "molsyssuite.conda-plan@1",
+    "test_platforms": [
+      "linux-64",
+      "osx-arm64"
+    ],
+    "version": "1.2.2"
+  },
+  "resource_closeout": {
+    "cleanup_failures": [],
+    "durable_evidence": "Versioned release receipt, complete normalized installed closures, archived report and owning issues; small final API/comment drafts removed after their final upload.",
+    "foreign_consumer_worktree_registration_preserved": true,
+    "primary_checkout_preserved": true,
+    "public_conda_prefix_removed_with_manager": true,
+    "shared_development_environment_preserved": true,
+    "task_processes_completed": true,
+    "task_root": "/tmp/pytest-receptor-122-6jn92rq6",
+    "task_root_removed": true,
+    "three_independent_clones_checked_clean_before_removal": true
+  },
+  "source_preflight": {
+    "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "checked_at": "2026-10-24T18:37:52.353883+00:00",
+    "checkout_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+    "decision_by": "dprada; 2026-10-24; uibcdf/pytest-receptor#45",
+    "event": "workflow_dispatch",
+    "gates": [
+      {
+        "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+        "conclusion": "success",
+        "executed_jobs": {
+          "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+          "jobs": [
+            {
+              "job_id": 120953227841,
+              "name": "lint",
+              "required_steps": [
+                "Check reviewed dependency and runtime routes"
+              ]
+            },
+            {
+              "job_id": 120953295282,
+              "name": "py3.11 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295244,
+              "name": "py3.11 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295184,
+              "name": "py3.12 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295181,
+              "name": "py3.12 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295231,
+              "name": "py3.13 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295233,
+              "name": "py3.13 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295221,
+              "name": "py3.14 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953295182,
+              "name": "py3.14 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            }
+          ],
+          "run_attempt": 1,
+          "run_id": 40121309054,
+          "schema": "molsyssuite.native-gate@1",
+          "state": "verified",
+          "workflow": ".github/workflows/tests.yml"
+        },
+        "run_id": 40121309054,
+        "workflow": ".github/workflows/tests.yml"
+      },
+      {
+        "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+        "conclusion": "success",
+        "executed_jobs": {
+          "candidate_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+          "jobs": [
+            {
+              "job_id": 120953240449,
+              "name": "Full ubuntu-latest / py3.11 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240777,
+              "name": "Full ubuntu-latest / py3.11 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240683,
+              "name": "Full ubuntu-latest / py3.12 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240642,
+              "name": "Full ubuntu-latest / py3.12 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240685,
+              "name": "Full ubuntu-latest / py3.13 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240746,
+              "name": "Full ubuntu-latest / py3.13 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240744,
+              "name": "Full ubuntu-latest / py3.14 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240788,
+              "name": "Full ubuntu-latest / py3.14 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240754,
+              "name": "Full macos-15 / py3.14 / pytest 8",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            },
+            {
+              "job_id": 120953240735,
+              "name": "Full macos-15 / py3.14 / pytest 9",
+              "required_steps": [
+                "Run the suite",
+                "Run the suite distributed"
+              ]
+            }
+          ],
+          "run_attempt": 1,
+          "run_id": 40121311832,
+          "schema": "molsyssuite.native-gate@1",
+          "state": "verified",
+          "workflow": ".github/workflows/full-tests.yml"
+        },
+        "run_id": 40121311832,
+        "workflow": ".github/workflows/full-tests.yml"
+      }
+    ],
+    "package": "pytest-receptor",
+    "reason": "Qualify the exact installed file before publishing through the official Conda channel.",
+    "route": "staged",
+    "schema": "molsyssuite.conda-preflight@1",
+    "tag_sha": null,
+    "version": "1.2.2"
+  },
+  "source_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787",
+  "state": "published-and-verified",
+  "suite_notice": "uibcdf/molsyssuite#133",
+  "tag": {
+    "name": "1.2.2",
+    "object_sha": "1eaaf71b33cf11144a41322bef47c00f430db47b",
+    "target_sha": "531bafde5d48ddd8974e29ac91ae53ecae0fd787"
+  },
+  "tag_gates": {
+    "conclusion": "success",
+    "policy": 40123323764,
+    "publication_governance": 40123323767
+  },
+  "version": "1.2.2"
+}

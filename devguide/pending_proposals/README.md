@@ -62,10 +62,6 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
-### Active (1)
-
-- [`release_1_2_2.md`](release_1_2_2.md) — [#45](https://github.com/uibcdf/pytest-receptor/issues/45) — Publish and independently verify pytest-receptor 1.2.2. *(active, inspected)*
-
 ### Open (1)
 
 - [`ci_error_annotations.md`](ci_error_annotations.md) — [#9](https://github.com/uibcdf/pytest-receptor/issues/9) — Decide whether to emit CI error annotations from the ci profile. *(open, inspected)*

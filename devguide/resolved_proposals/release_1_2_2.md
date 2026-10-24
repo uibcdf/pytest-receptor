@@ -1,10 +1,10 @@
 ---
 summary: Publish and independently verify pytest-receptor 1.2.2.
 issue: uibcdf/pytest-receptor#45
-status: active
+status: resolved
 opened: 2026-10-24
-closed:
-verification: inspected
+closed: 2026-10-24
+verification: reproduced
 area: [release, distribution, compatibility]
 guard: tests/test_noarch_conda_publication.py
 normative:
@@ -123,3 +123,81 @@ pin/adoption work. New public package availability alone does not certify it.
 - Independently verify public PyPI wheel/sdist, provenance and clean install.
 - Archive/update durable evidence and #45, update central notice #133 and review
   task-owned resources for removal after their required use ends.
+
+## Resolution — 2026-10-24
+
+The annotated tag and GitHub Release `1.2.2` target
+`531bafde5d48ddd8974e29ac91ae53ecae0fd787`; release title/tag are both exactly
+`1.2.2`. Ordinary Tests `40121309054` and full compatibility `40121311832` pass
+at that source. Pinned native preflight verifies all required ordinary/full
+jobs/steps, including representative macOS arm64 Python 3.14 / pytest 8 and 9.
+Native reporting `40121309163`, policy `40121309333`, publication governance
+`40121309530` and Sphinx build/deployment `40121309105` pass. Tag policy
+`40123323764` and publication governance `40123323767` pass separately.
+
+Staging `40121753074` builds/uploads one exact archive and retains verified
+`uibcdf.conda-upload@1` evidence. Independent anonymous registry/download/resource
+checks confirm `noarch/pytest-receptor-1.2.2-py_0.tar.bz2`, build zero, SHA-256
+`c0b075286f45e8fce5ab5852947611bfba82b7d509115fc5dadf1a9572b9dd74`.
+Installed run `40122053512`, attempt 1, passes all eight Linux/macOS arm64 ×
+Python 3.11–3.14 cells, with **264 tests passed in each**. Producer and
+qualification source are the same release commit. Independent native checks
+verify the matrix and all 32 required execution/provenance steps. Source/file/run
+binding and complete dependency closures are retained. Native CLI log rendering
+labels steps `UNKNOWN STEP`; actual required-step execution is verified through
+native job metadata, and the unique bound job verdict supplies each test count.
+No missing step name is invented from that CLI rendering.
+
+Promotion `40123419141` verifies the existing installed matrix, promotes those
+same bytes to `main` and retains verified `uibcdf.conda-promotion@1` evidence.
+Staging remains. Independent public metadata, downloaded archive and solver
+repodata agree on the same filename/digest; no rebuild/overwrite occurred.
+
+PyPI `40123418672` passes exact-tag source/dependency checks, strict metadata and
+runtime payload validation, clean plugin discovery and Trusted Publishing. The
+protected `pypi` environment is approved only after those build gates pass.
+Anonymous public downloads and metadata verify wheel and sdist; both archives
+exactly match the native publisher's retained files and their public attested
+subjects. Publisher identity is this repository, `release.yml`, environment
+`pypi`. This receipt does not claim a separate local Sigstore signature audit.
+
+Fresh ordinary public installations pass: pip on Python 3.14.7 and Conda on
+Python 3.14.9, both Linux. Each imports the non-editable plugin from its own
+prefix, discovers pytest11, passes a real smoke test and executes the corrected
+external-helper rerun, reproducing the two original controlled failures with
+complete, integrity-valid JSONL. These checks are separate from the complete
+eight-cell exact-file installed Conda matrix.
+
+Public PyPI file hashes, native gate/run/job/step receipts, publisher/source/tag
+identities, benchmark provenance, upload/promotion/public verification and fresh
+install results are retained in `devguide/release_evidence/1.2.2.json`. Complete
+normalized installed dependency closures are retained separately in
+`devguide/release_evidence/1.2.2-installed-closures.json`. The static guard protects
+route/matrix/file controls; actual native and public receipts prove delivery.
+
+The version-specific notice `uibcdf/molsyssuite#133` records actual source,
+staging and public package events and the consumer follow-up disposition.
+Known receiving context remains `uibcdf/opencastp#13` through #39; no automatic
+consumer update is claimed. #9 remains an independent optional proposal.
+
+## Resource closeout
+
+All task-created build/measurement/public verification processes finish before
+disposal. The public Conda verification prefix is removed with its manager after
+its successful results are recorded. The unique owned task root contains clean
+independent provider/source clones, venvs, cache, generated tests/downloads and
+temporary scripts/receipts; these are retired after durable evidence and final
+handoff payloads are preserved. Clones are not primary-repository registered
+worktrees; clean tracked status is checked before disposal. Cleanup success or
+failure is recorded in the durable release receipt before issue closure.
+
+The primary checkout, shared `molsyssuite@uibcdf_3.14` environment and foreign
+consumer worktree registration remain protected. Small final API/comment drafts
+last through their final upload and are then removed. No broader `/tmp` cleanup
+or historical-deletion/space-reclaimed claim is made. No new platform or DOI
+claim is introduced by this release.
+
+Closeout confirms the owned `/tmp/pytest-receptor-122-6jn92rq6` task root is
+absent after the verification prefix was removed with Conda and all owned
+processes completed. The three independent clones were clean before removal;
+no cleanup failure occurred. Durable receipts retain the explicit outcome.
