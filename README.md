@@ -311,8 +311,8 @@ told it otherwise. So every test run spends tokens on a platform banner, a
 failing test — none of which the agent needs, all of which you pay for, on every
 iteration of every loop.
 
-Measured on 2026-10-03 with the 1.2.1 candidate wheel in a clean Linux
-environment: CPython 3.13.14, pytest 9.1.1, tiktoken 0.14.0 (`cl100k_base`)
+Measured on 2026-10-24 with the 1.2.2 candidate wheel in a clean Linux
+environment: CPython 3.14.7, pytest 9.1.1, tiktoken 0.14.0 (`cl100k_base`)
 and pytest-xdist 3.8.0. [Conditions and saved measurements](docs/benchmarks.md):
 
 | Scenario | `pytest` | `--receptor=llm` | Change |
@@ -336,8 +336,8 @@ been quietened:
 | Scenario | `-q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: |
 | Whole suite green | 812 | **17** | 97.9% |
-| One fixture breaks 200 tests | 22,874 | **107** | 99.5% |
-| Six unrelated bugs | 1,419 | **278** | 80.4% |
+| One fixture breaks 200 tests | 24,080 | **107** | 99.6% |
+| Six unrelated bugs | 1,455 | **278** | 80.9% |
 
 `-q` prints one progress character per test, so a *successful* eight-thousand
 test run costs 812 tokens of dots before anything has gone wrong.

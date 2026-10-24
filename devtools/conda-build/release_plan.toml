@@ -1,11 +1,11 @@
 schema = "molsyssuite.conda-plan@1"
-version = "1.2.1"
+version = "1.2.2"
 package = "pytest-receptor"
 build_number = 0
 route = "staged"
 profile = "noarch-python"
 reason = "Qualify the exact installed file before publishing through the official Conda channel."
-decision_by = "dprada; 2026-10-03; uibcdf/pytest-receptor#32"
+decision_by = "dprada; 2026-10-24; uibcdf/pytest-receptor#45"
 artifact_subdirs = ["noarch"]
 test_platforms = ["linux-64", "osx-arm64"]
 python_versions = ["3.11", "3.12", "3.13", "3.14"]

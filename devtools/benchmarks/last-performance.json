@@ -1,26 +1,23 @@
 {
   "metadata": {
-    "measured": "2026-10-03",
-    "python": "3.13.14",
+    "measured": "2026-10-24",
+    "python": "3.14.7",
     "pytest": "9.1.1",
-    "pytest_receptor": "1.2.1",
-    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
-    "tests": 1000,
-    "repeat": 5,
-    "cpu_count": 20,
-    "source_sha": "b8071ce13196b5b24d20b034676636c0a8fd8f4a",
-    "runtime_wheel_sha256": "15b9215224db476ec01ee2cb51a3781816b96261b6bda5e64a7dc7f0a003632d",
+    "pytest_receptor": "1.2.2",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "source_sha": "74631c1e4606db81a9666eeb2606d9c66157ce31",
+    "runtime_wheel_sha256": "9d670b99ce32308e7180ef1c50e10660a1e7090ee05d19bbda8c82f27751eb45",
     "runtime_sources_sha256": {
       "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
-      "pytest_receptor/artifact.py": "1a2559f177fb8cd98a6e934afb64befef2b4559e4f174bd09d9a4568c2d1a35c",
+      "pytest_receptor/artifact.py": "fe05375dd54a9916323fd5527d062fcd8a94cbdef48814ca4ce6b78eb16900a0",
       "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
-      "pytest_receptor/model.py": "dfefb5188c30b825caf54a3ac3cf36955a9e6985f94864b209aea0cdce780588",
-      "pytest_receptor/plugin.py": "eefb1304c9835b3b1cafad8ac88983619db3b0ab93c021dc3b89b9ab4e88897c"
+      "pytest_receptor/model.py": "f133056d200256423102f3a2787888aff71d2c4c4bc74cc7f471d4318c0f1b13",
+      "pytest_receptor/plugin.py": "3d671ad07bf9c99217d976ee98210357c9544be29bda505e770ef0913f4b3354"
     },
     "dependencies": [
       {
         "name": "certifi",
-        "version": "2026.7.22"
+        "version": "2026.10.23"
       },
       {
         "name": "charset-normalizer",
@@ -36,7 +33,7 @@
       },
       {
         "name": "iniconfig",
-        "version": "2.3.0"
+        "version": "2.3.1"
       },
       {
         "name": "packaging",
@@ -44,11 +41,11 @@
       },
       {
         "name": "pip",
-        "version": "26.1.2"
+        "version": "26.2.1"
       },
       {
         "name": "pluggy",
-        "version": "1.6.0"
+        "version": "1.7.0"
       },
       {
         "name": "Pygments",
@@ -60,7 +57,7 @@
       },
       {
         "name": "pytest-receptor",
-        "version": "1.2.1"
+        "version": "1.2.2"
       },
       {
         "name": "pytest-xdist",
@@ -83,42 +80,46 @@
         "version": "2.8.0"
       }
     ],
-    "artifact_status": "locally built release-candidate wheel; not a registry receipt",
-    "harness_sha256": "83033ead11b728816394ed34e2f336a3f235588000595d60bd3135b1f6281c76",
-    "plugin_autoload": false
+    "artifact_status": "locally built patch-candidate measurement wheel; not a registry receipt",
+    "tests": 1000,
+    "repeat": 5,
+    "cpu_count": 20,
+    "plugin_autoload": false,
+    "harness_sha256": "db798b163eed919f36e0963a57cbd8cd87eb40350b3b20e59020e7932dab130c",
+    "measurement_process": "fresh performance-only process; no tokenizer imports in measuring parent"
   },
   "results": {
     "green": {
       "pytest quiet": {
-        "seconds": 0.9872791785746813,
-        "peak_mib": 39.16796875,
+        "seconds": 1.1972847119905055,
+        "peak_mib": 46.09765625,
         "returncode": 0
       },
       "receptor": {
-        "seconds": 1.0958287548273802,
-        "peak_mib": 39.9296875,
+        "seconds": 1.5392327699810266,
+        "peak_mib": 46.86328125,
         "returncode": 0
       },
       "receptor + JSONL": {
-        "seconds": 1.2644934514537454,
-        "peak_mib": 40.1171875,
+        "seconds": 1.7039783039945178,
+        "peak_mib": 47.00390625,
         "returncode": 0
       }
     },
     "setup cascade": {
       "pytest quiet": {
-        "seconds": 2.242549947462976,
-        "peak_mib": 41.21484375,
+        "seconds": 2.35719709697878,
+        "peak_mib": 47.34765625,
         "returncode": 1
       },
       "receptor": {
-        "seconds": 2.6343693556264043,
-        "peak_mib": 43.05078125,
+        "seconds": 2.9014939870103262,
+        "peak_mib": 49.0859375,
         "returncode": 1
       },
       "receptor + JSONL": {
-        "seconds": 2.7376586012542248,
-        "peak_mib": 43.8828125,
+        "seconds": 3.066787391959224,
+        "peak_mib": 49.58984375,
         "returncode": 1
       }
     }

@@ -28,7 +28,7 @@ From a clean, pushed candidate commit:
 git rev-parse HEAD
 gh workflow run build_and_upload_conda_packages.yaml \
   -f candidate_sha=FULL_40_CHARACTER_SHA \
-  -f version=1.2.1
+  -f version=1.2.2
 ```
 
 The manual path always uploads to `uibcdf/label/staging`. `build_number` starts at zero
@@ -49,7 +49,7 @@ gate at a ref resolving to the candidate, using the exact filename and digest:
 ```bash
 gh workflow run test_installed_conda.yaml --ref CANDIDATE_REF \
   -f candidate_sha=FULL_40_CHARACTER_SHA \
-  -f filename=pytest-receptor-1.2.1-py_0.tar.bz2 \
+  -f filename=pytest-receptor-1.2.2-py_0.tar.bz2 \
   -f sha256=FULL_64_CHARACTER_STAGING_DIGEST
 ```
 
@@ -63,9 +63,10 @@ by the independent staging query:
 ```bash
 gh workflow run promote_conda_package.yaml \
   -f candidate_sha=FULL_40_CHARACTER_RELEASE_SHA \
-  -f version=1.2.1 \
+  -f version=1.2.2 \
   -f sha256=FULL_64_CHARACTER_STAGING_DIGEST \
-  -f installed_run_id=EXACT_COMPLETED_INSTALLED_RUN_ID
+  -f installed_run_id=EXACT_COMPLETED_INSTALLED_RUN_ID \
+  -f qualification_sha=FULL_40_CHARACTER_INSTALLED_CALLER_SHA
 ```
 
 The pinned shared workflow binds the candidate to the committed plan and native
@@ -75,12 +76,18 @@ It retains all receipts and preserves staging. Never use `--force`: labels
 share one underlying file identity, so rebuilding the coordinate either
 conflicts or risks replacing verified bytes.
 
+`qualification_sha` identifies the installed caller's source. Normally it is the
+same as the producer candidate. If a separately reviewed administrative caller
+was required, preserve the distinct source/file/run binding rather than
+attributing its execution to the original producer.
+
 All shared units are pinned to full MolSysSuite commits. The local installed
 wrapper calls the provider's validation tools and adds the integration-test
 dependencies absent from its common workflow, tracked in
 `uibcdf/molsyssuite#77`. The descriptor requires all Linux/macOS arm64 and
 Python 3.11–3.14 cells in the current plan. Actual run results and the release
-decision belong to `uibcdf/pytest-receptor#32`.
+decision for 1.2.2 belong to `uibcdf/pytest-receptor#45`; the completed 1.2.1
+delivery remains recorded in #32.
 
 ## Why there is no platform matrix
 

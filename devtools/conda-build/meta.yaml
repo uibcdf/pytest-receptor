@@ -10,9 +10,9 @@ source:
 build:
   number: {{ environ.get('MOLSYSSUITE_CONDA_BUILD_NUMBER', '0') }}
   string: py_{{ environ.get('MOLSYSSUITE_CONDA_BUILD_NUMBER', '0') }}
-  # Pure Python, no compiled extensions: one architecture-independent package
-  # installs on linux, osx and win. The run/python constraint below (>=3.11,<3.15)
-  # makes the same package valid on Python 3.11 through 3.14. No build matrix.
+  # Pure Python: one architecture-independent payload. Installed qualification
+  # covers the platforms/Python minors declared in release_plan.toml; noarch
+  # metadata alone does not establish additional runtime/platform support.
   noarch: python
 
 requirements:

@@ -1,19 +1,23 @@
 {
   "metadata": {
-    "python": "3.13.14",
+    "measured": "2026-10-24",
+    "python": "3.14.7",
     "pytest": "9.1.1",
-    "pytest_receptor": "1.2.1",
-    "tokenizer": "cl100k_base",
-    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
-    "baseline": "pytest -q --no-header --tb=short",
-    "measured": "2026-10-03",
-    "source_sha": "b8071ce13196b5b24d20b034676636c0a8fd8f4a",
-    "runtime_wheel_sha256": "15b9215224db476ec01ee2cb51a3781816b96261b6bda5e64a7dc7f0a003632d",
-    "harness_sha256": "99724b0739e136923641e11d4286b7d0344785fc904d41ec4432cd304023d535",
+    "pytest_receptor": "1.2.2",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "source_sha": "74631c1e4606db81a9666eeb2606d9c66157ce31",
+    "runtime_wheel_sha256": "9d670b99ce32308e7180ef1c50e10660a1e7090ee05d19bbda8c82f27751eb45",
+    "runtime_sources_sha256": {
+      "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
+      "pytest_receptor/artifact.py": "fe05375dd54a9916323fd5527d062fcd8a94cbdef48814ca4ce6b78eb16900a0",
+      "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
+      "pytest_receptor/model.py": "f133056d200256423102f3a2787888aff71d2c4c4bc74cc7f471d4318c0f1b13",
+      "pytest_receptor/plugin.py": "3d671ad07bf9c99217d976ee98210357c9544be29bda505e770ef0913f4b3354"
+    },
     "dependencies": [
       {
         "name": "certifi",
-        "version": "2026.7.22"
+        "version": "2026.10.23"
       },
       {
         "name": "charset-normalizer",
@@ -29,7 +33,7 @@
       },
       {
         "name": "iniconfig",
-        "version": "2.3.0"
+        "version": "2.3.1"
       },
       {
         "name": "packaging",
@@ -37,11 +41,11 @@
       },
       {
         "name": "pip",
-        "version": "26.1.2"
+        "version": "26.2.1"
       },
       {
         "name": "pluggy",
-        "version": "1.6.0"
+        "version": "1.7.0"
       },
       {
         "name": "Pygments",
@@ -53,7 +57,7 @@
       },
       {
         "name": "pytest-receptor",
-        "version": "1.2.1"
+        "version": "1.2.2"
       },
       {
         "name": "pytest-xdist",
@@ -76,33 +80,74 @@
         "version": "2.8.0"
       }
     ],
-    "artifact_status": "locally built release-candidate wheel; not a registry receipt",
+    "artifact_status": "locally built patch-candidate measurement wheel; not a registry receipt",
+    "tokenizer": "cl100k_base",
+    "baseline": "pytest -q -n 12",
     "plugin_autoload": true,
-    "runtime_sources_sha256": {
-      "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
-      "pytest_receptor/artifact.py": "1a2559f177fb8cd98a6e934afb64befef2b4559e4f174bd09d9a4568c2d1a35c",
-      "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
-      "pytest_receptor/model.py": "dfefb5188c30b825caf54a3ac3cf36955a9e6985f94864b209aea0cdce780588",
-      "pytest_receptor/plugin.py": "eefb1304c9835b3b1cafad8ac88983619db3b0ab93c021dc3b89b9ab4e88897c"
-    },
+    "harness_sha256": "87356d63098569f9f16598f17a0a0243f18ca4c86c08dbfb18d29a764c18b2e0",
     "tests": 8000,
     "workers": 12
   },
   "results": {
     "Whole suite green": {
-      "pytest -n 12": 887,
-      "pytest -q -n 12": 812,
-      "--receptor=llm -n 12": 17
+      "pytest -n 12": {
+        "cl100k_base": 887,
+        "o200k_base": 888,
+        "p50k_base": 781,
+        "r50k_base": 841
+      },
+      "pytest -q -n 12": {
+        "cl100k_base": 812,
+        "o200k_base": 812,
+        "p50k_base": 705,
+        "r50k_base": 765
+      },
+      "--receptor=llm": {
+        "cl100k_base": 17,
+        "o200k_base": 17,
+        "p50k_base": 14,
+        "r50k_base": 14
+      }
     },
     "One fixture breaks 200 tests": {
-      "pytest -n 12": 22952,
-      "pytest -q -n 12": 22874,
-      "--receptor=llm -n 12": 107
+      "pytest -n 12": {
+        "cl100k_base": 24159,
+        "o200k_base": 25162,
+        "p50k_base": 29847,
+        "r50k_base": 32707
+      },
+      "pytest -q -n 12": {
+        "cl100k_base": 24080,
+        "o200k_base": 25081,
+        "p50k_base": 29767,
+        "r50k_base": 32627
+      },
+      "--receptor=llm": {
+        "cl100k_base": 107,
+        "o200k_base": 110,
+        "p50k_base": 130,
+        "r50k_base": 154
+      }
     },
     "Six unrelated bugs": {
-      "pytest -n 12": 1494,
-      "pytest -q -n 12": 1419,
-      "--receptor=llm -n 12": 278
+      "pytest -n 12": {
+        "cl100k_base": 1530,
+        "o200k_base": 1532,
+        "p50k_base": 1569,
+        "r50k_base": 1785
+      },
+      "pytest -q -n 12": {
+        "cl100k_base": 1455,
+        "o200k_base": 1456,
+        "p50k_base": 1492,
+        "r50k_base": 1708
+      },
+      "--receptor=llm": {
+        "cl100k_base": 278,
+        "o200k_base": 290,
+        "p50k_base": 329,
+        "r50k_base": 365
+      }
     }
   }
 }

@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-24
+
 ### Fixed
 
 - Close owned runtime evidence streams on setup/finalization failures and expose
@@ -14,6 +16,14 @@ All notable changes to this project are recorded here. The format follows
   becoming unrelated deletion operands or options (#44).
 - Keep external tests' rerun targets separate from imported helpers' crash
   locations when a fixed pytest rootdir leaves node IDs without a path (#39).
+- Protect other callers' benchmark scratch and expose cleanup failures (#40).
+- Reap interrupted benchmark children before removing owned scratch (#41).
+
+### Changed
+
+- Check dependency routes and exact-tag executed source gates before publication
+  and retain independent source-gate receipts (#38).
+- Document operation-specific resource ownership and closeout (#42).
 
 ## [1.2.1] - 2026-10-03
 

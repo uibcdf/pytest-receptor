@@ -17,10 +17,10 @@ errors. The performance harness uses a unique managed directory with the same
 cleanup/error contract. These operations do not clean other callers' resources.
 See [uibcdf/pytest-receptor#40](https://github.com/uibcdf/pytest-receptor/issues/40).
 
-Reference measurements were repeated on 2026-10-03 using an installed 1.2.1
-candidate wheel in a fresh Linux environment: CPython 3.13.14, pytest 9.1.1,
+Reference measurements were repeated on 2026-10-24 using an installed 1.2.2
+candidate wheel in a fresh Linux environment: CPython 3.14.7, pytest 9.1.1,
 pytest-xdist 3.8.0 and tiktoken 0.14.0. The wheel was built locally from
-`b8071ce13196b5b24d20b034676636c0a8fd8f4a`; it is measurement evidence,
+`74631c1e4606db81a9666eeb2606d9c66157ce31`; it is measurement evidence,
 not proof of registry publication. Saved [token](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-run.json),
 [scale](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-scale.json) and
 [runtime](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-performance.json) results record versions,
@@ -28,8 +28,10 @@ source and harness hashes, and the installed dependency closure.
 
 Subprocesses run with colour disabled. Token measurements retain normal plugin
 autoload in that clean environment; banner size can change with installed
-plugins. These conditions differ from the previous 0.6.0 token measurements,
-so the tables do not establish performance changes between releases.
+plugins. Python and the resolved environment differ from earlier measurements;
+the tables do not establish performance changes between releases. Runtime and
+harness hashes bind reuse to unchanged measured code, separately from the final
+release source and registry receipts.
 
 ## Runtime and memory
 
@@ -39,17 +41,20 @@ Receptor, redirects output to `DEVNULL`, and measures each pytest child with
 to the run being measured. Modes rotate order and the reported value is the
 median after an unreported warm-up.
 
-Local reference measurement on Linux, CPython 3.13.14, 1,000 tests, median of
+Run that harness in a fresh process; the reference RSS run does not import the
+tokenizers into its measuring parent.
+
+Local reference measurement on Linux, CPython 3.14.7, 1,000 tests, median of
 five runs:
 
 | Scenario | Mode | Wall time | Peak RSS | Time vs quiet | RSS vs quiet |
 | :--- | :--- | ---: | ---: | ---: | ---: |
-| green | pytest quiet | 0.987s | 39.2 MiB | baseline | baseline |
-| green | receptor | 1.096s | 39.9 MiB | +11.0% | +0.8 MiB |
-| green | receptor + JSONL | 1.264s | 40.1 MiB | +28.1% | +0.9 MiB |
-| setup cascade | pytest quiet | 2.243s | 41.2 MiB | baseline | baseline |
-| setup cascade | receptor | 2.634s | 43.1 MiB | +17.5% | +1.8 MiB |
-| setup cascade | receptor + JSONL | 2.738s | 43.9 MiB | +22.1% | +2.7 MiB |
+| green | pytest quiet | 1.197s | 46.1 MiB | baseline | baseline |
+| green | receptor | 1.539s | 46.9 MiB | +28.6% | +0.8 MiB |
+| green | receptor + JSONL | 1.704s | 47.0 MiB | +42.3% | +0.9 MiB |
+| setup cascade | pytest quiet | 2.357s | 47.3 MiB | baseline | baseline |
+| setup cascade | receptor | 2.901s | 49.1 MiB | +23.1% | +1.7 MiB |
+| setup cascade | receptor + JSONL | 3.067s | 49.6 MiB | +30.1% | +2.2 MiB |
 
 These are reference observations, not portable promises: CPU, filesystem,
 pytest and Python affect time and RSS. The meaningful result is that the
@@ -72,8 +77,8 @@ it discards the assertion diff and is not really comparable in usefulness.
 | Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: | ---: |
 | Whole suite green | 887 | 812 | **17** | 97.9% |
-| One fixture breaks 200 tests | 22,952 | 22,874 | **107** | 99.5% |
-| Six unrelated bugs | 1,494 | 1,419 | **278** | 80.4% |
+| One fixture breaks 200 tests | 24,159 | 24,080 | **107** | 99.6% |
+| Six unrelated bugs | 1,530 | 1,455 | **278** | 80.9% |
 
 `-q` does not save you: it still prints one progress character per test, so a
 *successful* 8,000-test run costs 812 tokens of dots.
