@@ -10,7 +10,9 @@ See the [local reporting protocol](../reporting_protocol.md).
 
 <!-- generated: devguide_index -->
 
-*No entries.*
+### Open (1)
+
+- [`collection_errors_counted_as_executed_failures.md`](collection_errors_counted_as_executed_failures.md) — [#46](https://github.com/uibcdf/pytest-receptor/issues/46) — Collection errors are counted as executed failed tests. *(open, reproduced)*
 
 <!-- /generated -->
 
