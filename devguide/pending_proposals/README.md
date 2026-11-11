@@ -62,12 +62,9 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
-### Active (1)
+### Open (2)
 
-- [`release_1_2_3.md`](release_1_2_3.md) — [#52](https://github.com/uibcdf/pytest-receptor/issues/52) — Prepare and qualify public 1.2.3 after owner issue resolution. *(active, inspected)*
-
-### Open (1)
-
+- [`automate_zenodo_release_verification.md`](automate_zenodo_release_verification.md) — [#53](https://github.com/uibcdf/pytest-receptor/issues/53) — Automate bounded public Zenodo verification and overdue recovery. *(open, inspected)*
 - [`ci_error_annotations.md`](ci_error_annotations.md) — [#9](https://github.com/uibcdf/pytest-receptor/issues/9) — Decide whether to emit CI error annotations from the ci profile. *(open, inspected)*
 
 <!-- /generated -->
