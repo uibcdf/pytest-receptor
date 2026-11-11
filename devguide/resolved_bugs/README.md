@@ -27,9 +27,10 @@ silently rewritten.
 
 <!-- generated: devguide_index -->
 
-### Resolved (20)
+### Resolved (21)
 
 - [`benchmark_resource_ownership.md`](benchmark_resource_ownership.md) — [#40](https://github.com/uibcdf/pytest-receptor/issues/40) — Protect benchmark ownership and expose cleanup failures. *(resolved, reproduced)*
+- [`collection_errors_counted_as_executed_failures.md`](collection_errors_counted_as_executed_failures.md) — [#46](https://github.com/uibcdf/pytest-receptor/issues/46) — Collection errors are counted as executed failed tests. *(resolved, reproduced)*
 - [`deselected_tests_reported_incomplete.md`](deselected_tests_reported_incomplete.md) — [#25](https://github.com/uibcdf/pytest-receptor/issues/25) — Distinguish deselection from incomplete execution. *(resolved, inspected)*
 - [`discard_stream_remains_unclosed_after_pytest.md`](discard_stream_remains_unclosed_after_pytest.md) — [#4](https://github.com/uibcdf/pytest-receptor/issues/4) — Close the late-terminal discard stream without leaking ResourceWarning *(resolved, reproduced)*
 - [`docs_clean_operand_ownership.md`](docs_clean_operand_ownership.md) — [#44](https://github.com/uibcdf/pytest-receptor/issues/44) — Keep documentation cleanup within the selected build directory. *(resolved, reproduced)*

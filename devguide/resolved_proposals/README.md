@@ -29,13 +29,15 @@ is retired rather than renewed indefinitely.
 
 <!-- generated: devguide_index -->
 
-### Resolved (12)
+### Resolved (15)
 
 - [`adopt_reporting_lifecycle.md`](adopt_reporting_lifecycle.md) — [#8](https://github.com/uibcdf/pytest-receptor/issues/8) — Adopt the MolSysSuite issue-backed reporting lifecycle locally. *(resolved, inspected)*
 - [`built_in_normalizers_for_warning_variants.md`](built_in_normalizers_for_warning_variants.md) — [#28](https://github.com/uibcdf/pytest-receptor/issues/28) — Normalize warning sizes while preserving meaningful names. *(resolved, inspected)*
+- [`conda_provider_v2_3_adoption.md`](conda_provider_v2_3_adoption.md) — [#50](https://github.com/uibcdf/pytest-receptor/issues/50) — Adopt the reviewed shared Conda v2.3.0 publisher and promotion callers. *(resolved, measured)*
 - [`configurable_rerun_command.md`](configurable_rerun_command.md) — [#29](https://github.com/uibcdf/pytest-receptor/issues/29) — Configure the runner prefix in rerun commands. *(resolved, inspected)*
 - [`default_branch_coverage_reporting.md`](default_branch_coverage_reporting.md) — [#12](https://github.com/uibcdf/pytest-receptor/issues/12) — Publish owned default-branch coverage from the existing tool suite. *(resolved, measured)*
 - [`distribution_adoption_runtime_review.md`](distribution_adoption_runtime_review.md) — [#38](https://github.com/uibcdf/pytest-receptor/issues/38) — Complete maintained dependency-route controls for distribution adoption. *(resolved, measured)*
+- [`exhaustive_skip_recovery.md`](exhaustive_skip_recovery.md) — [#51](https://github.com/uibcdf/pytest-receptor/issues/51) — Document same-session exhaustive skipped-node recovery after detail truncation. *(resolved, measured)*
 - [`publish_canonical_consumer_guide.md`](publish_canonical_consumer_guide.md) — [#5](https://github.com/uibcdf/pytest-receptor/issues/5) — Publish a canonical Pytest Receptor guide for MolSysSuite consumers. *(resolved, measured)*
 - [`python_314_support.md`](python_314_support.md) — [#3](https://github.com/uibcdf/pytest-receptor/issues/3) — Verify Python 3.14 support and delivery. *(resolved, inspected)*
 - [`reconcile_legacy_report_identities.md`](reconcile_legacy_report_identities.md) — [#10](https://github.com/uibcdf/pytest-receptor/issues/10) — Reconcile pre-protocol resolved-report identities without losing field evidence. *(resolved, inspected)*
@@ -43,5 +45,6 @@ is retired rather than renewed indefinitely.
 - [`release_1_2_2.md`](release_1_2_2.md) — [#45](https://github.com/uibcdf/pytest-receptor/issues/45) — Publish and independently verify pytest-receptor 1.2.2. *(resolved, reproduced)*
 - [`review_python_ecosystem_policy_adoption.md`](review_python_ecosystem_policy_adoption.md) — [#6](https://github.com/uibcdf/pytest-receptor/issues/6) — Review MolSysSuite Python ecosystem policy in pytest-receptor. *(resolved, measured)*
 - [`review_temporary_resource_ownership.md`](review_temporary_resource_ownership.md) — [#42](https://github.com/uibcdf/pytest-receptor/issues/42) — Complete the component-owned temporary-resource lifecycle review. *(resolved, inspected)*
+- [`runtime_dependency_floor_review.md`](runtime_dependency_floor_review.md) — [#49](https://github.com/uibcdf/pytest-receptor/issues/49) — Review runtime dependency API floors and classify every maintained route. *(resolved, measured)*
 
 <!-- /generated -->

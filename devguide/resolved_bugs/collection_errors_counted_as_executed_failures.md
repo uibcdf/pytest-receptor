@@ -1,9 +1,9 @@
 ---
 summary: Collection errors are counted as executed failed tests.
 issue: uibcdf/pytest-receptor#46
-status: active
+status: resolved
 opened: 2026-10-26
-closed:
+closed: 2026-11-11
 severity: medium
 verification: reproduced
 area: [reporting, collection]
@@ -79,3 +79,12 @@ Sixteen focused regression cases cover SyntaxError, ImportError, partial
 collection, -x/maxfail, continuation, collect-only and mixed xdist execution.
 This source fix does not rewrite historical consumer evidence; actual installed
 1.2.3 receiving is tracked separately in uibcdf/pytest-receptor#52.
+
+## Resolution evidence — 2026-11-11
+
+Implementation: d1d2349 (the immutable owner commit contains runtime changes,
+regressions, route review and preserved consumer observations). Local focused
+checks, exact pytest 8.0.0 API-floor checks and the completed Python 3.14.7
+pytest 9.1.1 source suite are retained by the 1.2.3 campaign. Public installation
+and hosted compatibility are separately qualified in uibcdf/pytest-receptor#52;
+these source results do not claim registry delivery or downstream adoption.

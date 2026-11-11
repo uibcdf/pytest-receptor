@@ -6,6 +6,23 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-11-11
+
+### Fixed
+
+- Count collection errors separately from failed/executed test items, preserve
+  repeated xdist evidence without inflating collector counts, and label
+  collection-only execution explicitly (#46).
+
+### Changed
+
+- Document exhaustive skipped-node recovery through same-session JUnit when
+  bounded artifact detail is truncated, including live-reader limitations (#51).
+- Review the exact pytest 8.0.0 runtime floor and maintained dependency routes
+  without changing runtime requirements (#49).
+- Adopt the reviewed Conda v2.3.0 publisher and promotion wrappers while retaining
+  exact-source, installed-artifact and independent public-verification gates (#50).
+
 ## [1.2.2] - 2026-10-24
 
 ### Fixed

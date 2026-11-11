@@ -311,7 +311,7 @@ told it otherwise. So every test run spends tokens on a platform banner, a
 failing test — none of which the agent needs, all of which you pay for, on every
 iteration of every loop.
 
-Measured on 2026-10-24 with the 1.2.2 candidate wheel in a clean Linux
+Measured on 2026-11-11 with the 1.2.3 candidate wheel in a clean Linux
 environment: CPython 3.14.7, pytest 9.1.1, tiktoken 0.14.0 (`cl100k_base`)
 and pytest-xdist 3.8.0. [Conditions and saved measurements](docs/benchmarks.md):
 

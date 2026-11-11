@@ -1,18 +1,18 @@
 {
   "metadata": {
-    "measured": "2026-10-24",
+    "measured": "2026-11-11",
     "python": "3.14.7",
     "pytest": "9.1.1",
-    "pytest_receptor": "1.2.2",
+    "pytest_receptor": "1.2.3",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "source_sha": "74631c1e4606db81a9666eeb2606d9c66157ce31",
-    "runtime_wheel_sha256": "9d670b99ce32308e7180ef1c50e10660a1e7090ee05d19bbda8c82f27751eb45",
+    "source_sha": "d1d2349fb24a57bd946680a4bfbd6b0bb39f9caf",
+    "runtime_wheel_sha256": "2201116340b876349f745676796e78feca6834067858c9b92900632231017151",
     "runtime_sources_sha256": {
       "pytest_receptor/__init__.py": "e470b0c9942b9fb52555b86e69a0ff5c5db91b7787bc226e10272fbaed189e6b",
       "pytest_receptor/artifact.py": "fe05375dd54a9916323fd5527d062fcd8a94cbdef48814ca4ce6b78eb16900a0",
       "pytest_receptor/extensions.py": "16c76cb0819d340343afe169302a75300b692f981f9ddbc035e94d3d146a7728",
-      "pytest_receptor/model.py": "f133056d200256423102f3a2787888aff71d2c4c4bc74cc7f471d4318c0f1b13",
-      "pytest_receptor/plugin.py": "3d671ad07bf9c99217d976ee98210357c9544be29bda505e770ef0913f4b3354"
+      "pytest_receptor/model.py": "6069f1fe160d41a99dae98d1026e71994dbaf9ec95720719d85e51e9cec6189f",
+      "pytest_receptor/plugin.py": "15fe80f00322ae92fdcdbe6247516eb287482e752f6277f790a14b18813a030c"
     },
     "dependencies": [
       {
@@ -57,7 +57,7 @@
       },
       {
         "name": "pytest-receptor",
-        "version": "1.2.2"
+        "version": "1.2.3"
       },
       {
         "name": "pytest-xdist",
@@ -65,7 +65,7 @@
       },
       {
         "name": "regex",
-        "version": "2026.9.29"
+        "version": "2026.11.9"
       },
       {
         "name": "requests",
@@ -80,11 +80,9 @@
         "version": "2.8.0"
       }
     ],
-    "artifact_status": "locally built patch-candidate measurement wheel; not a registry receipt",
+    "harness_sha256": "87356d63098569f9f16598f17a0a0243f18ca4c86c08dbfb18d29a764c18b2e0",
     "tokenizer": "cl100k_base",
-    "baseline": "pytest -q --no-header --tb=short",
-    "plugin_autoload": true,
-    "harness_sha256": "87356d63098569f9f16598f17a0a0243f18ca4c86c08dbfb18d29a764c18b2e0"
+    "baseline": "pytest -q --no-header --tb=short"
   },
   "results": {
     "Green suite (128 tests)": {

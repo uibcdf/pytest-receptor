@@ -28,7 +28,7 @@ From a clean, pushed candidate commit:
 git rev-parse HEAD
 gh workflow run build_and_upload_conda_packages.yaml \
   -f candidate_sha=FULL_40_CHARACTER_SHA \
-  -f version=1.2.2
+  -f version=1.2.3
 ```
 
 The manual path always uploads to `uibcdf/label/staging`. `build_number` starts at zero
@@ -49,7 +49,7 @@ gate at a ref resolving to the candidate, using the exact filename and digest:
 ```bash
 gh workflow run test_installed_conda.yaml --ref CANDIDATE_REF \
   -f candidate_sha=FULL_40_CHARACTER_SHA \
-  -f filename=pytest-receptor-1.2.2-py_0.tar.bz2 \
+  -f filename=pytest-receptor-1.2.3-py_0.tar.bz2 \
   -f sha256=FULL_64_CHARACTER_STAGING_DIGEST
 ```
 
@@ -63,7 +63,7 @@ by the independent staging query:
 ```bash
 gh workflow run promote_conda_package.yaml \
   -f candidate_sha=FULL_40_CHARACTER_RELEASE_SHA \
-  -f version=1.2.2 \
+  -f version=1.2.3 \
   -f sha256=FULL_64_CHARACTER_STAGING_DIGEST \
   -f installed_run_id=EXACT_COMPLETED_INSTALLED_RUN_ID \
   -f qualification_sha=FULL_40_CHARACTER_INSTALLED_CALLER_SHA
@@ -86,8 +86,17 @@ wrapper calls the provider's validation tools and adds the integration-test
 dependencies absent from its common workflow, tracked in
 `uibcdf/molsyssuite#77`. The descriptor requires all Linux/macOS arm64 and
 Python 3.11–3.14 cells in the current plan. Actual run results and the release
-decision for 1.2.2 belong to `uibcdf/pytest-receptor#45`; the completed 1.2.1
-delivery remains recorded in #32.
+decision for 1.2.3 belong to `uibcdf/pytest-receptor#52`; completed 1.2.2 and
+1.2.1 deliveries remain recorded in #45 and #32.
+
+The publish and promotion callers adopt MolSysSuite
+`95f693be10c9205ab9b912cb53453710a207bf45`, which selects Conda provider
+v2.3.0 `87c70b1443d5f22d738ee3ddf812bdbe0152f6c2`. The owner review is
+`uibcdf/pytest-receptor#50`, coordinated through `uibcdf/molsyssuite#87`.
+Input/secret mapping, inspection-before-upload and installed-before-promotion
+ordering are preserved. Installed/operator/dependency-preflight pins retain
+their separately reviewed revisions; this adoption does not replace old bytes
+or activate withdrawal. Future actual publication needs its own receipts.
 
 ## Why there is no platform matrix
 

@@ -1,10 +1,10 @@
 ---
 summary: Review runtime dependency API floors and classify every maintained route.
 issue: uibcdf/pytest-receptor#49
-status: active
+status: resolved
 opened: 2026-11-11
-closed:
-verification: inspected
+closed: 2026-11-11
+verification: measured
 area: [reporting, governance]
 guard: tests/test_dependency_routes.py
 normative: devguide/runtime_dependencies.md
@@ -35,3 +35,17 @@ for executed floor scope and the release receipt for wider compatibility.
 
 Report explicit Review completed in this issue and link the confirmation to
 uibcdf/molsyssuite#137 after recording the implementation commit/checks.
+
+## Resolution evidence — 2026-11-11
+
+Implementation: d1d2349 (the immutable owner commit contains runtime changes,
+regressions, route review and preserved consumer observations). Local focused
+checks, exact pytest 8.0.0 API-floor checks and the completed Python 3.14.7
+pytest 9.1.1 source suite are retained by the 1.2.3 campaign. Public installation
+and hosted compatibility are separately qualified in uibcdf/pytest-receptor#52;
+these source results do not claim registry delivery or downstream adoption.
+
+Exact pytest 8.0.0 API-floor execution: **19 passed**, with only the two
+optional xdist execution cases deselected. Full pytest 9.1.1 source selection:
+**281 passed** serial and distributed, no skips. All 13 maintained dependency
+routes pass. No required/optional runtime bound correction was needed.

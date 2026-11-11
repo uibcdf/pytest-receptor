@@ -1,0 +1,133 @@
+{
+  "schema": "pytest-receptor.source-review@1",
+  "date": "2026-11-11",
+  "implementation_sha": "d1d2349fb24a57bd946680a4bfbd6b0bb39f9caf",
+  "reviewed_baseline_sha": "acd8897f593fd11ec676c2b960fe53b9e699f5e6",
+  "python": "3.14.7",
+  "pytest": "9.1.1",
+  "environment": {
+    "parent": "molsyssuite@uibcdf_3.14",
+    "validation": "task-owned venv inheriting the parent and adding missing optional test tools; shared prefix unchanged",
+    "pytest-subtests": "0.15.0",
+    "pytest-rerunfailures": "16.7",
+    "gh-run-receptor": "published 1.4.0 at c2d16255868df5e1f5a7eaaa72d71ac8387cef01 in task-owned tools prefix"
+  },
+  "local_source_tests": {
+    "serial": {
+      "passed": 281,
+      "skipped": 0,
+      "exitstatus": 0
+    },
+    "xdist_2": {
+      "passed": 281,
+      "skipped": 0,
+      "exitstatus": 0
+    }
+  },
+  "runtime_floor": {
+    "pytest": "8.0.0",
+    "python": "3.14.7",
+    "passed": 19,
+    "deselected": 2,
+    "scope": "tests/test_collection_counts.py and tests/test_model.py, excluding only optional xdist execution cases",
+    "exitstatus": 0,
+    "public_artifact_qualification": false,
+    "dependency_closure": [
+      {
+        "name": "iniconfig",
+        "version": "2.3.1"
+      },
+      {
+        "name": "packaging",
+        "version": "26.3"
+      },
+      {
+        "name": "pip",
+        "version": "26.2.1"
+      },
+      {
+        "name": "pluggy",
+        "version": "1.7.0"
+      },
+      {
+        "name": "pytest",
+        "version": "8.0.0"
+      }
+    ]
+  },
+  "publication_adoption": {
+    "shared_wrappers": "95f693be10c9205ab9b912cb53453710a207bf45",
+    "external_provider": "87c70b1443d5f22d738ee3ddf812bdbe0152f6c2",
+    "shared_contract_tests_passed": 28,
+    "member_route_publication_guide_tests_passed": 21,
+    "dependency_routes_passed": 13,
+    "old_publish_wrapper": "2fb344525ca0eea817dc24a518f4a6bf26e311cf",
+    "old_promotion_wrapper": "c3e2b9b3dabf3d1c65349c389a23048957bea21a",
+    "unchanged_installed_helper": "3350615eee8c95903aca916e42789ecbdcc1f8ef",
+    "unchanged_dependency_preflight": "43b9f94bf5ab0ec3f54a4b2ca5b23b791d6af0bc"
+  },
+  "reporting_checks": {
+    "unittest_passed": 5,
+    "indexes": "regenerated and checked at each report transition"
+  },
+  "initial_checks": {
+    "shared_environment_source_run": "268 passed, 10 optional-dependency skips, 1 stale-index failure (279 cases before two further regressions were added); not accepted as full validation",
+    "tooling_startup": "restricted sandbox prevented rerunfailures local socket; executed with required permission afterward",
+    "floor_startup": "duplicate explicit plugin registration removed from the inspection command; source auto-discovery retained"
+  },
+  "issues": {
+    "fixed": [
+      "uibcdf/pytest-receptor#46",
+      "uibcdf/pytest-receptor#49",
+      "uibcdf/pytest-receptor#50",
+      "uibcdf/pytest-receptor#51"
+    ],
+    "deferred": "uibcdf/pytest-receptor#9: no demonstrated CI-consumer request; maintainer reviews when one arrives",
+    "release": "uibcdf/pytest-receptor#52",
+    "advance_notice": "uibcdf/molsyssuite#188"
+  },
+  "scope_limits": [
+    "Source/floor/adoption evidence does not establish new public registry availability.",
+    "Hosted exact-source and installed matrix gates are recorded separately.",
+    "No Windows, Intel macOS, scientific, consumer-adoption or DOI certification.",
+    "Existing local #46 xdist consumer note preserved verbatim before adding provider resolution."
+  ],
+  "retained_log_sha256": {
+    "tests-serial.log": "b06dc1e16fa25d688b98a0933e927815cb48cf6733f89af18df326c0fe47b7ae",
+    "tests-xdist.log": "bea8c1020d437ae20a293a25c2cf679bb54fa6989747d685316982f70828a978",
+    "floor-tests.log": "2c4d3964e6e1c177e541624b7544f1ed7c2eb9bc26b6e805cb8a421960d4467e"
+  },
+  "benchmarks": {
+    "source_sha": "d1d2349fb24a57bd946680a4bfbd6b0bb39f9caf",
+    "installed_version": "1.2.3",
+    "measurement_wheel_sha256": "2201116340b876349f745676796e78feca6834067858c9b92900632231017151",
+    "token_scenarios": 8,
+    "scale_scenarios": 3,
+    "scale_tests": 8000,
+    "scale_workers": 12,
+    "runtime_tests": 1000,
+    "runtime_repeats": 5,
+    "runtime_parent": "fresh process without tokenizer imports",
+    "runtime_nonversion_sources_match_final_worktree": true,
+    "public_registry_receipt": false
+  },
+  "intermediate_resource_cleanup": {
+    "removed_task_owned_venvs": [
+      "floor",
+      "benchmark"
+    ],
+    "reason": "measurements and floor verification completed; retained outputs, closure and log hashes before disposal; free task quota for documentation"
+  },
+  "documentation": {
+    "build": "Sphinx HTML, warnings treated as errors; succeeded",
+    "tools": "task-owned validation prefix; required theme/MyST installed there",
+    "initial_failure": "shared environment lacks sphinx_rtd_theme; no provider defect inferred",
+    "quota_recovery": "first isolated docs installation exceeded disk quota; completed after disposal of owned finished floor/benchmark prefixes"
+  },
+  "quality": {
+    "ruff": "0.16.5; check and format check passed",
+    "diff_check": "passed",
+    "reporting_tests_passed": 5,
+    "indexes": "current"
+  }
+}

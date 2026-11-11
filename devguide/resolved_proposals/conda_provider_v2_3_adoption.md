@@ -1,10 +1,10 @@
 ---
 summary: Adopt the reviewed shared Conda v2.3.0 publisher and promotion callers.
 issue: uibcdf/pytest-receptor#50
-status: active
+status: resolved
 opened: 2026-11-11
-closed:
-verification: inspected
+closed: 2026-11-11
+verification: measured
 area: [reporting, governance]
 guard: tests/test_noarch_conda_publication.py
 normative: devtools/conda-build/README.md
@@ -37,3 +37,17 @@ qualifies the actual bytes separately under uibcdf/pytest-receptor#52.
 Explicit Review completed with the exact implementation commit goes to #50 and
 uibcdf/molsyssuite#87. Withdrawal and existing artifact replacement remain out
 of scope.
+
+## Resolution evidence — 2026-11-11
+
+Implementation: d1d2349 (the immutable owner commit contains runtime changes,
+regressions, route review and preserved consumer observations). Local focused
+checks, exact pytest 8.0.0 API-floor checks and the completed Python 3.14.7
+pytest 9.1.1 source suite are retained by the 1.2.3 campaign. Public installation
+and hosted compatibility are separately qualified in uibcdf/pytest-receptor#52;
+these source results do not claim registry delivery or downstream adoption.
+
+The member's source suite passes **281/281** serial and **281/281** with two
+xdist workers on Python 3.14.7 / pytest 9.1.1, with the optional test providers
+installed in a task-owned validation prefix and no skips. These executions
+exercise the owner guard while shared registry transport remains fixture-only.

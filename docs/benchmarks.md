@@ -17,10 +17,10 @@ errors. The performance harness uses a unique managed directory with the same
 cleanup/error contract. These operations do not clean other callers' resources.
 See [uibcdf/pytest-receptor#40](https://github.com/uibcdf/pytest-receptor/issues/40).
 
-Reference measurements were repeated on 2026-10-24 using an installed 1.2.2
+Reference measurements were repeated on 2026-11-11 using an installed 1.2.3
 candidate wheel in a fresh Linux environment: CPython 3.14.7, pytest 9.1.1,
 pytest-xdist 3.8.0 and tiktoken 0.14.0. The wheel was built locally from
-`74631c1e4606db81a9666eeb2606d9c66157ce31`; it is measurement evidence,
+`d1d2349fb24a57bd946680a4bfbd6b0bb39f9caf`; it is measurement evidence,
 not proof of registry publication. Saved [token](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-run.json),
 [scale](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-scale.json) and
 [runtime](https://github.com/uibcdf/pytest-receptor/blob/main/devtools/benchmarks/last-performance.json) results record versions,
@@ -49,12 +49,12 @@ five runs:
 
 | Scenario | Mode | Wall time | Peak RSS | Time vs quiet | RSS vs quiet |
 | :--- | :--- | ---: | ---: | ---: | ---: |
-| green | pytest quiet | 1.197s | 46.1 MiB | baseline | baseline |
-| green | receptor | 1.539s | 46.9 MiB | +28.6% | +0.8 MiB |
-| green | receptor + JSONL | 1.704s | 47.0 MiB | +42.3% | +0.9 MiB |
-| setup cascade | pytest quiet | 2.357s | 47.3 MiB | baseline | baseline |
-| setup cascade | receptor | 2.901s | 49.1 MiB | +23.1% | +1.7 MiB |
-| setup cascade | receptor + JSONL | 3.067s | 49.6 MiB | +30.1% | +2.2 MiB |
+| green | pytest quiet | 1.144s | 45.8 MiB | baseline | baseline |
+| green | receptor | 1.469s | 46.8 MiB | +28.4% | +1.0 MiB |
+| green | receptor + JSONL | 1.671s | 46.7 MiB | +46.0% | +0.9 MiB |
+| setup cascade | pytest quiet | 2.303s | 47.2 MiB | baseline | baseline |
+| setup cascade | receptor | 2.829s | 49.1 MiB | +22.8% | +1.9 MiB |
+| setup cascade | receptor + JSONL | 2.992s | 49.4 MiB | +29.9% | +2.2 MiB |
 
 These are reference observations, not portable promises: CPU, filesystem,
 pytest and Python affect time and RSS. The meaningful result is that the
@@ -77,7 +77,7 @@ it discards the assertion diff and is not really comparable in usefulness.
 | Scenario | `pytest -n 12` | `pytest -q -n 12` | `--receptor=llm -n 12` | Saving |
 | :--- | ---: | ---: | ---: | ---: |
 | Whole suite green | 887 | 812 | **17** | 97.9% |
-| One fixture breaks 200 tests | 24,159 | 24,080 | **107** | 99.6% |
+| One fixture breaks 200 tests | 24,153 | 24,080 | **107** | 99.6% |
 | Six unrelated bugs | 1,530 | 1,455 | **278** | 80.9% |
 
 `-q` does not save you: it still prints one progress character per test, so a

@@ -19,7 +19,8 @@ supersedes: []
 **Origin:** salvaged design from the `event-model-v0.5` branch. Deliberately not
 implemented in 0.6.
 
-**Status:** untriaged. Waiting on evidence that anyone wants it.
+**Status:** deferred after owner triage on 2026-11-11. Waiting on a concrete
+CI-consumer request; reassess when that evidence arrives.
 
 ## What it is
 

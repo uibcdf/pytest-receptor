@@ -54,7 +54,9 @@ test`, `tox`, or a wrapper must set it.
 
 ## Session outcomes
 
-Exactly one of these opens every run. The numeric status is always pytest's;
+Exactly one of these opens the compact execution report. Collection-only runs
+may first print pytest's native collection listing. The numeric status is always
+pytest's;
 the label refines statuses that pytest uses for more than one state when the
 receptor has concrete evidence, rather than inferring success or failure from
 the absence of reports.
@@ -69,6 +71,7 @@ the absence of reports.
 | `USAGE_ERROR exit=4` | 4 | pytest was invoked incorrectly. |
 | `USAGE_ERROR exit=5 \| invalid selection` | 5 | Under xdist, pytest returned its no-tests status for an invocation containing nonexistent filesystem targets; every missing target follows. |
 | `NO_TESTS exit=5` | 5 | Nothing was collected. |
+| `RECEPTOR_ERROR` | *preserved* | The receptor itself failed. pytest's status and the raw evidence follow. |
 
 Collection errors are counted as `errors`, separately from failed test items;
 they never increase `executed`. Repeated xdist collection diagnostics count once
@@ -77,7 +80,6 @@ per collector while the phase stream retains the reports. A successful
 `collection only: N collected, 0 executed` note. Its collection succeeded, but
 it is not an executed test gate. Setup/teardown errors still count as executed
 items. The JSONL counters follow these same definitions.
-| `RECEPTOR_ERROR` | *preserved* | The receptor itself failed. pytest's status and the raw evidence follow. |
 
 A run stopped early by `-x` or `--maxfail` is additionally marked `incomplete`
 with executed and collected counts, **even when nothing has failed yet**.
@@ -91,7 +93,7 @@ an `error`.
 | Word | Means |
 | :--- | :--- |
 | `failed` | The call phase failed. |
-| `errors` | Setup or teardown failed. |
+| `errors` | Collection, setup or teardown failed; collection never executes an item. |
 | `passed` | The call phase passed. |
 | `skipped` / `xfailed` / `xpassed` | As pytest reports them. |
 
