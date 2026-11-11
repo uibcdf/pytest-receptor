@@ -81,6 +81,7 @@ class SessionEvidence:
     warnings: list[WarningEvent] = field(default_factory=list)
     outcomes: dict[str, str] = field(default_factory=dict)
     errors: set[str] = field(default_factory=set)
+    collection_errors: set[str] = field(default_factory=set)
     skipped: dict[str, str] = field(default_factory=dict)
     xfailed: dict[str, str] = field(default_factory=dict)
     xpassed: list[tuple[str, str]] = field(default_factory=list)
@@ -110,6 +111,13 @@ class SessionEvidence:
     def add_phase(self, event: PhaseEvent) -> None:
         self.phases.append(event)
         nodeid = event.nodeid
+        # Collectors are not runnable items. Repeated worker diagnostics remain
+        # in the phase stream, but count once per collector and never execute a
+        # test or overwrite a test item's runtime outcome.
+        if event.phase in ("collect", "collection"):
+            if event.outcome == "failed":
+                self.collection_errors.add(nodeid)
+            return
         if event.phase == "teardown":
             self.finished += 1
 
@@ -166,6 +174,10 @@ class SessionEvidence:
     @property
     def executed(self) -> int:
         return len(set(self.outcomes) | self.errors)
+
+    @property
+    def error_count(self) -> int:
+        return len(self.errors) + len(self.collection_errors)
 
     @property
     def warning_count(self) -> int:

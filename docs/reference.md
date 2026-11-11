@@ -69,6 +69,14 @@ the absence of reports.
 | `USAGE_ERROR exit=4` | 4 | pytest was invoked incorrectly. |
 | `USAGE_ERROR exit=5 \| invalid selection` | 5 | Under xdist, pytest returned its no-tests status for an invocation containing nonexistent filesystem targets; every missing target follows. |
 | `NO_TESTS exit=5` | 5 | Nothing was collected. |
+
+Collection errors are counted as `errors`, separately from failed test items;
+they never increase `executed`. Repeated xdist collection diagnostics count once
+per collector while the phase stream retains the reports. A successful
+`--collect-only` keeps exit 0 and reports `INCOMPLETE` with an explicit
+`collection only: N collected, 0 executed` note. Its collection succeeded, but
+it is not an executed test gate. Setup/teardown errors still count as executed
+items. The JSONL counters follow these same definitions.
 | `RECEPTOR_ERROR` | *preserved* | The receptor itself failed. pytest's status and the raw evidence follow. |
 
 A run stopped early by `-x` or `--maxfail` is additionally marked `incomplete`

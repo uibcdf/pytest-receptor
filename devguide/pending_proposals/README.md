@@ -62,6 +62,13 @@ when they feel too small to bother with:
 
 <!-- generated: devguide_index -->
 
+### Active (4)
+
+- [`conda_provider_v2_3_adoption.md`](conda_provider_v2_3_adoption.md) — [#50](https://github.com/uibcdf/pytest-receptor/issues/50) — Adopt the reviewed shared Conda v2.3.0 publisher and promotion callers. *(active, inspected)*
+- [`exhaustive_skip_recovery.md`](exhaustive_skip_recovery.md) — [#51](https://github.com/uibcdf/pytest-receptor/issues/51) — Document same-session exhaustive skipped-node recovery after detail truncation. *(active, inspected)*
+- [`release_1_2_3.md`](release_1_2_3.md) — [#52](https://github.com/uibcdf/pytest-receptor/issues/52) — Prepare and qualify public 1.2.3 after owner issue resolution. *(active, inspected)*
+- [`runtime_dependency_floor_review.md`](runtime_dependency_floor_review.md) — [#49](https://github.com/uibcdf/pytest-receptor/issues/49) — Review runtime dependency API floors and classify every maintained route. *(active, inspected)*
+
 ### Open (1)
 
 - [`ci_error_annotations.md`](ci_error_annotations.md) — [#9](https://github.com/uibcdf/pytest-receptor/issues/9) — Decide whether to emit CI error annotations from the ci profile. *(open, inspected)*

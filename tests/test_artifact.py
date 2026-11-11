@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import xml.etree.ElementTree as ET
 
 import pytest
 
@@ -150,6 +151,47 @@ def test_events_size_limit_has_a_safe_minimum(pytester):
         ["*--receptor-events-max-bytes must be at least 65536*"]
     )
     assert not (pytester.path / "events.jsonl").exists()
+
+
+def test_same_session_junit_recovers_late_skips_after_detail_truncation(pytester):
+    """#51: valid final counters cannot make retained phase nodes exhaustive."""
+    pytester.makepyfile(
+        test_capped="""
+        import pytest
+
+        @pytest.mark.parametrize("case", range(120))
+        def test_before_limit(case):
+            pass
+
+        @pytest.mark.parametrize("case", range(3))
+        def test_late_skip(case):
+            pytest.skip("independent oracle unavailable")
+        """
+    )
+    result = pytester.runpytest(
+        "--receptor=llm",
+        "--receptor-events=events.jsonl",
+        f"--receptor-events-max-bytes={MIN_MAX_BYTES}",
+        "--junitxml=same-session.xml",
+    )
+    assert result.ret == 0
+    artifact = read_artifact(pytester.path / "events.jsonl")
+    assert artifact.complete and artifact.integrity_valid
+    assert artifact.final.data["counts"]["skipped"] == 3
+    assert artifact.final.data["artifact_policy"]["truncated"] is True
+    assert any(record.type == "evidence_limit" for record in artifact.events)
+    assert not any(
+        record.type == "phase" and record.data["outcome"] == "skipped"
+        for record in artifact.events
+    )
+    junit = ET.parse(pytester.path / "same-session.xml")
+    skipped = [
+        case for case in junit.iter("testcase") if case.find("skipped") is not None
+    ]
+    assert {case.attrib["name"] for case in skipped} == {
+        f"test_late_skip[{index}]" for index in range(3)
+    }
+    assert (pytester.path / "events.jsonl").stat().st_size <= MIN_MAX_BYTES
 
 
 def test_events_option_requires_collecting_profile(pytester):

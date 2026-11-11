@@ -83,3 +83,13 @@ Two details worth getting right if it happens:
 
 Support for other CI systems (GitLab, Buildkite) should wait for the same kind
 of evidence, separately.
+
+## Owner triage — 2026-11-11
+
+Reviewed for the 1.2.3 issue campaign. No concrete request from a CI consumer
+has been supplied, so implementation remains deferred and this issue stays
+open. Maintainers own reassessment when a consumer supplies its desired
+annotation workflow and accepts the extra output. No release depends on this
+optional feature. Retain the original sketch as a proposal, not an accepted
+contract; any implementation must review GitHub command escaping, bounded
+output and untrusted messages before execution.

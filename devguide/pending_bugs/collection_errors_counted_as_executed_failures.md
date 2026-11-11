@@ -1,13 +1,13 @@
 ---
 summary: Collection errors are counted as executed failed tests.
 issue: uibcdf/pytest-receptor#46
-status: open
+status: active
 opened: 2026-10-26
 closed:
 severity: medium
 verification: reproduced
 area: [reporting, collection]
-guard:
+guard: tests/test_collection_counts.py
 normative:
 blocked_by: []
 supersedes: []
@@ -52,3 +52,30 @@ will not rewrite inputs or reinterpret successful/failed exits to hide the gap.
 
 This report records the defect and requested provider-owned guard. It does not
 change runtime code, dependencies, release tags or publication state.
+
+## Xdist receiving observation — 2026-10-29
+
+During the standalone source review in uibcdf/molsysviewer#270, native JUnit
+records 3,288 passed cases, eight failed cases, 21 skipped and four collection
+errors (the same helper import problem reported by four xdist workers).
+The compact LLM header instead reports nine failed cases: it groups the one
+unique collection failure with eight call failures. This is not a false pass;
+the authoritative exit remains 1. It is additional mixed collection/execution
+and worker-deduplication evidence for this existing issue, not a new defect.
+
+The consumer corrected its unsafe helper import, recovered the affected
+checks separately and kept the original failed campaign. The consumer receipt
+is referenced by owning issue uibcdf/molsysviewer#270. No receptor source,
+dependency, tag or reporting status was changed in this receiving note.
+
+## Provider correction — 2026-11-11
+
+Keep failed collectors in a separate normalized set. They contribute to errors
+but never runtime outcomes/executed counts. Repeated worker reports remain
+in the stream and count once per collector; render diagnostic occurrences as
+collectors rather than tests. Preserve pytest exit codes. Successful collect-only
+keeps execution incomplete and explicitly reports collected/zero executed.
+Sixteen focused regression cases cover SyntaxError, ImportError, partial
+collection, -x/maxfail, continuation, collect-only and mixed xdist execution.
+This source fix does not rewrite historical consumer evidence; actual installed
+1.2.3 receiving is tracked separately in uibcdf/pytest-receptor#52.

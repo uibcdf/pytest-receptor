@@ -90,6 +90,56 @@ Minor evolution within `events@1` may add fields and record types. Consumers
 must ignore unknown fields and retain unknown records when rewriting an
 artifact. An incompatible change requires a new schema major.
 
+## Exhaustive node recovery after truncation
+
+`artifact.complete` and `artifact.integrity_valid` establish finalized transport
+and integrity, not exhaustive event detail. Final counters describe the whole
+session even when later phase or extension bodies could not be retained.
+Before deriving **all skipped nodes**, or any other exhaustive node set, inspect
+the final `artifact_policy.truncated` value:
+
+```python
+artifact = read_artifact("events.jsonl")
+detail_complete = (
+    artifact.complete
+    and artifact.integrity_valid is True
+    and artifact.final.data.get("artifact_policy", {}).get("truncated") is False
+)
+if not detail_complete:
+    print("incomplete event detail: use the same-session JUnit fallback")
+```
+
+Never return retained nodes as an exhaustive set when this check fails, even if
+their number happens to match a final counter. Unknown truncation metadata also
+does not establish exhaustive detail. Extension-specific loss is separately
+reported by `session_finish.extensions`.
+
+Request pytest's independent JUnit output **in the same invocation** when a
+complete list may be needed:
+
+```bash
+pytest tests/ --receptor=llm --receptor-events=events.jsonl \
+  --junitxml=same-session.xml
+```
+
+Use a fresh destination for each invocation and retain the invocation, source,
+selection and environment identity alongside both files. Confirm that pytest
+finished writing that JUnit file and reconcile its skipped entries with the
+final session counters before claiming exhaustive recovery. JUnit preserves
+pytest's testcase `classname`/`name` identities; these are not universally
+interchangeable with original pytest node IDs. Resolve them against that same
+selection/collection when an exact rerun selector is needed; ambiguous mapping
+remains incomplete. A separately rerun session cannot repair the original
+session's missing evidence. If the original JUnit was not requested, is partial,
+or disagrees with the final counters, report incomplete recovery explicitly.
+
+Live readers must treat an `evidence_limit` record as loss of subsequent detail.
+Retained phase counts may then stop advancing while pytest continues normally.
+Until finalization, absence of that marker does not certify a complete stream;
+at finalization the authoritative cap state is `artifact_policy.truncated`.
+Increasing the cap for a future run preserves its own evidence, not missing
+events from an earlier run. The hard ceiling and `events@1` format are unchanged.
+
 Phase records retain the collected test file in `test_path`, resolved from the
 invocation directory. This can differ from `exception.location`, which identifies
 the crash site, for example inside an imported helper. Older `events@1` artifacts

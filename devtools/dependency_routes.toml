@@ -28,7 +28,7 @@ reason = "Build/upload bootstrap only. No component is installed; recipe host/ru
 
 [[workflows]]
 path = ".github/workflows/build_and_upload_conda_packages.yaml"
-sha256 = "7d43725ddf9091749cdf319712f02b16e691f83f87d4adb9e10b0c3cc9bcd546"
+sha256 = "293a9ec1903c98b78a5c57ab880bb5f1f9720292ed00a680ef10f0e1e30630d8"
 reason = "Manual exact-candidate noarch staging wrapper uses pinned shared publisher. Committed source gates include the dependency preflight before any build; recipe host/run supply separate build/runtime closure."
 
 [[workflows]]
@@ -53,7 +53,7 @@ reason = "Pinned shared administrative policy/lint audit; no plugin runtime is i
 
 [[workflows]]
 path = ".github/workflows/promote_conda_package.yaml"
-sha256 = "ccefb54799756c0adf90d1fac608c22fb539dc9b62cc14081e2721adbc56de34"
+sha256 = "e09f36dee1d1bc9b55fd239452c76077854e12a5c201ff73e3e8c8c74af98fa4"
 reason = "Pinned same-file/digest promotion with required exact-source and installed receipts; no runtime rebuild or source replacement."
 
 [[workflows]]

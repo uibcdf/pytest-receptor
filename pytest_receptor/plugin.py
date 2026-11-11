@@ -1027,7 +1027,7 @@ class ReceptorPlugin:
         }
         counts.update(
             {
-                "errors": len(self._evidence.errors),
+                "errors": self._evidence.error_count,
                 "warnings": self._evidence.warning_count,
                 "collected": self._evidence.collected,
                 "executed": self._evidence.executed,
@@ -1357,8 +1357,8 @@ class ReceptorPlugin:
         counts = {}
         for outcome in self._evidence.outcomes.values():
             counts[outcome] = counts.get(outcome, 0) + 1
-        if self._evidence.errors:
-            counts["errors"] = len(self._evidence.errors)
+        if self._evidence.error_count:
+            counts["errors"] = self._evidence.error_count
         if self._evidence.deselected:
             counts["deselected"] = self._evidence.deselected
         executed = self._evidence.executed
@@ -1424,6 +1424,11 @@ class ReceptorPlugin:
         return " | ".join(parts)
 
     def _stop_reason(self, session, exitstatus, executed):
+        if self.config.option.collectonly and exitstatus == pytest.ExitCode.OK:
+            return (
+                f"collection only: {self._evidence.collected} collected, "
+                f"{executed} executed"
+            )
         if exitstatus == pytest.ExitCode.INTERRUPTED:
             return f"incomplete: {executed} of {self._evidence.collected} executed"
         shouldstop = getattr(session, "shouldstop", False)
@@ -2069,6 +2074,8 @@ def _exception_type(message):
 
 def _tests(group):
     count = len(group.occurrences)
+    if group.phase in ("collect", "collection"):
+        return f"{count} collector" if count == 1 else f"{count} collectors"
     if group.occurrences and all(item.subtest for item in group.occurrences):
         return f"{count} subtest" if count == 1 else f"{count} subtests"
     return f"{count} test" if count == 1 else f"{count} tests"
